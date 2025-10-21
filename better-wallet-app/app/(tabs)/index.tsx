@@ -1,90 +1,22 @@
-// Import polyfills first
-import "@/polyfills";
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Link } from "expo-router";
-import { useEffect } from "react";
-import { TPCEcdsaKeyGen } from "@/libs/two-party-ecdsa-js";
+import { Image } from 'expo-image';
+import { Platform, StyleSheet } from 'react-native';
+
+import { HelloWave } from '@/components/hello-wave';
+import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { Link } from 'expo-router';
 
 export default function HomeScreen() {
-  useEffect(() => {
-    console.log("HomeScreen mounted");
-    (async () => {
-      try {
-        console.log("Starting key generation...");
-        console.log(
-          "⚠️  WARNING: This will take 30-60 seconds on mobile devices!"
-        );
-        console.log(
-          "Generating 2048-bit Paillier keys requires finding large primes..."
-        );
-
-        const startTime = Date.now();
-
-        console.log("Creating P1 context...");
-        let p1Ctx = await TPCEcdsaKeyGen.P1Context.createContext();
-        const p1Time = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`✅ P1 context created in ${p1Time}s`);
-
-        console.log("Creating P2 context...");
-        const p2Start = Date.now();
-        let p2Ctx = await TPCEcdsaKeyGen.P2Context.createContext();
-        const p2Time = ((Date.now() - p2Start) / 1000).toFixed(1);
-        console.log(`✅ P2 context created in ${p2Time}s`);
-
-        console.log("Starting protocol steps...");
-        let message1 = p1Ctx.step1();
-        console.log("Step 1 complete");
-
-        let message2 = p2Ctx.step1(message1);
-        console.log("Step 2 complete");
-
-        let message3 = p1Ctx.step2(message2);
-        console.log("Step 3 complete");
-
-        p2Ctx.step2(message3);
-        console.log("Step 4 complete");
-
-        console.log("Exporting key shares...");
-        let keyShare1 = p1Ctx.exportKeyShare();
-        let keyShare2 = p2Ctx.exportKeyShare();
-
-        let keyShare1JsonStr = JSON.stringify(
-          keyShare1.toJsonObject(),
-          null,
-          4
-        );
-        let keyShare2JsonStr = JSON.stringify(
-          keyShare2.toJsonObject(),
-          null,
-          4
-        );
-
-        console.log("✅ Key generation successful!");
-        console.log("key share 1: \n", keyShare1JsonStr);
-        console.log("key share 2: \n", keyShare2JsonStr);
-      } catch (e) {
-        console.error("❌ Error during key generation:", e);
-        if (e instanceof Error) {
-          console.error("Error stack:", e.stack);
-        }
-      }
-    })();
-  }, []);
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
+      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
         <Image
-          source={require("@/assets/images/partial-react-logo.png")}
+          source={require('@/assets/images/partial-react-logo.png')}
           style={styles.reactLogo}
         />
-      }
-    >
+      }>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
@@ -92,16 +24,15 @@ export default function HomeScreen() {
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
+          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
+          Press{' '}
           <ThemedText type="defaultSemiBold">
             {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
+              ios: 'cmd + d',
+              android: 'cmd + m',
+              web: 'F12',
             })}
-          </ThemedText>{" "}
+          </ThemedText>{' '}
           to open developer tools.
         </ThemedText>
       </ThemedView>
@@ -112,22 +43,18 @@ export default function HomeScreen() {
           </Link.Trigger>
           <Link.Preview />
           <Link.Menu>
-            <Link.MenuAction
-              title="Action"
-              icon="cube"
-              onPress={() => alert("Action pressed")}
-            />
+            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
             <Link.MenuAction
               title="Share"
               icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
+              onPress={() => alert('Share pressed')}
             />
             <Link.Menu title="More" icon="ellipsis">
               <Link.MenuAction
                 title="Delete"
                 icon="trash"
                 destructive
-                onPress={() => alert("Delete pressed")}
+                onPress={() => alert('Delete pressed')}
               />
             </Link.Menu>
           </Link.Menu>
@@ -141,12 +68,9 @@ export default function HomeScreen() {
         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
         <ThemedText>
           {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
+          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
+          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
+          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
@@ -156,8 +80,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   stepContainer: {
@@ -169,6 +93,6 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: "absolute",
+    position: 'absolute',
   },
 });
