@@ -1,29 +1,58 @@
+// Import polyfills first
+import "@/polyfills";
 import { Image } from "expo-image";
 import { Platform, StyleSheet } from "react-native";
-
 import { HelloWave } from "@/components/hello-wave";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Link } from "expo-router";
 import { useEffect } from "react";
-
-import { TPCEcdsaKeyGen } from "@safeheron/two-party-ecdsa-js";
+import { TPCEcdsaKeyGen } from "@/libs/two-party-ecdsa-js";
 
 export default function HomeScreen() {
   useEffect(() => {
-    console.log("HomeScreen");
+    console.log("HomeScreen mounted");
     (async () => {
       try {
-        let p1Ctx = await TPCEcdsaKeyGen.P1Context.createContext();
-        let p2Ctx = await TPCEcdsaKeyGen.P2Context.createContext();
-        let message1 = p1Ctx.step1();
-        let message2 = p2Ctx.step1(message1);
-        let message3 = p1Ctx.step2(message2);
-        p2Ctx.step2(message3);
+        console.log("Starting key generation...");
+        console.log(
+          "⚠️  WARNING: This will take 30-60 seconds on mobile devices!"
+        );
+        console.log(
+          "Generating 2048-bit Paillier keys requires finding large primes..."
+        );
 
+        const startTime = Date.now();
+
+        console.log("Creating P1 context...");
+        let p1Ctx = await TPCEcdsaKeyGen.P1Context.createContext();
+        const p1Time = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`✅ P1 context created in ${p1Time}s`);
+
+        console.log("Creating P2 context...");
+        const p2Start = Date.now();
+        let p2Ctx = await TPCEcdsaKeyGen.P2Context.createContext();
+        const p2Time = ((Date.now() - p2Start) / 1000).toFixed(1);
+        console.log(`✅ P2 context created in ${p2Time}s`);
+
+        console.log("Starting protocol steps...");
+        let message1 = p1Ctx.step1();
+        console.log("Step 1 complete");
+
+        let message2 = p2Ctx.step1(message1);
+        console.log("Step 2 complete");
+
+        let message3 = p1Ctx.step2(message2);
+        console.log("Step 3 complete");
+
+        p2Ctx.step2(message3);
+        console.log("Step 4 complete");
+
+        console.log("Exporting key shares...");
         let keyShare1 = p1Ctx.exportKeyShare();
         let keyShare2 = p2Ctx.exportKeyShare();
+
         let keyShare1JsonStr = JSON.stringify(
           keyShare1.toJsonObject(),
           null,
@@ -34,10 +63,15 @@ export default function HomeScreen() {
           null,
           4
         );
+
+        console.log("✅ Key generation successful!");
         console.log("key share 1: \n", keyShare1JsonStr);
         console.log("key share 2: \n", keyShare2JsonStr);
       } catch (e) {
-        console.error(e);
+        console.error("❌ Error during key generation:", e);
+        if (e instanceof Error) {
+          console.error("Error stack:", e.stack);
+        }
       }
     })();
   }, []);

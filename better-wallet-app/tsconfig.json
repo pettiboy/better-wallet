@@ -3,15 +3,19 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "global.d.ts"
+  ],
+  "exclude": [
+    "libs/two-party-ecdsa-js/lib",
+    "libs/two-party-ecdsa-js/test",
+    "node_modules"
   ]
 }
