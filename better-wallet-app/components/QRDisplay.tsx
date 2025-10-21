@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
-import { ThemedView } from './themed-view';
-import { ThemedText } from './themed-text';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import QRCode from "react-native-qrcode-svg";
+import { ThemedView } from "./themed-view";
+import { ThemedText } from "./themed-text";
 
 interface QRDisplayProps {
   data: string;
@@ -11,7 +11,12 @@ interface QRDisplayProps {
   description?: string;
 }
 
-export function QRDisplay({ data, size = 250, title, description }: QRDisplayProps) {
+export function QRDisplay({
+  data,
+  size = 250,
+  title,
+  description,
+}: QRDisplayProps) {
   return (
     <ThemedView style={styles.container}>
       {title && (
@@ -20,9 +25,7 @@ export function QRDisplay({ data, size = 250, title, description }: QRDisplayPro
         </ThemedText>
       )}
       {description && (
-        <ThemedText style={styles.description}>
-          {description}
-        </ThemedText>
+        <ThemedText style={styles.description}>{description}</ThemedText>
       )}
       <View style={styles.qrContainer}>
         <QRCode
@@ -38,27 +41,26 @@ export function QRDisplay({ data, size = 250, title, description }: QRDisplayPro
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
   },
   title: {
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   description: {
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.7,
   },
   qrContainer: {
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
 });
-
