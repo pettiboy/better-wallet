@@ -1,25 +1,30 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
-import { ThemedView } from '@/components/themed-view';
-import { ThemedText } from '@/components/themed-text';
-import { QRScanner } from '@/components/QRScanner';
-import { QRDisplay } from '@/components/QRDisplay';
-import { signTransaction, loadPrivateKey } from '@/services/wallet';
-import { ethers } from 'ethers';
+import React, { useState } from "react";
+import { View, StyleSheet, Alert, ScrollView } from "react-native";
+import { ThemedView } from "@/components/themed-view";
+import { ThemedText } from "@/components/themed-text";
+import { SafeThemedView } from "@/components/safe-themed-view";
+import { ThemedButton } from "@/components/themed-button";
+import { QRScanner } from "@/components/QRScanner";
+import { QRDisplay } from "@/components/QRDisplay";
+import { signTransaction, loadPrivateKey } from "@/services/wallet";
+import { ethers } from "ethers";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 export default function SignScreen() {
   const [scanning, setScanning] = useState(false);
-  const [unsignedTx, setUnsignedTx] = useState<ethers.TransactionRequest | null>(null);
+  const [unsignedTx, setUnsignedTx] =
+    useState<ethers.TransactionRequest | null>(null);
   const [signedTx, setSignedTx] = useState<string | null>(null);
+
+  const overlayColor = useThemeColor({}, "overlay");
 
   const handleScan = async (data: string) => {
     try {
-      // Parse the unsigned transaction from QR code
       const tx = JSON.parse(data);
       setUnsignedTx(tx);
       setScanning(false);
     } catch {
-      Alert.alert('Error', 'Invalid transaction QR code');
+      Alert.alert("Error", "Invalid transaction QR code");
       setScanning(false);
     }
   };
@@ -29,19 +34,25 @@ export default function SignScreen() {
 
     try {
       const privateKey = await loadPrivateKey();
-      
+
       if (!privateKey) {
-        Alert.alert('Error', 'No private key found. Please set up wallet first.');
+        Alert.alert(
+          "Error",
+          "No private key found. Please set up wallet first."
+        );
         return;
       }
 
       const signed = await signTransaction(unsignedTx, privateKey);
       setSignedTx(signed);
-      
-      Alert.alert('Success', 'Transaction signed! Show this QR code to your hot wallet.');
+
+      Alert.alert(
+        "Success",
+        "Transaction signed! Show this QR code to your hot wallet."
+      );
     } catch (error) {
-      console.error('Error signing transaction:', error);
-      Alert.alert('Error', 'Failed to sign transaction');
+      console.error("Error signing transaction:", error);
+      Alert.alert("Error", "Failed to sign transaction");
     }
   };
 
@@ -62,79 +73,98 @@ export default function SignScreen() {
 
   if (signedTx) {
     return (
-      <ThemedView style={styles.container}>
-        <QRDisplay
-          data={signedTx}
-          title="Signed Transaction"
-          description="Scan this with your hot wallet to broadcast"
-          size={280}
-        />
-        <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-          <Text style={styles.resetButtonText}>Sign Another Transaction</Text>
-        </TouchableOpacity>
-      </ThemedView>
+      <SafeThemedView>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ThemedView style={styles.container}>
+            <QRDisplay
+              data={signedTx}
+              title="Signed Transaction"
+              description="Scan this with your hot wallet to broadcast"
+              size={280}
+            />
+            <ThemedButton
+              title="Sign Another Transaction"
+              variant="primary"
+              onPress={handleReset}
+              style={styles.marginTop}
+            />
+          </ThemedView>
+        </ScrollView>
+      </SafeThemedView>
     );
   }
 
   if (unsignedTx) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText type="title" style={styles.title}>
-          Review Transaction
-        </ThemedText>
-        
-        <View style={styles.detailsContainer}>
-          <DetailRow label="To" value={unsignedTx.to as string} />
-          <DetailRow 
-            label="Amount" 
-            value={`${ethers.formatEther(unsignedTx.value || 0)} ETH`} 
-          />
-          <DetailRow 
-            label="Gas Limit" 
-            value={unsignedTx.gasLimit?.toString() || 'N/A'} 
-          />
-          <DetailRow 
-            label="Chain ID" 
-            value={unsignedTx.chainId?.toString() || 'N/A'} 
-          />
-        </View>
+      <SafeThemedView>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <ThemedView style={styles.container}>
+            <ThemedText type="title" style={styles.title}>
+              Review Transaction
+            </ThemedText>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.button, styles.signButton]} 
-            onPress={handleSign}
-          >
-            <Text style={styles.buttonText}>Sign Transaction</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.button, styles.cancelButton]} 
-            onPress={handleReset}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </ThemedView>
+            <View
+              style={[
+                styles.detailsContainer,
+                { backgroundColor: overlayColor },
+              ]}
+            >
+              <DetailRow label="To" value={unsignedTx.to as string} />
+              <DetailRow
+                label="Amount"
+                value={`${ethers.formatEther(unsignedTx.value || 0)} ETH`}
+              />
+              <DetailRow
+                label="Gas Limit"
+                value={unsignedTx.gasLimit?.toString() || "N/A"}
+              />
+              <DetailRow
+                label="Chain ID"
+                value={unsignedTx.chainId?.toString() || "N/A"}
+              />
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <ThemedButton
+                title="Sign Transaction"
+                variant="success"
+                onPress={handleSign}
+              />
+
+              <ThemedButton
+                title="Cancel"
+                variant="danger"
+                onPress={handleReset}
+                style={styles.marginTop}
+              />
+            </View>
+          </ThemedView>
+        </ScrollView>
+      </SafeThemedView>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
-        Sign Transaction
-      </ThemedText>
-      
-      <ThemedText style={styles.instructions}>
-        Scan the QR code from your hot wallet to sign a transaction
-      </ThemedText>
+    <SafeThemedView>
+      <ScrollView contentContainerStyle={styles.centerContainer}>
+        <ThemedText type="title" style={styles.title}>
+          Sign Transaction
+        </ThemedText>
 
-      <TouchableOpacity 
-        style={styles.scanButton} 
-        onPress={() => setScanning(true)}
-      >
-        <Text style={styles.scanButtonText}>Scan Transaction QR</Text>
-      </TouchableOpacity>
-    </ThemedView>
+        <ThemedText style={styles.instructions}>
+          Scan the QR code from your hot wallet to sign a transaction
+        </ThemedText>
+
+        <ThemedButton
+          title="Scan Transaction QR"
+          variant="primary"
+          onPress={() => setScanning(true)}
+        />
+      </ScrollView>
+    </SafeThemedView>
   );
 }
 
@@ -142,7 +172,11 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.detailRow}>
       <ThemedText style={styles.detailLabel}>{label}:</ThemedText>
-      <ThemedText style={styles.detailValue} numberOfLines={1} ellipsizeMode="middle">
+      <ThemedText
+        style={styles.detailValue}
+        numberOfLines={1}
+        ellipsizeMode="middle"
+      >
         {value}
       </ThemedText>
     </View>
@@ -150,90 +184,54 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  centerContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   instructions: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 32,
     opacity: 0.7,
   },
-  scanButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  scanButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
   detailsContainer: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
   },
   detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   detailLabel: {
-    fontWeight: '600',
+    fontWeight: "600",
     marginRight: 8,
   },
   detailValue: {
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   buttonContainer: {
     gap: 12,
   },
-  button: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  signButton: {
-    backgroundColor: '#34C759',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  cancelButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#FF3B30',
-  },
-  cancelButtonText: {
-    color: '#FF3B30',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  resetButton: {
-    marginTop: 24,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
-  },
-  resetButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+  marginTop: {
+    marginTop: 12,
   },
 });
-

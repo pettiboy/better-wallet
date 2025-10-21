@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
-  Text,
   TextInput,
   Alert,
   ScrollView,
@@ -12,6 +10,8 @@ import {
 } from "react-native";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { SafeThemedView } from "@/components/safe-themed-view";
+import { ThemedButton } from "@/components/themed-button";
 import { QRDisplay } from "@/components/QRDisplay";
 import { QRScanner } from "@/components/QRScanner";
 import { useDeviceMode } from "@/contexts/DeviceModeContext";
@@ -21,6 +21,7 @@ import {
   isValidAddress,
 } from "@/services/ethereum";
 import { ethers } from "ethers";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 type Step =
   | "input"
@@ -37,6 +38,13 @@ export default function SendScreen() {
   const [unsignedTx, setUnsignedTx] =
     useState<ethers.TransactionRequest | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+
+  const borderColor = useThemeColor({}, "border");
+  const overlayColor = useThemeColor({}, "overlay");
+  const infoColor = useThemeColor({}, "info");
+  const textColor = useThemeColor({}, "text");
+  const backgroundColor = useThemeColor({}, "background");
+  const primaryColor = useThemeColor({}, "primary");
 
   const handleCreateTransaction = async () => {
     if (!walletAddress) {
@@ -75,8 +83,6 @@ export default function SendScreen() {
 
   const handleScanSigned = (data: string) => {
     setStep("input");
-
-    // The scanned data should be the signed transaction
     broadcastSignedTransaction(data);
   };
 
@@ -118,141 +124,179 @@ export default function SendScreen() {
 
   if (step === "show-unsigned" && unsignedTx) {
     return (
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.container}>
-          <ThemedText type="title" style={styles.title}>
-            Unsigned Transaction
-          </ThemedText>
+      <SafeThemedView>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <ThemedView style={styles.container}>
+            <ThemedText type="title" style={styles.title}>
+              Unsigned Transaction
+            </ThemedText>
 
-          <ThemedText style={styles.instructions}>
-            Show this QR code to your cold wallet for signing
-          </ThemedText>
+            <ThemedText style={styles.instructions}>
+              Show this QR code to your cold wallet for signing
+            </ThemedText>
 
-          <QRDisplay
-            data={JSON.stringify(unsignedTx)}
-            title="Transaction to Sign"
-            size={280}
-          />
-
-          <View style={styles.transactionDetails}>
-            <DetailRow label="To" value={unsignedTx.to as string} />
-            <DetailRow
-              label="Amount"
-              value={`${ethers.formatEther(unsignedTx.value || 0)} ETH`}
+            <QRDisplay
+              data={JSON.stringify(unsignedTx)}
+              title="Transaction to Sign"
+              size={280}
             />
-          </View>
 
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => setStep("scan-signed")}
-          >
-            <Text style={styles.primaryButtonText}>
-              Scan Signed Transaction
-            </Text>
-          </TouchableOpacity>
+            <View
+              style={[
+                styles.transactionDetails,
+                { backgroundColor: overlayColor },
+              ]}
+            >
+              <DetailRow label="To" value={unsignedTx.to as string} />
+              <DetailRow
+                label="Amount"
+                value={`${ethers.formatEther(unsignedTx.value || 0)} ETH`}
+              />
+            </View>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={handleReset}
-          >
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </ThemedView>
-      </ScrollView>
+            <ThemedButton
+              title="Scan Signed Transaction"
+              variant="primary"
+              onPress={() => setStep("scan-signed")}
+            />
+
+            <ThemedButton
+              title="Cancel"
+              variant="danger"
+              onPress={handleReset}
+              style={styles.marginTop}
+            />
+          </ThemedView>
+        </ScrollView>
+      </SafeThemedView>
     );
   }
 
   if (step === "broadcasting") {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText type="title" style={styles.title}>
-          Broadcasting...
-        </ThemedText>
-        <ThemedText style={styles.message}>
-          Sending transaction to the network
-        </ThemedText>
-      </ThemedView>
+      <SafeThemedView>
+        <ScrollView contentContainerStyle={styles.centerContainer}>
+          <ThemedText type="title" style={styles.title}>
+            Broadcasting...
+          </ThemedText>
+          <ThemedText style={styles.message}>
+            Sending transaction to the network
+          </ThemedText>
+        </ScrollView>
+      </SafeThemedView>
     );
   }
 
   if (step === "success" && txHash) {
     return (
-      <ThemedView style={styles.container}>
-        <ThemedText type="title" style={styles.successTitle}>
-          ✅ Transaction Sent!
-        </ThemedText>
+      <SafeThemedView>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <ThemedView style={styles.container}>
+            <ThemedText type="title" style={styles.successTitle}>
+              ✅ Transaction Sent!
+            </ThemedText>
 
-        <View style={styles.hashContainer}>
-          <ThemedText style={styles.hashLabel}>Transaction Hash:</ThemedText>
-          <ThemedText style={styles.hash}>{txHash}</ThemedText>
-        </View>
+            <View
+              style={[styles.hashContainer, { backgroundColor: overlayColor }]}
+            >
+              <ThemedText style={styles.hashLabel}>
+                Transaction Hash:
+              </ThemedText>
+              <ThemedText style={styles.hash}>{txHash}</ThemedText>
+            </View>
 
-        <ThemedText style={styles.explorerText}>
-          View on block explorer:
-        </ThemedText>
-        <ThemedText style={styles.explorerLink} numberOfLines={1}>
-          https://sepolia.etherscan.io/tx/{txHash}
-        </ThemedText>
+            <ThemedText style={styles.explorerText}>
+              View on block explorer:
+            </ThemedText>
+            <ThemedText
+              style={[styles.explorerLink, { color: primaryColor }]}
+              numberOfLines={1}
+            >
+              https://sepolia.etherscan.io/tx/{txHash}
+            </ThemedText>
 
-        <TouchableOpacity style={styles.primaryButton} onPress={handleReset}>
-          <Text style={styles.primaryButtonText}>Send Another Transaction</Text>
-        </TouchableOpacity>
-      </ThemedView>
+            <ThemedButton
+              title="Send Another Transaction"
+              variant="primary"
+              onPress={handleReset}
+            />
+          </ThemedView>
+        </ScrollView>
+      </SafeThemedView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-    >
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.container}>
-          <ThemedText type="title" style={styles.title}>
-            Send Transaction
-          </ThemedText>
-
-          <View style={styles.inputContainer}>
-            <ThemedText style={styles.inputLabel}>Recipient Address</ThemedText>
-            <TextInput
-              style={styles.input}
-              value={recipient}
-              onChangeText={setRecipient}
-              placeholder="0x..."
-              placeholderTextColor="#999"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <ThemedText style={styles.inputLabel}>Amount (ETH)</ThemedText>
-            <TextInput
-              style={styles.input}
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="0.0"
-              placeholderTextColor="#999"
-              keyboardType="decimal-pad"
-            />
-          </View>
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleCreateTransaction}
-          >
-            <Text style={styles.primaryButtonText}>Create Transaction</Text>
-          </TouchableOpacity>
-
-          <View style={styles.infoBox}>
-            <ThemedText style={styles.infoText}>
-              💡 This will create an unsigned transaction. You&apos;ll need to
-              show the QR code to your cold wallet for signing.
+    <SafeThemedView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <ThemedView style={styles.container}>
+            <ThemedText type="title" style={styles.title}>
+              Send Transaction
             </ThemedText>
-          </View>
-        </ThemedView>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+            <View style={styles.inputContainer}>
+              <ThemedText style={styles.inputLabel}>
+                Recipient Address
+              </ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  { borderColor, color: textColor, backgroundColor },
+                ]}
+                value={recipient}
+                onChangeText={setRecipient}
+                placeholder="0x..."
+                placeholderTextColor="#999"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <ThemedText style={styles.inputLabel}>Amount (ETH)</ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  { borderColor, color: textColor, backgroundColor },
+                ]}
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="0.0"
+                placeholderTextColor="#999"
+                keyboardType="decimal-pad"
+              />
+            </View>
+
+            <ThemedButton
+              title="Create Transaction"
+              variant="primary"
+              onPress={handleCreateTransaction}
+            />
+
+            <View style={[styles.infoBox, { backgroundColor: infoColor }]}>
+              <ThemedText style={styles.infoText}>
+                💡 This will create an unsigned transaction. You&apos;ll need to
+                show the QR code to your cold wallet for signing.
+              </ThemedText>
+            </View>
+          </ThemedView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeThemedView>
   );
 }
 
@@ -275,9 +319,18 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  centerContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   container: {
     flex: 1,
-    padding: 20,
   },
   title: {
     marginBottom: 24,
@@ -302,41 +355,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: "white",
-  },
-  primaryButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  primaryButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    backgroundColor: "transparent",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#FF3B30",
-  },
-  secondaryButtonText: {
-    color: "#FF3B30",
-    fontSize: 18,
-    fontWeight: "600",
   },
   transactionDetails: {
-    backgroundColor: "rgba(0,0,0,0.05)",
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -360,7 +383,6 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   hashContainer: {
-    backgroundColor: "rgba(0,0,0,0.05)",
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
@@ -381,11 +403,9 @@ const styles = StyleSheet.create({
   explorerLink: {
     fontFamily: "monospace",
     fontSize: 11,
-    color: "#007AFF",
     marginBottom: 24,
   },
   infoBox: {
-    backgroundColor: "#E8F4FD",
     padding: 16,
     borderRadius: 8,
     marginTop: 16,
@@ -393,5 +413,8 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  marginTop: {
+    marginTop: 12,
   },
 });

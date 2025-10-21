@@ -1,8 +1,8 @@
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
 
 // Using public Ethereum RPC endpoints
-const MAINNET_RPC = 'https://eth.llamarpc.com';
-const SEPOLIA_RPC = 'https://rpc.sepolia.org';
+// const MAINNET_RPC = 'https://eth.llamarpc.com';
+const SEPOLIA_RPC = "https://1rpc.io/sepolia";
 
 // Default to Sepolia testnet for safety
 const DEFAULT_RPC = SEPOLIA_RPC;
@@ -29,8 +29,8 @@ export async function getBalance(address: string): Promise<string> {
     const balance = await provider.getBalance(address);
     return ethers.formatEther(balance);
   } catch (error) {
-    console.error('Error fetching balance:', error);
-    throw new Error('Failed to fetch balance');
+    console.error("Error fetching balance:", error);
+    throw new Error("Failed to fetch balance");
   }
 }
 
@@ -43,8 +43,8 @@ export async function getGasPrice(): Promise<bigint> {
     const feeData = await provider.getFeeData();
     return feeData.gasPrice || BigInt(0);
   } catch (error) {
-    console.error('Error fetching gas price:', error);
-    throw new Error('Failed to fetch gas price');
+    console.error("Error fetching gas price:", error);
+    throw new Error("Failed to fetch gas price");
   }
 }
 
@@ -59,16 +59,16 @@ export async function estimateGas(
   try {
     const provider = getProvider();
     const valueInWei = ethers.parseEther(value);
-    
+
     const gasEstimate = await provider.estimateGas({
       from,
       to,
       value: valueInWei,
     });
-    
+
     return gasEstimate;
   } catch (error) {
-    console.error('Error estimating gas:', error);
+    console.error("Error estimating gas:", error);
     // Return a default safe gas limit
     return BigInt(21000);
   }
@@ -84,13 +84,13 @@ export async function constructTransaction(
 ): Promise<ethers.TransactionRequest> {
   try {
     const provider = getProvider();
-    const nonce = await provider.getTransactionCount(from, 'pending');
+    const nonce = await provider.getTransactionCount(from, "pending");
     const feeData = await provider.getFeeData();
     const valueInWei = ethers.parseEther(amount);
-    
+
     // Estimate gas
     const gasLimit = await estimateGas(from, to, amount);
-    
+
     const tx: ethers.TransactionRequest = {
       from,
       to,
@@ -102,11 +102,11 @@ export async function constructTransaction(
       maxFeePerGas: feeData.maxFeePerGas,
       maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
     };
-    
+
     return tx;
   } catch (error) {
-    console.error('Error constructing transaction:', error);
-    throw new Error('Failed to construct transaction');
+    console.error("Error constructing transaction:", error);
+    throw new Error("Failed to construct transaction");
   }
 }
 
@@ -119,8 +119,8 @@ export async function broadcastTransaction(signedTx: string): Promise<string> {
     const txResponse = await provider.broadcastTransaction(signedTx);
     return txResponse.hash;
   } catch (error) {
-    console.error('Error broadcasting transaction:', error);
-    throw new Error('Failed to broadcast transaction');
+    console.error("Error broadcasting transaction:", error);
+    throw new Error("Failed to broadcast transaction");
   }
 }
 
@@ -134,7 +134,7 @@ export async function getTransactionReceipt(
     const provider = getProvider();
     return await provider.getTransactionReceipt(txHash);
   } catch (error) {
-    console.error('Error fetching transaction receipt:', error);
+    console.error("Error fetching transaction receipt:", error);
     return null;
   }
 }
@@ -159,4 +159,3 @@ export function formatEther(wei: bigint): string {
 export function parseEther(ether: string): bigint {
   return ethers.parseEther(ether);
 }
-

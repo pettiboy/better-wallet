@@ -1,83 +1,106 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, ScrollView, Alert } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useDeviceMode } from '@/contexts/DeviceModeContext';
-import { QRScanner } from '@/components/QRScanner';
-import { QRDisplay } from '@/components/QRDisplay';
-import { generateWallet, storePrivateKey, hasWallet, loadPrivateKey, getAddress } from '@/services/wallet';
-import { router } from 'expo-router';
+import React, { useState } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { SafeThemedView } from "@/components/safe-themed-view";
+import { ThemedButton } from "@/components/themed-button";
+import { useDeviceMode } from "@/contexts/DeviceModeContext";
+import { QRScanner } from "@/components/QRScanner";
+import { QRDisplay } from "@/components/QRDisplay";
+import {
+  generateWallet,
+  storePrivateKey,
+  hasWallet,
+  loadPrivateKey,
+  getAddress,
+} from "@/services/wallet";
+import { router } from "expo-router";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 export default function HomeScreen() {
   const { mode, setMode, setWalletAddress } = useDeviceMode();
 
   // Setup mode
-  if (mode === 'setup') {
-    return <SetupScreen onSetupComplete={setMode} onAddressSet={setWalletAddress} />;
+  if (mode === "setup") {
+    return (
+      <SetupScreen onSetupComplete={setMode} onAddressSet={setWalletAddress} />
+    );
   }
 
   // Cold wallet mode
-  if (mode === 'cold') {
+  if (mode === "cold") {
     return <ColdHomeScreen />;
   }
 
   // Hot wallet mode
-  if (mode === 'hot') {
+  if (mode === "hot") {
     return <HotHomeScreenWrapper />;
   }
 
   return null;
 }
 
-function SetupScreen({ 
-  onSetupComplete, 
-  onAddressSet 
-}: { 
-  onSetupComplete: (mode: 'hot' | 'cold') => void;
+function SetupScreen({
+  onSetupComplete,
+  onAddressSet,
+}: {
+  onSetupComplete: (mode: "hot" | "cold") => void;
   onAddressSet: (address: string) => void;
 }) {
   const [scanning, setScanning] = useState(false);
+  const cardColor = useThemeColor({}, "card");
+  const overlayColor = useThemeColor({}, "overlay");
+  const warningColor = useThemeColor({}, "warning");
+  const primaryColor = useThemeColor({}, "primary");
 
   const handleColdWallet = async () => {
     try {
-      // Check if wallet already exists
       const exists = await hasWallet();
-      
+
       if (exists) {
         Alert.alert(
-          'Wallet Exists',
-          'A wallet already exists on this device. Continue?',
+          "Wallet Exists",
+          "A wallet already exists on this device. Continue?",
           [
-            { text: 'Cancel', style: 'cancel' },
-            { 
-              text: 'Continue', 
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Continue",
               onPress: async () => {
                 const privateKey = await loadPrivateKey();
                 if (privateKey) {
                   const address = getAddress(privateKey);
                   onAddressSet(address);
                 }
-                onSetupComplete('cold');
-              }
+                onSetupComplete("cold");
+              },
             },
           ]
         );
         return;
       }
 
-      // Generate new wallet
       const wallet = await generateWallet();
       await storePrivateKey(wallet.privateKey, wallet.mnemonic);
       onAddressSet(wallet.address);
-      
+
       Alert.alert(
-        'Wallet Created',
-        `Your wallet has been created securely. Address: ${wallet.address.substring(0, 10)}...`,
-        [{ text: 'OK', onPress: () => onSetupComplete('cold') }]
+        "Wallet Created",
+        `Your wallet has been created securely. Address: ${wallet.address.substring(
+          0,
+          10
+        )}...`,
+        [{ text: "OK", onPress: () => onSetupComplete("cold") }]
       );
     } catch (error) {
-      console.error('Error setting up cold wallet:', error);
-      Alert.alert('Error', 'Failed to create wallet');
+      console.error("Error setting up cold wallet:", error);
+      Alert.alert("Error", "Failed to create wallet");
     }
   };
 
@@ -87,14 +110,16 @@ function SetupScreen({
 
   const handleScan = (data: string) => {
     setScanning(false);
-    
-    // The scanned data should be an Ethereum address
-    if (data.startsWith('0x') && data.length === 42) {
+
+    if (data.startsWith("0x") && data.length === 42) {
       onAddressSet(data);
-      onSetupComplete('hot');
-      Alert.alert('Success', `Connected to wallet: ${data.substring(0, 10)}...`);
+      onSetupComplete("hot");
+      Alert.alert(
+        "Success",
+        `Connected to wallet: ${data.substring(0, 10)}...`
+      );
     } else {
-      Alert.alert('Error', 'Invalid address QR code');
+      Alert.alert("Error", "Invalid address QR code");
     }
   };
 
@@ -109,58 +134,81 @@ function SetupScreen({
   }
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <ThemedView style={styles.container}>
-        <ThemedText type="title" style={styles.title}>
-          Better Wallet
-        </ThemedText>
-
-        <ThemedText style={styles.subtitle}>
-          Turn your smartphone into an air-gapped hardware wallet
-        </ThemedText>
-
-        <View style={styles.explanationBox}>
-          <ThemedText type="subtitle" style={styles.explanationTitle}>
-            How It Works
+    <SafeThemedView>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ThemedView style={styles.container}>
+          <ThemedText type="title" style={styles.title}>
+            Better Wallet
           </ThemedText>
-          <ThemedText style={styles.explanationText}>
-            • <ThemedText type="defaultSemiBold">Cold Wallet:</ThemedText> Stores private keys offline, signs transactions
-          </ThemedText>
-          <ThemedText style={styles.explanationText}>
-            • <ThemedText type="defaultSemiBold">Hot Wallet:</ThemedText> Connects to blockchain, broadcasts transactions
-          </ThemedText>
-          <ThemedText style={styles.explanationText}>
-            • Communication via QR codes only
-          </ThemedText>
-        </View>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.coldButton} onPress={handleColdWallet}>
-            <Text style={styles.buttonIcon}>🔒</Text>
-            <Text style={styles.buttonTitle}>Cold Wallet</Text>
-            <Text style={styles.buttonSubtitle}>Store keys offline (Old Phone)</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.hotButton} onPress={handleHotWallet}>
-            <Text style={styles.buttonIcon}>📱</Text>
-            <Text style={styles.buttonTitle}>Hot Wallet</Text>
-            <Text style={styles.buttonSubtitle}>Connect to blockchain (Main Phone)</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.securityNote}>
-          <ThemedText style={styles.securityText}>
-            ⚠️ For maximum security, use a dedicated offline device as your cold wallet
+          <ThemedText style={styles.subtitle}>
+            Turn your smartphone into an air-gapped hardware wallet
           </ThemedText>
-        </View>
-      </ThemedView>
-    </ScrollView>
+
+          <View
+            style={[styles.explanationBox, { backgroundColor: overlayColor }]}
+          >
+            <ThemedText type="subtitle" style={styles.explanationTitle}>
+              How It Works
+            </ThemedText>
+            <ThemedText style={styles.explanationText}>
+              • <ThemedText type="defaultSemiBold">Cold Wallet:</ThemedText>{" "}
+              Stores private keys offline, signs transactions
+            </ThemedText>
+            <ThemedText style={styles.explanationText}>
+              • <ThemedText type="defaultSemiBold">Hot Wallet:</ThemedText>{" "}
+              Connects to blockchain, broadcasts transactions
+            </ThemedText>
+            <ThemedText style={styles.explanationText}>
+              • Communication via QR codes only
+            </ThemedText>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.coldButton, { backgroundColor: warningColor }]}
+              onPress={handleColdWallet}
+            >
+              <Text style={styles.buttonIcon}>🔒</Text>
+              <Text style={styles.buttonTitle}>Cold Wallet</Text>
+              <Text style={styles.buttonSubtitle}>
+                Store keys offline (Old Phone)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.hotButton, { backgroundColor: primaryColor }]}
+              onPress={handleHotWallet}
+            >
+              <Text style={styles.buttonIcon}>📱</Text>
+              <Text style={styles.buttonTitle}>Hot Wallet</Text>
+              <Text style={styles.buttonSubtitle}>
+                Connect to blockchain (Main Phone)
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.securityNote, { backgroundColor: cardColor }]}>
+            <ThemedText style={styles.securityText}>
+              ⚠️ For maximum security, use a dedicated offline device as your
+              cold wallet
+            </ThemedText>
+          </View>
+        </ThemedView>
+      </ScrollView>
+    </SafeThemedView>
   );
 }
 
 function ColdHomeScreen() {
   const { walletAddress } = useDeviceMode();
   const [showQR, setShowQR] = useState(false);
+  const warningColor = useThemeColor({}, "warning");
+  const overlayColor = useThemeColor({}, "overlay");
+  const borderColor = useThemeColor({}, "border");
 
   const handleShowAddress = () => {
     setShowQR(true);
@@ -168,64 +216,80 @@ function ColdHomeScreen() {
 
   if (showQR && walletAddress) {
     return (
-      <ThemedView style={styles.container}>
-        <QRDisplay
-          data={walletAddress}
-          title="Your Wallet Address"
-          description="Scan this with your hot wallet"
-          size={280}
-        />
-        <TouchableOpacity style={styles.button} onPress={() => setShowQR(false)}>
-          <Text style={styles.buttonText}>Hide QR Code</Text>
-        </TouchableOpacity>
-      </ThemedView>
+      <SafeThemedView>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ThemedView style={styles.container}>
+            <QRDisplay
+              data={walletAddress}
+              title="Your Wallet Address"
+              description="Scan this with your hot wallet"
+              size={280}
+            />
+            <ThemedButton
+              title="Hide QR Code"
+              variant="primary"
+              onPress={() => setShowQR(false)}
+              style={styles.marginTop}
+            />
+          </ThemedView>
+        </ScrollView>
+      </SafeThemedView>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>
-        Cold Wallet
-      </ThemedText>
+    <SafeThemedView>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ThemedView style={styles.container}>
+          <ThemedText type="title" style={styles.title}>
+            Cold Wallet
+          </ThemedText>
 
-      <View style={styles.offlineIndicator}>
-        <ThemedText style={styles.offlineText}>✈️ OFFLINE MODE</ThemedText>
-      </View>
+          <View
+            style={[styles.offlineIndicator, { backgroundColor: warningColor }]}
+          >
+            <Text style={styles.offlineText}>✈️ OFFLINE MODE</Text>
+          </View>
 
-      <View style={styles.addressContainer}>
-        <ThemedText style={styles.addressLabel}>Your Address:</ThemedText>
-        <ThemedText style={styles.address}>{walletAddress}</ThemedText>
-      </View>
+          <View
+            style={[
+              styles.addressContainer,
+              { backgroundColor: overlayColor, borderColor, borderWidth: 1 },
+            ]}
+          >
+            <ThemedText style={styles.addressLabel}>Your Address:</ThemedText>
+            <ThemedText style={styles.address}>{walletAddress}</ThemedText>
+          </View>
 
-      <View style={styles.actionButtons}>
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={handleShowAddress}
-        >
-          <Text style={styles.primaryButtonText}>Show Address QR</Text>
-        </TouchableOpacity>
+          <View style={styles.actionButtons}>
+            <ThemedButton
+              title="Show Address QR"
+              variant="primary"
+              onPress={handleShowAddress}
+            />
 
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={() => router.push('/cold/sign')}
-        >
-          <Text style={styles.primaryButtonText}>Sign Transaction</Text>
-        </TouchableOpacity>
+            <ThemedButton
+              title="Sign Transaction"
+              variant="primary"
+              onPress={() => router.push("/cold/sign")}
+              style={styles.marginTop}
+            />
 
-        <TouchableOpacity 
-          style={styles.secondaryButton}
-          onPress={() => router.push('/cold/settings')}
-        >
-          <Text style={styles.secondaryButtonText}>Settings</Text>
-        </TouchableOpacity>
-      </View>
-    </ThemedView>
+            <ThemedButton
+              title="Settings"
+              variant="secondary"
+              onPress={() => router.push("/cold/settings")}
+              style={styles.marginTop}
+            />
+          </View>
+        </ThemedView>
+      </ScrollView>
+    </SafeThemedView>
   );
 }
 
 function HotHomeScreenWrapper() {
-  // Import the hot home screen component
-  const HotHomeContent = require('../hot/home').default;
+  const HotHomeContent = require("../hot/home").default;
   return <HotHomeContent />;
 }
 
@@ -233,22 +297,24 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+  },
   container: {
     flex: 1,
-    padding: 20,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 32,
     opacity: 0.7,
   },
   explanationBox: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
     padding: 20,
     borderRadius: 12,
     marginBottom: 32,
@@ -265,22 +331,20 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   coldButton: {
-    backgroundColor: '#FF9500',
     padding: 24,
     borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
   hotButton: {
-    backgroundColor: '#007AFF',
     padding: 24,
     borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -291,40 +355,37 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   buttonTitle: {
-    color: 'white',
+    color: "white",
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   buttonSubtitle: {
-    color: 'rgba(255,255,255,0.9)',
+    color: "rgba(255,255,255,0.9)",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   securityNote: {
-    backgroundColor: '#FFF3CD',
     padding: 16,
     borderRadius: 8,
   },
   securityText: {
     fontSize: 13,
     lineHeight: 18,
-    textAlign: 'center',
+    textAlign: "center",
   },
   offlineIndicator: {
-    backgroundColor: '#FF9500',
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   offlineText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   addressContainer: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
@@ -335,49 +396,13 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   address: {
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
     fontSize: 12,
   },
   actionButtons: {
     gap: 12,
   },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#007AFF',
-  },
-  secondaryButtonText: {
-    color: '#007AFF',
-    fontSize: 18,
-    fontWeight: '600',
+  marginTop: {
+    marginTop: 12,
   },
 });
