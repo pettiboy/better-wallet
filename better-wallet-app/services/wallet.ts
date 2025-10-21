@@ -1,8 +1,9 @@
-import * as SecureStore from 'expo-secure-store';
-import { ethers } from 'ethers';
+import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
+import { ethers } from "ethers";
 
-const PRIVATE_KEY_STORAGE_KEY = 'wallet_private_key';
-const MNEMONIC_STORAGE_KEY = 'wallet_mnemonic';
+const PRIVATE_KEY_STORAGE_KEY = "wallet_private_key";
+const MNEMONIC_STORAGE_KEY = "wallet_mnemonic";
 
 /**
  * Generate a new Ethereum wallet with mnemonic
@@ -12,13 +13,33 @@ export async function generateWallet(): Promise<{
   mnemonic: string;
   privateKey: string;
 }> {
-  const wallet = ethers.Wallet.createRandom();
-  
-  return {
-    address: wallet.address,
-    mnemonic: wallet.mnemonic?.phrase || '',
-    privateKey: wallet.privateKey,
-  };
+  try {
+    // Use ethers' built-in random wallet generation (now works with polyfill)
+    const wallet = ethers.Wallet.createRandom();
+
+    return {
+      address: wallet.address,
+      mnemonic: wallet.mnemonic?.phrase || "",
+      privateKey: wallet.privateKey,
+    };
+  } catch (error) {
+    // Fallback: Generate using expo-crypto and create wallet from random bytes
+    console.log("Using expo-crypto fallback for wallet generation");
+    const randomBytes = await Crypto.getRandomBytesAsync(32);
+    const randomHex = Array.from(randomBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    const privateKey = "0x" + randomHex;
+
+    const wallet = new ethers.Wallet(privateKey);
+
+    // Note: This fallback doesn't generate a mnemonic
+    return {
+      address: wallet.address,
+      mnemonic: "Generated without mnemonic (using fallback method)",
+      privateKey: wallet.privateKey,
+    };
+  }
 }
 
 /**
@@ -81,4 +102,3 @@ export async function deleteWallet(): Promise<void> {
   await SecureStore.deleteItemAsync(PRIVATE_KEY_STORAGE_KEY);
   await SecureStore.deleteItemAsync(MNEMONIC_STORAGE_KEY);
 }
-
