@@ -3,6 +3,7 @@
 ## 🚀 Get Started in 5 Minutes
 
 ### Prerequisites
+
 - Two smartphones (iOS or Android)
 - Node.js 20.x+ installed
 - Expo Go app installed on both phones
@@ -44,6 +45,7 @@ Scan the QR code with Expo Go on both devices.
 ### Step 5: Send Your First Transaction (2 minutes)
 
 **On Device A (Hot Wallet):**
+
 1. Tap "Send Transaction"
 2. Enter a recipient address (can use your own for testing)
 3. Enter amount (e.g., 0.001 ETH)
@@ -51,6 +53,7 @@ Scan the QR code with Expo Go on both devices.
 5. A QR code appears
 
 **On Device B (Cold Wallet):**
+
 1. Tap "Sign Transaction"
 2. Scan the QR code from Device A
 3. Review transaction details
@@ -58,6 +61,7 @@ Scan the QR code with Expo Go on both devices.
 5. A new QR code appears
 
 **Back on Device A (Hot Wallet):**
+
 1. Tap "Scan Signed Transaction"
 2. Scan the QR code from Device B
 3. Transaction broadcasts automatically
@@ -78,24 +82,28 @@ You've just completed a secure, air-gapped transaction without your private keys
 ## 🆘 Troubleshooting
 
 ### QR Code Won't Scan
+
 - Ensure good lighting
 - Hold phone steady
 - Try adjusting distance
 - Check camera permissions
 
 ### Balance Shows 0 After Faucet
+
 - Wait a bit longer (can take up to 5 minutes)
 - Pull down to refresh
 - Check faucet actually sent funds
 - Verify you copied correct address
 
 ### Transaction Failed
+
 - Ensure you have enough balance
 - Check gas estimation
 - Verify recipient address is valid
 - Make sure Device A has internet connection
 
 ### App Crashes or Freezes
+
 - Restart the app
 - Check Expo Go is up to date
 - Clear cache and restart
@@ -111,6 +119,7 @@ You've just completed a secure, air-gapped transaction without your private keys
 ## 🎯 What You've Built
 
 You now have:
+
 - ✅ Secure private key storage (cold wallet)
 - ✅ Air-gapped transaction signing
 - ✅ Blockchain connectivity (hot wallet)
@@ -130,4 +139,3 @@ This is the same security model used by hardware wallets like Ledger and Trezor,
 ---
 
 **Congratulations!** You're now using an air-gapped hardware wallet system. 🎉
-
