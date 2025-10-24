@@ -22,6 +22,7 @@ import {
 } from "@/services/ethereum";
 import { ethers } from "ethers";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { serializeTransaction } from "@/utils/transaction-serializer";
 
 type Step =
   | "input"
@@ -139,7 +140,7 @@ export default function SendScreen() {
             </ThemedText>
 
             <QRDisplay
-              data={JSON.stringify(unsignedTx)}
+              data={serializeTransaction(unsignedTx)}
               title="Transaction to Sign"
               size={280}
             />
