@@ -9,6 +9,7 @@ import { QRDisplay } from "@/components/QRDisplay";
 import { signTransaction, loadPrivateKey } from "@/services/wallet";
 import { ethers } from "ethers";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { deserializeTransaction } from "@/utils/transaction-serializer";
 
 export default function SignScreen() {
   const [scanning, setScanning] = useState(false);
@@ -20,10 +21,11 @@ export default function SignScreen() {
 
   const handleScan = async (data: string) => {
     try {
-      const tx = JSON.parse(data);
+      const tx = deserializeTransaction(data);
       setUnsignedTx(tx);
       setScanning(false);
-    } catch {
+    } catch (error) {
+      console.error("Error parsing transaction:", error);
       Alert.alert("Error", "Invalid transaction QR code");
       setScanning(false);
     }
