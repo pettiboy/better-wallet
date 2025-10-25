@@ -9,20 +9,26 @@ import { QRDisplay } from "@/components/QRDisplay";
 import { signTransaction, loadPrivateKey } from "@/services/wallet";
 import { ethers } from "ethers";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { deserializeTransaction } from "@/utils/transaction-serializer";
+import {
+  deserializeTransaction,
+  serializeSignedTransaction,
+  SerializedTransaction,
+} from "@/utils/transaction-serializer";
 
 export default function SignScreen() {
   const [scanning, setScanning] = useState(false);
-  const [unsignedTx, setUnsignedTx] =
-    useState<ethers.TransactionRequest | null>(null);
+  const [transactionData, setTransactionData] =
+    useState<SerializedTransaction | null>(null);
   const [signedTx, setSignedTx] = useState<string | null>(null);
 
   const overlayColor = useThemeColor({}, "overlay");
+  const warningColor = useThemeColor({}, "warning");
+  const infoColor = useThemeColor({}, "info");
 
   const handleScan = async (data: string) => {
     try {
-      const tx = deserializeTransaction(data);
-      setUnsignedTx(tx);
+      const parsed = deserializeTransaction(data);
+      setTransactionData(parsed);
       setScanning(false);
     } catch (error) {
       console.error("Error parsing transaction:", error);
@@ -32,7 +38,7 @@ export default function SignScreen() {
   };
 
   const handleSign = async () => {
-    if (!unsignedTx) return;
+    if (!transactionData) return;
 
     try {
       const privateKey = await loadPrivateKey();
@@ -45,8 +51,17 @@ export default function SignScreen() {
         return;
       }
 
-      const signed = await signTransaction(unsignedTx, privateKey);
-      setSignedTx(signed);
+      const signed = await signTransaction(
+        transactionData.transaction,
+        privateKey
+      );
+
+      // Serialize signed transaction with metadata for routing
+      const serialized = serializeSignedTransaction(
+        signed,
+        transactionData.metadata
+      );
+      setSignedTx(serialized);
 
       Alert.alert(
         "Success",
@@ -59,7 +74,7 @@ export default function SignScreen() {
   };
 
   const handleReset = () => {
-    setUnsignedTx(null);
+    setTransactionData(null);
     setSignedTx(null);
   };
 
@@ -96,7 +111,11 @@ export default function SignScreen() {
     );
   }
 
-  if (unsignedTx) {
+  if (transactionData) {
+    const { transaction: unsignedTx, metadata } = transactionData;
+    const isWalletConnect = metadata.source === "walletconnect";
+    const hasData = unsignedTx.data && unsignedTx.data !== "0x";
+
     return (
       <SafeThemedView>
         <ScrollView
@@ -108,12 +127,72 @@ export default function SignScreen() {
               Review Transaction
             </ThemedText>
 
+            {/* Transaction Source */}
+            <View
+              style={[
+                styles.sourceContainer,
+                { backgroundColor: isWalletConnect ? infoColor : overlayColor },
+              ]}
+            >
+              <ThemedText style={styles.sourceLabel}>
+                {isWalletConnect ? "📱 dApp Request" : "✏️ Manual Transaction"}
+              </ThemedText>
+            </View>
+
+            {/* dApp Information (if from WalletConnect) */}
+            {isWalletConnect && metadata.dappMetadata && (
+              <View
+                style={[
+                  styles.dappContainer,
+                  { backgroundColor: overlayColor },
+                ]}
+              >
+                <ThemedText type="subtitle" style={styles.dappTitle}>
+                  dApp Information
+                </ThemedText>
+                <DetailRow label="Name" value={metadata.dappMetadata.name} />
+                <DetailRow label="URL" value={metadata.dappMetadata.url} />
+                {metadata.dappMetadata.description && (
+                  <View style={styles.descriptionContainer}>
+                    <ThemedText style={styles.detailLabel}>
+                      Description:
+                    </ThemedText>
+                    <ThemedText style={styles.description}>
+                      {metadata.dappMetadata.description}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Contract Interaction Warning */}
+            {hasData && (
+              <View
+                style={[
+                  styles.warningContainer,
+                  { backgroundColor: warningColor },
+                ]}
+              >
+                <ThemedText style={styles.warningText}>
+                  ⚠️ Contract Interaction
+                </ThemedText>
+                <ThemedText style={styles.warningDescription}>
+                  This transaction includes contract data. Verify the recipient
+                  and dApp before signing.
+                </ThemedText>
+              </View>
+            )}
+
+            {/* Transaction Details */}
             <View
               style={[
                 styles.detailsContainer,
                 { backgroundColor: overlayColor },
               ]}
             >
+              <ThemedText type="subtitle" style={styles.detailsTitle}>
+                Transaction Details
+              </ThemedText>
               <DetailRow label="To" value={unsignedTx.to as string} />
               <DetailRow
                 label="Amount"
@@ -127,6 +206,12 @@ export default function SignScreen() {
                 label="Chain ID"
                 value={unsignedTx.chainId?.toString() || "N/A"}
               />
+              {hasData && (
+                <DetailRow
+                  label="Data"
+                  value={`${(unsignedTx.data as string).substring(0, 20)}...`}
+                />
+              )}
             </View>
 
             <View style={styles.buttonContainer}>
@@ -212,10 +297,53 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     opacity: 0.7,
   },
+  sourceContainer: {
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  sourceLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  dappContainer: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  dappTitle: {
+    marginBottom: 12,
+  },
+  descriptionContainer: {
+    marginTop: 8,
+  },
+  description: {
+    fontSize: 14,
+    marginTop: 4,
+    opacity: 0.8,
+  },
+  warningContainer: {
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  warningText: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  warningDescription: {
+    fontSize: 14,
+    opacity: 0.9,
+  },
   detailsContainer: {
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
+  },
+  detailsTitle: {
+    marginBottom: 12,
   },
   detailRow: {
     flexDirection: "row",
