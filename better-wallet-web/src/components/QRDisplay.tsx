@@ -1,4 +1,4 @@
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG } from "qrcode.react";
 
 interface QRDisplayProps {
   data: string;
@@ -14,18 +14,47 @@ export function QRDisplay({
   description,
 }: QRDisplayProps) {
   return (
-    <div className="flex flex-col items-center p-5">
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        padding: "1rem",
+      }}
+    >
       {title && (
-        <h3 className="text-lg font-semibold mb-2 text-center text-gray-900 dark:text-white">
+        <h3
+          style={{
+            fontSize: "1.25rem",
+            fontWeight: 900,
+            marginBottom: "0.5rem",
+            textAlign: "center",
+            color: "var(--color-black)",
+          }}
+        >
           {title}
         </h3>
       )}
       {description && (
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 text-center">
+        <p
+          style={{
+            fontSize: "0.875rem",
+            color: "var(--color-gray-800)",
+            marginBottom: "1rem",
+            textAlign: "center",
+          }}
+        >
           {description}
         </p>
       )}
-      <div className="p-5 bg-white rounded-xl shadow-lg">
+      <div
+        style={{
+          padding: "1.25rem",
+          backgroundColor: "var(--color-white)",
+          border: "4px solid var(--color-black)",
+          boxShadow: "8px 8px 0 var(--color-black)",
+        }}
+      >
         <QRCodeSVG
           value={data}
           size={size}

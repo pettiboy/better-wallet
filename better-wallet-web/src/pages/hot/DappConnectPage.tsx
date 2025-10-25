@@ -49,7 +49,7 @@ export function DappConnectPage() {
       const confirmed = window.confirm(
         `${pendingProposal.params.proposer.metadata.name} wants to connect to your wallet. Do you want to approve this connection?`
       );
-      
+
       if (confirmed) {
         handleApproveSession();
       } else {
@@ -154,8 +154,7 @@ export function DappConnectPage() {
 
     try {
       // Deserialize signed transaction with metadata
-      const { signedTransaction } =
-        deserializeSignedTransaction(data);
+      const { signedTransaction } = deserializeSignedTransaction(data);
 
       // Broadcast to network FIRST to get the transaction hash
       const hash = await broadcastTransaction(signedTransaction);
@@ -165,9 +164,7 @@ export function DappConnectPage() {
       // This is what eth_sendTransaction expects as a return value
       await respondTransaction(hash);
 
-      alert(
-        `Transaction sent to dApp!\nHash: ${hash.substring(0, 10)}...`
-      );
+      alert(`Transaction sent to dApp!\nHash: ${hash.substring(0, 10)}...`);
 
       // Reset state
       setCurrentRequest(null);
@@ -183,14 +180,36 @@ export function DappConnectPage() {
 
   if (!initialized) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-            <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              Initializing WalletConnect...
-            </h1>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-          </div>
+      <div
+        style={{
+          flex: 1,
+          backgroundColor: "var(--color-bg-main)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "1.5rem",
+          paddingBottom: "6rem",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "var(--color-white)",
+            border: "4px solid var(--color-black)",
+            boxShadow: "8px 8px 0 var(--color-black)",
+            padding: "2rem",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 900,
+              marginBottom: "1rem",
+            }}
+          >
+            Initializing WalletConnect...
+          </h1>
+          <div className="spinner" style={{ margin: "0 auto" }}></div>
         </div>
       </div>
     );
@@ -221,35 +240,79 @@ export function DappConnectPage() {
     }
 
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-            <h1 className="text-2xl font-bold text-center mb-4 text-gray-900 dark:text-white">
+      <div
+        style={{
+          flex: 1,
+          backgroundColor: "var(--color-bg-main)",
+          overflowY: "auto",
+          padding: "1.5rem",
+          paddingBottom: "6rem",
+        }}
+      >
+        <div style={{ maxWidth: "400px", margin: "0 auto" }}>
+          <div
+            style={{
+              backgroundColor: "var(--color-white)",
+              border: "4px solid var(--color-black)",
+              boxShadow: "8px 8px 0 var(--color-black)",
+              padding: "2rem",
+            }}
+          >
+            <h1
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: 900,
+                textAlign: "center",
+                marginBottom: "1rem",
+              }}
+            >
               dApp Transaction Request
             </h1>
 
             {dappMetadata && (
-              <div className="bg-blue-100 dark:bg-blue-900 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">
+              <div
+                style={{
+                  backgroundColor: "var(--color-info)",
+                  border: "3px solid var(--color-black)",
+                  padding: "1rem",
+                  marginBottom: "1.5rem",
+                  color: "var(--color-white)",
+                }}
+              >
+                <h3 style={{ fontWeight: 900, marginBottom: "0.25rem" }}>
                   {dappMetadata.name}
                 </h3>
-                <p className="text-sm text-blue-600 dark:text-blue-300">
+                <p style={{ fontSize: "0.875rem", fontWeight: 700 }}>
                   {dappMetadata.url}
                 </p>
               </div>
             )}
 
-            <p className="text-center text-gray-600 dark:text-gray-300 mb-6">
+            <p
+              style={{
+                textAlign: "center",
+                color: "var(--color-gray-800)",
+                marginBottom: "1.5rem",
+                fontWeight: 500,
+              }}
+            >
               Show this QR code to your cold wallet for signing
             </p>
 
             <QRDisplay
               data={serializedTx}
               title="Transaction from dApp"
-              size={280}
+              size={250}
             />
 
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
+            <div
+              style={{
+                backgroundColor: "var(--color-gray-100)",
+                border: "3px solid var(--color-black)",
+                padding: "1rem",
+                marginBottom: "1.5rem",
+              }}
+            >
               <DetailRow
                 label="To"
                 value={currentRequest.transaction.to || ""}
@@ -263,19 +326,21 @@ export function DappConnectPage() {
               <DetailRow label="Chain" value={currentRequest.chainId} />
             </div>
 
-            <div className="space-y-3">
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
               <Button
                 title="Scan Signed Transaction"
                 variant="primary"
                 onClick={() => setStep("scan-signed")}
-                className="w-full"
+                fullWidth
               />
 
               <Button
                 title="Reject Transaction"
                 variant="danger"
                 onClick={handleRejectTransaction}
-                className="w-full"
+                fullWidth
               />
             </div>
           </div>
@@ -298,17 +363,45 @@ export function DappConnectPage() {
   // Broadcasting
   if (step === "broadcasting") {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-            <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-              Broadcasting...
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Sending transaction to dApp
-            </p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-          </div>
+      <div
+        style={{
+          flex: 1,
+          backgroundColor: "var(--color-bg-main)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "1.5rem",
+          paddingBottom: "6rem",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "var(--color-white)",
+            border: "4px solid var(--color-black)",
+            boxShadow: "8px 8px 0 var(--color-black)",
+            padding: "2rem",
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 900,
+              marginBottom: "1rem",
+            }}
+          >
+            Broadcasting...
+          </h1>
+          <p
+            style={{
+              color: "var(--color-gray-800)",
+              marginBottom: "1.5rem",
+              fontWeight: 500,
+            }}
+          >
+            Sending transaction to dApp
+          </p>
+          <div className="spinner" style={{ margin: "0 auto" }}></div>
         </div>
       </div>
     );
@@ -331,32 +424,74 @@ export function DappConnectPage() {
   // Sessions list
   if (step === "sessions" && sessions.length > 0) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-            <h1 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
-              Connected dApps
+      <div
+        style={{
+          flex: 1,
+          backgroundColor: "var(--color-bg-main)",
+          overflowY: "auto",
+          padding: "1.5rem",
+          paddingBottom: "6rem",
+        }}
+      >
+        <div style={{ maxWidth: "400px", margin: "0 auto" }}>
+          <div
+            style={{
+              backgroundColor: "var(--color-white)",
+              border: "4px solid var(--color-black)",
+              boxShadow: "8px 8px 0 var(--color-black)",
+              padding: "2rem",
+            }}
+          >
+            <h1
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: 900,
+                textAlign: "center",
+                marginBottom: "1.5rem",
+              }}
+            >
+              🔌 Connected dApps
             </h1>
 
-            <div className="space-y-3 mb-6">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+                marginBottom: "1.5rem",
+              }}
+            >
               {sessions.map((session) => (
                 <div
                   key={session.topic}
-                  className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex justify-between items-center"
+                  style={{
+                    backgroundColor: "var(--color-gray-100)",
+                    border: "3px solid var(--color-black)",
+                    padding: "1rem",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: "1rem",
+                  }}
                 >
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontWeight: 900, marginBottom: "0.25rem" }}>
                       {session.peer.metadata.name}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <p
+                      style={{
+                        fontSize: "0.875rem",
+                        color: "var(--color-gray-800)",
+                        fontWeight: 500,
+                      }}
+                    >
                       {session.peer.metadata.url}
                     </p>
                   </div>
                   <Button
-                    title="Disconnect"
+                    title="✕"
                     variant="danger"
                     onClick={() => handleDisconnect(session.topic)}
-                    className="ml-4"
                   />
                 </div>
               ))}
@@ -364,9 +499,10 @@ export function DappConnectPage() {
 
             <Button
               title="Connect New dApp"
+              icon="+"
               variant="primary"
               onClick={() => setStep("connect")}
-              className="w-full"
+              fullWidth
             />
           </div>
         </div>
@@ -376,11 +512,33 @@ export function DappConnectPage() {
 
   // Connect screen (default)
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">
-            Connect to dApp
+    <div
+      style={{
+        flex: 1,
+        backgroundColor: "var(--color-bg-main)",
+        overflowY: "auto",
+        padding: "1.5rem",
+        paddingBottom: "6rem",
+      }}
+    >
+      <div style={{ maxWidth: "400px", margin: "0 auto" }}>
+        <div
+          style={{
+            backgroundColor: "var(--color-white)",
+            border: "4px solid var(--color-black)",
+            boxShadow: "8px 8px 0 var(--color-black)",
+            padding: "2rem",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 900,
+              textAlign: "center",
+              marginBottom: "1.5rem",
+            }}
+          >
+            🔌 Connect to dApp
           </h1>
 
           {sessions.length > 0 && (
@@ -388,41 +546,68 @@ export function DappConnectPage() {
               title={`View Connected dApps (${sessions.length})`}
               variant="secondary"
               onClick={() => setStep("sessions")}
-              className="w-full mb-4"
+              fullWidth
+              style={{ marginBottom: "1.5rem" }}
             />
           )}
 
-          <div className="mb-4">
-            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.875rem",
+                fontWeight: 900,
+                marginBottom: "0.5rem",
+                color: "var(--color-black)",
+              }}
+            >
               WalletConnect URI
             </label>
             <textarea
               value={wcUri}
               onChange={(e) => setWcUri(e.target.value)}
               placeholder="wc:..."
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               rows={3}
+              style={{
+                width: "100%",
+                resize: "none",
+              }}
             />
           </div>
 
-          <div className="space-y-3">
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+              marginBottom: "1.5rem",
+            }}
+          >
             <Button
               title="Connect"
               variant="primary"
               onClick={handlePairWithUri}
-              className="w-full"
+              fullWidth
             />
 
             <Button
               title="Scan QR Code"
+              icon="📷"
               variant="secondary"
               onClick={() => setStep("scan-uri")}
-              className="w-full"
+              fullWidth
             />
           </div>
 
-          <div className="bg-blue-100 dark:bg-blue-900 rounded-lg p-4 mt-6">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
+          <div
+            style={{
+              backgroundColor: "var(--color-info)",
+              border: "3px solid var(--color-black)",
+              padding: "1rem",
+              color: "var(--color-white)",
+            }}
+          >
+            <p style={{ fontSize: "0.875rem", fontWeight: 700, margin: 0 }}>
               💡 Scan a WalletConnect QR code from a dApp (like Uniswap,
               OpenSea) or paste the connection URI to connect.
             </p>
@@ -435,9 +620,25 @@ export function DappConnectPage() {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-start mb-2">
-      <span className="font-semibold text-gray-600 dark:text-gray-300">{label}:</span>
-      <span className="font-mono text-sm text-gray-900 dark:text-white text-right break-all ml-2">
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: "0.75rem",
+      }}
+    >
+      <span style={{ fontWeight: 900, fontSize: "0.875rem" }}>{label}:</span>
+      <span
+        style={{
+          fontFamily: "monospace",
+          fontSize: "0.875rem",
+          textAlign: "right",
+          wordBreak: "break-all",
+          marginLeft: "0.5rem",
+          fontWeight: 500,
+        }}
+      >
         {value}
       </span>
     </div>
