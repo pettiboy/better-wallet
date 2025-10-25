@@ -1,6 +1,7 @@
 import "@walletconnect/react-native-compat";
 import { Core } from "@walletconnect/core";
 import { WalletKit, WalletKitTypes } from "@reown/walletkit";
+import { SessionTypes } from "@walletconnect/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // WalletConnect Project ID - replace with your actual project ID
@@ -9,12 +10,14 @@ const PROJECT_ID =
 
 const ACTIVE_SESSIONS_KEY = "walletconnect_sessions";
 
-let walletKit: WalletKit | null = null;
+let walletKit: InstanceType<typeof WalletKit> | null = null;
 
 /**
  * Initialize WalletKit instance
  */
-export async function initWalletConnect(): Promise<WalletKit> {
+export async function initWalletConnect(): Promise<
+  InstanceType<typeof WalletKit>
+> {
   if (walletKit) {
     return walletKit;
   }
@@ -30,7 +33,7 @@ export async function initWalletConnect(): Promise<WalletKit> {
         name: "BetterWallet",
         description: "Secure 2-device wallet with offline signing",
         url: "https://betterwallet.app",
-        icons: ["https://betterwallet.app/icon.png"],
+        icons: ["https://avatars.githubusercontent.com/u/37784886"],
         redirect: {
           native: "betterwallet://",
         },
@@ -48,7 +51,7 @@ export async function initWalletConnect(): Promise<WalletKit> {
 /**
  * Get WalletKit instance (must be initialized first)
  */
-export function getWalletKit(): WalletKit | null {
+export function getWalletKit(): InstanceType<typeof WalletKit> | null {
   return walletKit;
 }
 
@@ -249,7 +252,7 @@ export async function disconnectSession(topic: string): Promise<void> {
 /**
  * Get all active sessions
  */
-export function getActiveSessions(): WalletKitTypes.SessionTypes.Struct[] {
+export function getActiveSessions(): SessionTypes.Struct[] {
   const kit = getWalletKit();
   if (!kit) {
     return [];
@@ -302,11 +305,53 @@ export function parseTransactionRequest(
 }
 
 /**
+ * Check if a method requires user interaction (transaction signing)
+ */
+export function isTransactionMethod(method: string): boolean {
+  const transactionMethods = ["eth_sendTransaction", "eth_signTransaction"];
+  return transactionMethods.includes(method);
+}
+
+/**
+ * Handle non-transaction methods automatically
+ */
+export async function handleNonTransactionMethod(
+  request: WalletKitTypes.SessionRequest
+): Promise<any> {
+  const { method, params } = request.params.request;
+
+  // Handle wallet capability queries
+  if (method === "wallet_getCapabilities") {
+    // Return empty capabilities for now
+    return {};
+  }
+
+  // Handle chain switching requests
+  if (method === "wallet_switchEthereumChain") {
+    // For now, we only support Sepolia testnet
+    // Return success if requesting Sepolia, error otherwise
+    const chainId = params[0]?.chainId;
+    if (chainId === "0xaa36a7" || chainId === "11155111") {
+      return null; // Success
+    }
+    throw new Error("Unsupported chain");
+  }
+
+  // Handle add chain requests
+  if (method === "wallet_addEthereumChain") {
+    // We don't support adding custom chains
+    throw new Error("Adding custom chains is not supported");
+  }
+
+  // Return null for other non-critical methods
+  console.log(`Auto-handling method: ${method}`);
+  return null;
+}
+
+/**
  * Get session by topic
  */
-export function getSessionByTopic(
-  topic: string
-): WalletKitTypes.SessionTypes.Struct | null {
+export function getSessionByTopic(topic: string): SessionTypes.Struct | null {
   const sessions = getActiveSessions();
   return sessions.find((session) => session.topic === topic) || null;
 }
