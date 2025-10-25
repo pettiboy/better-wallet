@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Wallet, Send, Plug, RefreshCw } from "lucide-react";
 import { Button } from "../../components/Button";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
 import { useWalletConnect } from "../../contexts/WalletConnectContext";
@@ -91,9 +92,14 @@ export function HotHomePage() {
             textAlign: "center",
             marginBottom: "2rem",
             color: "var(--color-black)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.75rem",
           }}
         >
-          💼 Wallet
+          <Wallet size={40} strokeWidth={2.5} />
+          Wallet
         </h1>
 
         {/* Balance Card */}
@@ -175,7 +181,7 @@ export function HotHomePage() {
         >
           <Button
             title="Send Transaction"
-            icon="📤"
+            icon={Send}
             variant="success"
             onClick={() => navigate("/hot/send")}
             fullWidth
@@ -185,7 +191,7 @@ export function HotHomePage() {
             title={`Connect to dApps${
               sessions.length > 0 ? ` (${sessions.length})` : ""
             }`}
-            icon="🔌"
+            icon={Plug}
             variant="primary"
             onClick={() => navigate("/hot/dapp-connect")}
             fullWidth
@@ -193,7 +199,7 @@ export function HotHomePage() {
 
           <Button
             title="Refresh Balance"
-            icon="🔄"
+            icon={RefreshCw}
             variant="secondary"
             onClick={loadBalance}
             disabled={loading}

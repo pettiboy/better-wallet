@@ -1,3 +1,5 @@
+import { type LucideIcon } from "lucide-react";
+
 interface ButtonProps {
   title: string;
   variant?: "primary" | "success" | "danger" | "warning" | "secondary";
@@ -5,7 +7,7 @@ interface ButtonProps {
   disabled?: boolean;
   className?: string;
   fullWidth?: boolean;
-  icon?: string;
+  icon?: LucideIcon;
 }
 
 export function Button({
@@ -15,7 +17,7 @@ export function Button({
   disabled = false,
   className = "",
   fullWidth = false,
-  icon,
+  icon: Icon,
 }: ButtonProps) {
   const getVariantColors = () => {
     switch (variant) {
@@ -103,7 +105,7 @@ export function Button({
         }
       }}
     >
-      {icon && <span style={{ fontSize: "1.25rem" }}>{icon}</span>}
+      {Icon && <Icon size={20} strokeWidth={2.5} />}
       <span>{title}</span>
     </button>
   );

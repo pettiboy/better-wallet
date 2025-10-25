@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Settings, Unplug, Info, Lightbulb } from "lucide-react";
 import { Button } from "../../components/Button";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
 
@@ -38,9 +39,14 @@ export function SettingsPage() {
             textAlign: "center",
             marginBottom: "2rem",
             color: "var(--color-black)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.75rem",
           }}
         >
-          ⚙️ Settings
+          <Settings size={40} strokeWidth={2.5} />
+          Settings
         </h1>
 
         {/* Connected Wallet Info */}
@@ -95,7 +101,7 @@ export function SettingsPage() {
 
           <Button
             title="Disconnect Wallet"
-            icon="🔌"
+            icon={Unplug}
             variant="danger"
             onClick={handleDisconnect}
             fullWidth
@@ -149,9 +155,13 @@ export function SettingsPage() {
               fontWeight: 900,
               marginBottom: "1rem",
               fontSize: "1.125rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
             }}
           >
-            💡 How It Works
+            <Lightbulb size={20} strokeWidth={2.5} />
+            How It Works
           </h3>
           <ul
             style={{

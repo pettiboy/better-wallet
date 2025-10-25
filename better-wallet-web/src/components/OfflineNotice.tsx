@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { WifiOff } from "lucide-react";
 
 export function OfflineNotice() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -42,9 +43,14 @@ export function OfflineNotice() {
           fontWeight: 900,
           color: "var(--color-black)",
           textAlign: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "0.5rem",
         }}
       >
-        ⚠️ You're offline. Some features may not work.
+        <WifiOff size={18} strokeWidth={2.5} />
+        You're offline. Some features may not work.
       </p>
       <style>
         {`

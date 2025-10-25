@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ethers } from "ethers";
+import { Send, CheckCircle, Lightbulb } from "lucide-react";
 import { Button } from "../../components/Button";
 import { QRDisplay } from "../../components/QRDisplay";
 import { QRScanner } from "../../components/QRScanner";
@@ -263,9 +264,14 @@ export function SendPage() {
                 textAlign: "center",
                 marginBottom: "1.5rem",
                 color: "var(--color-success)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
               }}
             >
-              ✅ Transaction Sent!
+              <CheckCircle size={28} strokeWidth={2.5} />
+              Transaction Sent!
             </h1>
 
             <div
@@ -360,9 +366,14 @@ export function SendPage() {
               fontWeight: 900,
               textAlign: "center",
               marginBottom: "1.5rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
             }}
           >
-            📤 Send Transaction
+            <Send size={28} strokeWidth={2.5} />
+            Send Transaction
           </h1>
 
           <div
@@ -426,9 +437,25 @@ export function SendPage() {
                 color: "var(--color-white)",
               }}
             >
-              <p style={{ fontSize: "0.875rem", fontWeight: 700, margin: 0 }}>
-                💡 This will create an unsigned transaction. You'll need to show
-                the QR code to your cold wallet for signing.
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  fontWeight: 700,
+                  margin: 0,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "0.5rem",
+                }}
+              >
+                <Lightbulb
+                  size={16}
+                  strokeWidth={2.5}
+                  style={{ flexShrink: 0, marginTop: "0.125rem" }}
+                />
+                <span>
+                  This will create an unsigned transaction. You'll need to show
+                  the QR code to your cold wallet for signing.
+                </span>
               </p>
             </div>
           </div>
