@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { ThemedView } from "./themed-view";
@@ -17,6 +17,11 @@ export function QRDisplay({
   title,
   description,
 }: QRDisplayProps) {
+  const [hasError, setHasError] = useState(false);
+
+  // Debug logging
+  console.log("QRDisplay - Data:", data, "Size:", size);
+
   return (
     <ThemedView style={styles.container}>
       {title && (
@@ -28,12 +33,24 @@ export function QRDisplay({
         <ThemedText style={styles.description}>{description}</ThemedText>
       )}
       <View style={styles.qrContainer}>
-        <QRCode
-          value={data}
-          size={size}
-          backgroundColor="white"
-          color="black"
-        />
+        {data && !hasError ? (
+          <QRCode
+            value={data}
+            size={size}
+            backgroundColor="white"
+            color="black"
+            onError={(error: any) => {
+              console.error("QR Code Error:", error);
+              setHasError(true);
+            }}
+          />
+        ) : hasError ? (
+          <ThemedText style={styles.errorText}>
+            QR Code failed to generate
+          </ThemedText>
+        ) : (
+          <ThemedText>No data to display</ThemedText>
+        )}
       </View>
     </ThemedView>
   );
@@ -62,5 +79,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  errorText: {
+    textAlign: "center",
+    color: "red",
+    fontSize: 14,
   },
 });

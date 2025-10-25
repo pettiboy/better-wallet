@@ -9,6 +9,7 @@ import {
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
+import { QRDisplay } from "@/components/QRDisplay";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useWallet } from "@/contexts/WalletContext";
 import { router } from "expo-router";
@@ -53,9 +54,9 @@ export default function DashboardScreen() {
     router.push("/scan-transaction");
   };
 
-  const handleSettings = () => {
-    router.push("/(tabs)/settings");
-  };
+  // const handleSettings = () => {
+  //   router.push("/(tabs)/settings");
+  // };
 
   if (showQR && address) {
     return (
@@ -70,16 +71,13 @@ export default function DashboardScreen() {
               Safe to share - Scan with your hot wallet
             </ThemedText>
 
-            {/* QR Code would go here - using QRDisplay component */}
-            <View
-              style={[
-                styles.qrPlaceholder,
-                { backgroundColor: overlayColor, borderColor },
-              ]}
-            >
-              <Text style={styles.qrText}>QR Code</Text>
-              <ThemedText style={styles.addressText}>{address}</ThemedText>
-            </View>
+            {/* QR Code */}
+            <QRDisplay
+              data={address}
+              title="Your Ethereum Address"
+              description="Scan with your hot wallet"
+              size={280}
+            />
 
             <ThemedButton
               title="Hide QR Code"
@@ -336,23 +334,6 @@ const styles = StyleSheet.create({
   securityText: {
     flex: 1,
     fontSize: 14,
-  },
-  qrPlaceholder: {
-    padding: 40,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  qrText: {
-    fontSize: 24,
-    marginBottom: 16,
-    opacity: 0.5,
-  },
-  addressText: {
-    fontFamily: "monospace",
-    fontSize: 12,
-    textAlign: "center",
   },
   hideButton: {
     width: "100%",

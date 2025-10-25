@@ -8,12 +8,11 @@ import { useWallet } from "@/contexts/WalletContext";
 import { router } from "expo-router";
 
 export default function WalletCreatedScreen() {
-  const { setWalletAddress, markSetupComplete } = useWallet();
+  const { markSetupComplete, reloadWallet } = useWallet();
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
 
   const successColor = useThemeColor({}, "success");
-  const primaryColor = useThemeColor({}, "primary");
   const overlayColor = useThemeColor({}, "overlay");
 
   useEffect(() => {
@@ -32,9 +31,10 @@ export default function WalletCreatedScreen() {
       }),
     ]).start();
 
-    // Mark setup as complete
+    // Mark setup as complete and reload wallet info
     markSetupComplete();
-  }, []);
+    reloadWallet();
+  }, [fadeAnim, markSetupComplete, reloadWallet, scaleAnim]);
 
   const handleGoToDashboard = () => {
     router.replace("/(tabs)");
@@ -106,7 +106,7 @@ export default function WalletCreatedScreen() {
         {/* Next Steps */}
         <View style={styles.nextStepsContainer}>
           <ThemedText type="subtitle" style={styles.nextStepsTitle}>
-            What's Next?
+            What&apos;s Next?
           </ThemedText>
 
           <ThemedText style={styles.nextStepItem}>

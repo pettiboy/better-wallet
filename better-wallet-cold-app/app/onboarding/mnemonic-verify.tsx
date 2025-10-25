@@ -11,7 +11,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useLocalSearchParams, router } from "expo-router";
-import { storePrivateKey, generateWallet } from "@/services/wallet";
+import { storePrivateKey } from "@/services/wallet";
+import { ethers } from "ethers";
 
 export default function MnemonicVerifyScreen() {
   const { mnemonic } = useLocalSearchParams<{ mnemonic: string }>();
@@ -74,9 +75,9 @@ export default function MnemonicVerifyScreen() {
       );
 
       if (isCorrect) {
-        // Store the wallet
-        const wallet = await generateWallet();
-        await storePrivateKey(wallet.privateKey, wallet.mnemonic);
+        // Create wallet from the verified mnemonic
+        const wallet = ethers.Wallet.fromPhrase(mnemonic);
+        await storePrivateKey(wallet.privateKey, mnemonic);
 
         // Navigate to success screen
         router.push("/onboarding/wallet-created");

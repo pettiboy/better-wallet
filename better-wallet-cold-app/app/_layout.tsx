@@ -3,7 +3,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { useEffect, useState } from "react";
@@ -20,11 +20,18 @@ export const unstable_settings = {
 
 function AppContent() {
   const [isOffline, setIsOffline] = useState<boolean | null>(null);
-  const { isLoading } = useWallet();
+  const { isLoading, isSetupComplete, hasWallet } = useWallet();
 
   useEffect(() => {
     checkOfflineStatus();
   }, []);
+
+  // Redirect to dashboard if wallet exists and setup is complete
+  useEffect(() => {
+    if (!isLoading && hasWallet && isSetupComplete && isOffline) {
+      router.replace("/(tabs)");
+    }
+  }, [isLoading, hasWallet, isSetupComplete, isOffline]);
 
   const checkOfflineStatus = async () => {
     try {
@@ -72,6 +79,19 @@ function AppContent() {
       <Stack.Screen
         name="modal"
         options={{ presentation: "modal", title: "Modal" }}
+      />
+      {/* Onboarding screens */}
+      <Stack.Screen
+        name="onboarding/mnemonic-display"
+        options={{ title: "Recovery Phrase", headerShown: false }}
+      />
+      <Stack.Screen
+        name="onboarding/mnemonic-verify"
+        options={{ title: "Verify Recovery Phrase", headerShown: false }}
+      />
+      <Stack.Screen
+        name="onboarding/wallet-created"
+        options={{ title: "Wallet Created", headerShown: false }}
       />
     </Stack>
   );
