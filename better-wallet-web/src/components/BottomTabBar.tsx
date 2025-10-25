@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 
-type Tab = "home" | "send" | "dapps";
+type Tab = "home" | "send" | "dapps" | "settings";
 
 interface TabConfig {
   id: Tab;
@@ -13,6 +13,7 @@ const tabs: TabConfig[] = [
   { id: "home", label: "Wallet", icon: "💼", path: "/hot/home" },
   { id: "send", label: "Send", icon: "📤", path: "/hot/send" },
   { id: "dapps", label: "dApps", icon: "🔌", path: "/hot/dapp-connect" },
+  { id: "settings", label: "Settings", icon: "⚙️", path: "/hot/settings" },
 ];
 
 export function BottomTabBar() {
@@ -22,6 +23,7 @@ export function BottomTabBar() {
   const getActiveTab = (): Tab => {
     if (location.pathname.includes("/hot/send")) return "send";
     if (location.pathname.includes("/hot/dapp-connect")) return "dapps";
+    if (location.pathname.includes("/hot/settings")) return "settings";
     return "home";
   };
 

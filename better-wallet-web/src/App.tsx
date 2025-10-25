@@ -15,6 +15,7 @@ import { SetupPage } from "./pages/SetupPage";
 import { HotHomePage } from "./pages/hot/HotHomePage";
 import { SendPage } from "./pages/hot/SendPage";
 import { DappConnectPage } from "./pages/hot/DappConnectPage";
+import { SettingsPage } from "./pages/hot/SettingsPage";
 import { useDeviceMode } from "./contexts/DeviceModeContext";
 import { useOnboarding } from "./contexts/OnboardingContext";
 
@@ -67,6 +68,7 @@ function AppContent() {
               <Route path="/hot/home" element={<HotHomePage />} />
               <Route path="/hot/send" element={<SendPage />} />
               <Route path="/hot/dapp-connect" element={<DappConnectPage />} />
+              <Route path="/hot/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/hot/home" replace />} />
             </>
           )}

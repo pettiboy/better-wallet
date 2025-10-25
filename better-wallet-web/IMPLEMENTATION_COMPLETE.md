@@ -24,10 +24,11 @@ The Better Wallet web application has been successfully revamped with:
 ### ✅ Bottom Tab Navigation
 
 - Persistent navigation bar at bottom
-- 3 main tabs: Wallet 💼, Send 📤, dApps 🔌
+- 4 main tabs: Wallet 💼, Send 📤, dApps 🔌, Settings ⚙️
 - Active state indication
 - Smooth navigation between sections
 - Fixed positioning with proper spacing
+- Settings tab includes wallet disconnect functionality
 
 ### ✅ PWA Support
 
@@ -44,12 +45,13 @@ The Better Wallet web application has been successfully revamped with:
 ### New Files Created
 
 1. `src/components/MobileContainer.tsx` - Mobile viewport wrapper
-2. `src/components/BottomTabBar.tsx` - Bottom navigation
+2. `src/components/BottomTabBar.tsx` - Bottom navigation with 4 tabs
 3. `src/components/OfflineNotice.tsx` - Offline indicator
-4. `public/manifest.json` - PWA manifest
-5. `public/icon-192.png` - PWA icon (small)
-6. `public/icon-512.png` - PWA icon (large)
-7. `UI_REVAMP_SUMMARY.md` - Detailed documentation
+4. `src/pages/hot/SettingsPage.tsx` - Settings page with disconnect wallet
+5. `public/manifest.json` - PWA manifest
+6. `public/icon-192.png` - PWA icon (small)
+7. `public/icon-512.png` - PWA icon (large)
+8. `UI_REVAMP_SUMMARY.md` - Detailed documentation
 
 ### Files Updated
 
@@ -119,6 +121,7 @@ npm run preview
 - Clear active state
 - Touch-friendly tap targets
 - Smooth transitions
+- Settings tab with disconnect wallet option
 
 ### 4. PWA Capabilities
 
