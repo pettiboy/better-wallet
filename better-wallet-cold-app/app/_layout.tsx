@@ -99,15 +99,13 @@ function AppContent() {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <WalletProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={DefaultTheme}>
         <SafeAreaView style={{ flex: 1 }}>
           <AppContent />
         </SafeAreaView>
-        <StatusBar style="auto" />
+        <StatusBar style="dark" />
       </ThemeProvider>
     </WalletProvider>
   );

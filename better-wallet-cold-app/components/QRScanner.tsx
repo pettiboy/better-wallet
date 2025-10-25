@@ -3,6 +3,9 @@ import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { ThemedText } from "./themed-text";
 import { ThemedView } from "./themed-view";
+import { ThemedButton } from "./themed-button";
+import { BorderWidth, Shadows } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -18,6 +21,9 @@ export function QRScanner({
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
+  const primaryColor = useThemeColor({}, "primary");
+  const borderColor = useThemeColor({}, "border");
+
   if (!permission) {
     return <ThemedView style={styles.container} />;
   }
@@ -28,9 +34,11 @@ export function QRScanner({
         <ThemedText style={styles.message}>
           Camera permission is required to scan QR codes
         </ThemedText>
-        <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>Grant Permission</Text>
-        </TouchableOpacity>
+        <ThemedButton
+          title="Grant Permission"
+          variant="primary"
+          onPress={requestPermission}
+        />
       </ThemedView>
     );
   }
@@ -39,7 +47,6 @@ export function QRScanner({
     if (scanned) return;
 
     setScanned(true);
-    // Validate that the scanned data is valid JSON or a valid format
     onScan(data);
   };
 
@@ -58,24 +65,52 @@ export function QRScanner({
           {title}
         </ThemedText>
 
-        <View style={styles.scanArea} />
+        <View
+          style={[
+            styles.scanArea,
+            {
+              borderColor,
+              borderWidth: BorderWidth.thick,
+            },
+          ]}
+        />
 
         <ThemedText style={styles.instructions}>
           Position the QR code within the frame
         </ThemedText>
 
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>Cancel</Text>
-        </TouchableOpacity>
-
-        {scanned && (
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.rescanButton}
-            onPress={() => setScanned(false)}
+            style={[
+              styles.closeButton,
+              {
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
+            onPress={onClose}
           >
-            <Text style={styles.buttonText}>Tap to Scan Again</Text>
+            <Text style={styles.closeButtonText}>CANCEL</Text>
           </TouchableOpacity>
-        )}
+
+          {scanned && (
+            <TouchableOpacity
+              style={[
+                styles.rescanButton,
+                {
+                  backgroundColor: primaryColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
+              ]}
+              onPress={() => setScanned(false)}
+            >
+              <Text style={styles.rescanButtonText}>SCAN AGAIN</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -96,61 +131,64 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    padding: 32,
   },
   title: {
     color: "white",
     marginTop: 60,
+    fontWeight: "800",
+    fontSize: 18,
   },
   scanArea: {
-    width: 250,
-    height: 250,
-    borderWidth: 2,
-    borderColor: "white",
-    borderRadius: 12,
+    width: 280,
+    height: 280,
+    borderRadius: 0,
     backgroundColor: "transparent",
   },
   instructions: {
     color: "white",
     textAlign: "center",
     marginBottom: 20,
+    fontWeight: "600",
+    fontSize: 16,
   },
   message: {
     textAlign: "center",
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: "white",
+    marginBottom: 24,
     fontSize: 16,
     fontWeight: "600",
   },
-  closeButton: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+  buttonContainer: {
+    width: "100%",
+    gap: 16,
     marginBottom: 40,
   },
+  closeButton: {
+    backgroundColor: "rgba(255,255,255,0.95)",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 0,
+    alignItems: "center",
+  },
   closeButtonText: {
-    color: "white",
+    color: "#000",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
   rescanButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    position: "absolute",
-    bottom: 120,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 0,
+    alignItems: "center",
+  },
+  rescanButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
 });

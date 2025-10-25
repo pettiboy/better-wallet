@@ -1,58 +1,45 @@
 /**
- * Ethereum-themed colors for the cold wallet app.
- * Colors inspired by Ethereum's brand colors and security-focused design.
+ * Neobrutalism design tokens for the cold wallet app.
+ * Bold colors, thick borders, and hard shadows.
  */
 
 import { Platform } from "react-native";
 
-// Ethereum brand colors
-const ethereumBlue = "#627EEA";
-const ethereumPurple = "#8B5CF6";
-const ethereumDark = "#1a1a1a";
-const ethereumLight = "#f8fafc";
+// Neobrutalism color palette
+const creamBackground = "#FFF8E7";
+const offWhite = "#FFFDF7";
+const black = "#000000";
 
-// Security-focused colors
-const successGreen = "#10B981";
-const warningOrange = "#F59E0B";
-const dangerRed = "#EF4444";
-const infoBlue = "#3B82F6";
+// Bold accent colors
+const ethereumBlue = "#4A90E2";
+const brightGreen = "#00D084";
+const brightOrange = "#FF9500";
+const brightYellow = "#FFD60A";
+const brightRed = "#FF3B30";
+const brightPurple = "#8B5CF6";
+const coolGrey = "#E8E8E8";
 
 export const Colors = {
+  // Neobrutalism uses light theme only
   light: {
-    text: "#1a1a1a",
-    background: ethereumLight,
+    text: black,
+    background: creamBackground,
     tint: ethereumBlue,
-    icon: "#6B7280",
-    tabIconDefault: "#9CA3AF",
+    icon: black,
+    tabIconDefault: black,
     tabIconSelected: ethereumBlue,
-    // Ethereum theme colors
+    // Action colors
     primary: ethereumBlue,
-    secondary: ethereumPurple,
-    success: successGreen,
-    warning: warningOrange,
-    danger: dangerRed,
-    info: infoBlue,
-    card: "#ffffff",
-    overlay: "#f1f5f9",
-    border: "#e2e8f0",
-  },
-  dark: {
-    text: "#f8fafc",
-    background: ethereumDark,
-    tint: ethereumBlue,
-    icon: "#9CA3AF",
-    tabIconDefault: "#6B7280",
-    tabIconSelected: ethereumBlue,
-    // Ethereum theme colors
-    primary: ethereumBlue,
-    secondary: ethereumPurple,
-    success: successGreen,
-    warning: warningOrange,
-    danger: dangerRed,
-    info: infoBlue,
-    card: "#1e293b",
-    overlay: "#334155",
-    border: "#475569",
+    secondary: brightPurple,
+    success: brightGreen,
+    warning: brightOrange,
+    danger: brightRed,
+    info: ethereumBlue,
+    accent: brightYellow,
+    // Layout colors
+    card: offWhite,
+    overlay: coolGrey,
+    border: black,
   },
 };
 
@@ -81,3 +68,44 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+// Neobrutalism design tokens
+export const Spacing = {
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const BorderWidth = {
+  thin: 2,
+  regular: 3,
+  thick: 4,
+  bold: 5,
+};
+
+export const Shadows = {
+  small: {
+    shadowColor: black,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  medium: {
+    shadowColor: black,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  large: {
+    shadowColor: black,
+    shadowOffset: { width: 6, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+};

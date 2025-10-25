@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Switch,
-  Alert,
-  TouchableOpacity,
-  Text,
-} from "react-native";
+import { View, StyleSheet, ScrollView, Switch, Alert } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
@@ -22,6 +14,8 @@ import {
 } from "@/services/biometric";
 import { loadMnemonic, deleteWallet } from "@/services/wallet";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function SettingsScreen() {
   const { address, resetWallet } = useWallet();
@@ -31,11 +25,13 @@ export default function SettingsScreen() {
     null
   );
   const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [isLoadingMnemonic, setIsLoadingMnemonic] = useState(false);
 
   const warningColor = useThemeColor({}, "warning");
   const overlayColor = useThemeColor({}, "overlay");
   const dangerColor = useThemeColor({}, "danger");
   const cardColor = useThemeColor({}, "card");
+  const borderColor = useThemeColor({}, "border");
 
   useEffect(() => {
     loadBiometricInfo();
@@ -78,6 +74,7 @@ export default function SettingsScreen() {
 
   const handleShowMnemonic = async () => {
     try {
+      setIsLoadingMnemonic(true);
       const mnemonicPhrase = await loadMnemonic();
       if (mnemonicPhrase) {
         setMnemonic(mnemonicPhrase);
@@ -87,6 +84,8 @@ export default function SettingsScreen() {
       }
     } catch {
       Alert.alert("Error", "Failed to load recovery phrase");
+    } finally {
+      setIsLoadingMnemonic(false);
     }
   };
 
@@ -120,37 +119,56 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeThemedView style={styles.container}>
+    <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
           <ThemedText type="title" style={styles.title}>
-            Cold Wallet Settings
+            SETTINGS
           </ThemedText>
 
           {/* Security Warning */}
           <View
-            style={[styles.warningContainer, { backgroundColor: warningColor }]}
+            style={[
+              styles.warningContainer,
+              {
+                backgroundColor: warningColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
           >
-            <Text style={styles.warningIcon}>⚠️</Text>
-            <ThemedText style={styles.warningText}>
-              KEEP THIS DEVICE OFFLINE
-            </ThemedText>
-            <ThemedText style={styles.warningSubtext}>
-              Never connect this device to the internet while storing private
-              keys
-            </ThemedText>
+            <Ionicons name="warning" size={32} color="#000" />
+            <View style={styles.warningTextContainer}>
+              <ThemedText style={styles.warningText}>
+                KEEP THIS DEVICE OFFLINE
+              </ThemedText>
+              <ThemedText style={styles.warningSubtext}>
+                Never connect this device to the internet while storing private
+                keys
+              </ThemedText>
+            </View>
           </View>
 
           {/* Wallet Address Section */}
           <View style={styles.section}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Your Address
+              YOUR ADDRESS
             </ThemedText>
             <View
-              style={[styles.addressBox, { backgroundColor: overlayColor }]}
+              style={[
+                styles.addressBox,
+                {
+                  backgroundColor: cardColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.small,
+                },
+              ]}
             >
               <ThemedText style={styles.address}>
                 {address || "Not available"}
@@ -161,13 +179,18 @@ export default function SettingsScreen() {
           {/* Security Section */}
           <View style={styles.section}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Security
+              SECURITY
             </ThemedText>
 
             <View
               style={[
                 styles.securityContainer,
-                { backgroundColor: overlayColor },
+                {
+                  backgroundColor: overlayColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.small,
+                },
               ]}
             >
               <View style={styles.securityRow}>
@@ -195,22 +218,31 @@ export default function SettingsScreen() {
               </View>
 
               {biometricInfo && !biometricInfo.isAvailable && (
-                <ThemedText
-                  style={[styles.securityWarningText, { color: dangerColor }]}
-                >
-                  ⚠️ Biometric authentication is not available on this device
-                </ThemedText>
+                <View style={styles.securityWarning}>
+                  <Ionicons name="warning" size={16} color={dangerColor} />
+                  <ThemedText
+                    style={[styles.securityWarningText, { color: dangerColor }]}
+                  >
+                    Biometric authentication is not available on this device
+                  </ThemedText>
+                </View>
               )}
 
               {biometricInfo &&
                 biometricInfo.isAvailable &&
                 !biometricInfo.isEnrolled && (
-                  <ThemedText
-                    style={[styles.securityWarningText, { color: dangerColor }]}
-                  >
-                    ⚠️ Please set up biometric authentication in your device
-                    settings
-                  </ThemedText>
+                  <View style={styles.securityWarning}>
+                    <Ionicons name="warning" size={16} color={dangerColor} />
+                    <ThemedText
+                      style={[
+                        styles.securityWarningText,
+                        { color: dangerColor },
+                      ]}
+                    >
+                      Please set up biometric authentication in your device
+                      settings
+                    </ThemedText>
+                  </View>
                 )}
             </View>
           </View>
@@ -218,7 +250,7 @@ export default function SettingsScreen() {
           {/* Recovery Phrase Section */}
           <View style={styles.section}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Recovery Phrase
+              RECOVERY PHRASE
             </ThemedText>
 
             {!showMnemonic ? (
@@ -226,22 +258,48 @@ export default function SettingsScreen() {
                 title="Show Recovery Phrase"
                 variant="primary"
                 onPress={handleShowMnemonic}
+                loading={isLoadingMnemonic}
               />
             ) : (
               <View style={styles.mnemonicContainer}>
-                <ThemedText
-                  style={[styles.mnemonicWarning, { color: dangerColor }]}
+                <View
+                  style={[
+                    styles.mnemonicWarningBox,
+                    {
+                      backgroundColor: dangerColor,
+                      borderColor,
+                      borderWidth: BorderWidth.thin,
+                    },
+                  ]}
                 >
-                  ⚠️ Keep this safe and private!
-                </ThemedText>
+                  <Ionicons name="warning" size={20} color="#fff" />
+                  <ThemedText style={styles.mnemonicWarning}>
+                    Keep this safe and private!
+                  </ThemedText>
+                </View>
                 <View
                   style={[
                     styles.mnemonicBox,
-                    { backgroundColor: overlayColor },
+                    {
+                      backgroundColor: cardColor,
+                      borderColor,
+                      borderWidth: BorderWidth.thick,
+                      ...Shadows.medium,
+                    },
                   ]}
                 >
                   {mnemonic.split(" ").map((word, index) => (
-                    <View key={index} style={styles.mnemonicWord}>
+                    <View
+                      key={index}
+                      style={[
+                        styles.mnemonicWord,
+                        {
+                          backgroundColor: overlayColor,
+                          borderColor,
+                          borderWidth: BorderWidth.thin,
+                        },
+                      ]}
+                    >
                       <ThemedText style={styles.mnemonicWordNumber}>
                         {index + 1}.
                       </ThemedText>
@@ -264,7 +322,7 @@ export default function SettingsScreen() {
           {/* Factory Reset Section */}
           <View style={styles.section}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Danger Zone
+              DANGER ZONE
             </ThemedText>
             <ThemedButton
               title="Factory Reset"
@@ -279,10 +337,18 @@ export default function SettingsScreen() {
           {/* App Info */}
           <View style={styles.section}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              App Information
+              APP INFORMATION
             </ThemedText>
             <View
-              style={[styles.infoContainer, { backgroundColor: overlayColor }]}
+              style={[
+                styles.infoContainer,
+                {
+                  backgroundColor: overlayColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.small,
+                },
+              ]}
             >
               <ThemedText style={styles.infoItem}>Version: 1.0.0</ThemedText>
               <ThemedText style={styles.infoItem}>
@@ -308,54 +374,58 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
-    paddingBottom: 100, // Extra padding for tab bar
+    padding: Spacing.md,
+    paddingBottom: 100,
   },
   content: {
     flex: 1,
   },
   title: {
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 28,
   },
   warningContainer: {
-    padding: 20,
-    borderRadius: 12,
+    flexDirection: "row",
+    padding: Spacing.md,
+    borderRadius: 0,
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
+    gap: Spacing.sm,
   },
-  warningIcon: {
-    fontSize: 32,
-    marginBottom: 8,
+  warningTextContainer: {
+    flex: 1,
   },
   warningText: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "800",
     marginBottom: 4,
-    color: "white",
   },
   warningSubtext: {
-    textAlign: "center",
-    fontSize: 14,
-    color: "white",
+    fontSize: 13,
+    fontWeight: "600",
   },
   section: {
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
+    fontWeight: "800",
+    fontSize: 16,
   },
   addressBox: {
-    padding: 12,
-    borderRadius: 8,
+    padding: Spacing.md,
+    borderRadius: 0,
   },
   address: {
     fontFamily: "monospace",
     fontSize: 12,
+    fontWeight: "700",
   },
   securityContainer: {
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 0,
+    padding: Spacing.md,
   },
   securityRow: {
     flexDirection: "row",
@@ -364,65 +434,84 @@ const styles = StyleSheet.create({
   },
   securityInfo: {
     flex: 1,
-    marginRight: 12,
+    marginRight: Spacing.sm,
   },
   securityLabel: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     marginBottom: 4,
   },
   securityDescription: {
-    fontSize: 14,
-    opacity: 0.7,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  securityWarning: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.sm,
+    gap: Spacing.xs,
   },
   securityWarningText: {
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: "center",
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
   },
   mnemonicContainer: {
-    marginTop: 8,
+    marginTop: Spacing.xs,
+  },
+  mnemonicWarningBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.sm,
+    borderRadius: 0,
+    marginBottom: Spacing.sm,
+    gap: Spacing.xs,
   },
   mnemonicWarning: {
-    textAlign: "center",
-    marginBottom: 12,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "#fff",
+    fontSize: 14,
   },
   mnemonicBox: {
-    padding: 16,
-    borderRadius: 8,
+    padding: Spacing.sm,
+    borderRadius: 0,
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: Spacing.xs,
   },
   mnemonicWord: {
-    width: "50%",
+    width: "48%",
     flexDirection: "row",
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: 0,
   },
   mnemonicWordNumber: {
-    fontWeight: "600",
-    marginRight: 6,
-    opacity: 0.5,
+    fontWeight: "800",
+    marginRight: Spacing.xs,
+    fontSize: 13,
   },
   mnemonicWordText: {
     fontFamily: "monospace",
+    fontWeight: "700",
+    fontSize: 13,
   },
   marginTop: {
-    marginTop: 16,
+    marginTop: Spacing.md,
   },
   resetWarning: {
-    marginTop: 8,
-    fontSize: 12,
-    opacity: 0.7,
+    marginTop: Spacing.sm,
+    fontSize: 13,
+    fontWeight: "600",
     textAlign: "center",
   },
   infoContainer: {
-    padding: 16,
-    borderRadius: 8,
+    padding: Spacing.md,
+    borderRadius: 0,
   },
   infoItem: {
     marginBottom: 4,
     fontSize: 14,
+    fontWeight: "600",
   },
 });

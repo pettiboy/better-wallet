@@ -2,23 +2,33 @@ import { Tabs } from "expo-router";
 import React from "react";
 
 import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Colors } from "@/constants/theme";
+import { Colors, BorderWidth } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} edges={["left", "right"]}>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+          tabBarActiveTintColor: Colors.light.tint,
+          tabBarInactiveTintColor: Colors.light.tabIconDefault,
           headerShown: false,
           tabBarButton: HapticTab,
           tabBarStyle: {
-            paddingBottom: 0, // Let SafeAreaView handle the bottom padding
+            paddingBottom: 8,
+            paddingTop: 8,
+            height: 64,
+            borderTopWidth: BorderWidth.thick,
+            borderTopColor: Colors.light.border,
+            backgroundColor: Colors.light.background,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: "700",
           },
         }}
       >
@@ -26,8 +36,12 @@ export default function TabLayout() {
           name="index"
           options={{
             title: "Dashboard",
-            tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="house.fill" color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? "home" : "home-outline"}
+                size={26}
+                color={color}
+              />
             ),
           }}
         />
@@ -35,8 +49,12 @@ export default function TabLayout() {
           name="settings"
           options={{
             title: "Settings",
-            tabBarIcon: ({ color }) => (
-              <IconSymbol size={28} name="gear" color={color} />
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? "settings" : "settings-outline"}
+                size={26}
+                color={color}
+              />
             ),
           }}
         />

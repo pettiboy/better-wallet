@@ -3,6 +3,8 @@ import { View, StyleSheet } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { ThemedView } from "./themed-view";
 import { ThemedText } from "./themed-text";
+import { BorderWidth, Shadows } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 interface QRDisplayProps {
   data: string;
@@ -18,9 +20,8 @@ export function QRDisplay({
   description,
 }: QRDisplayProps) {
   const [hasError, setHasError] = useState(false);
-
-  // Debug logging
-  console.log("QRDisplay - Data:", data, "Size:", size);
+  const borderColor = useThemeColor({}, "border");
+  const dangerColor = useThemeColor({}, "danger");
 
   return (
     <ThemedView style={styles.container}>
@@ -32,7 +33,16 @@ export function QRDisplay({
       {description && (
         <ThemedText style={styles.description}>{description}</ThemedText>
       )}
-      <View style={styles.qrContainer}>
+      <View
+        style={[
+          styles.qrContainer,
+          {
+            borderColor,
+            borderWidth: BorderWidth.thick,
+            ...Shadows.large,
+          },
+        ]}
+      >
         {data && !hasError ? (
           <QRCode
             value={data}
@@ -45,7 +55,7 @@ export function QRDisplay({
             }}
           />
         ) : hasError ? (
-          <ThemedText style={styles.errorText}>
+          <ThemedText style={[styles.errorText, { color: dangerColor }]}>
             QR Code failed to generate
           </ThemedText>
         ) : (
@@ -62,27 +72,23 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    marginBottom: 8,
+    marginBottom: 12,
     textAlign: "center",
+    fontWeight: "700",
   },
   description: {
-    marginBottom: 16,
+    marginBottom: 24,
     textAlign: "center",
-    opacity: 0.7,
+    fontSize: 14,
   },
   qrContainer: {
     padding: 20,
     backgroundColor: "white",
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderRadius: 0,
   },
   errorText: {
     textAlign: "center",
-    color: "red",
     fontSize: 14,
+    fontWeight: "600",
   },
 });

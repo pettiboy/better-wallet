@@ -1,31 +1,48 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function WelcomeScreen() {
   const primaryColor = useThemeColor({}, "primary");
   const overlayColor = useThemeColor({}, "overlay");
-  const cardColor = useThemeColor({}, "card");
+  const warningColor = useThemeColor({}, "warning");
+  const borderColor = useThemeColor({}, "border");
 
   const handleCreateWallet = () => {
     router.push("/onboarding/mnemonic-display");
   };
 
   return (
-    <SafeThemedView style={styles.container}>
-      <View style={styles.content}>
+    <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Ethereum Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: primaryColor }]}>
-          <Text style={styles.ethereumIcon}>Ξ</Text>
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: primaryColor,
+              borderColor,
+              borderWidth: BorderWidth.thick,
+              ...Shadows.large,
+            },
+          ]}
+        >
+          <MaterialCommunityIcons name="ethereum" size={64} color="white" />
         </View>
 
         {/* Main Title */}
         <ThemedText type="title" style={styles.title}>
-          Ethereum Cold Wallet
+          ETHEREUM COLD WALLET
         </ThemedText>
 
         {/* Subtitle */}
@@ -35,35 +52,47 @@ export default function WelcomeScreen() {
 
         {/* Security Features */}
         <View
-          style={[styles.featuresContainer, { backgroundColor: overlayColor }]}
+          style={[
+            styles.featuresContainer,
+            {
+              backgroundColor: overlayColor,
+              borderColor,
+              borderWidth: BorderWidth.thick,
+              ...Shadows.medium,
+            },
+          ]}
         >
           <ThemedText type="subtitle" style={styles.featuresTitle}>
-            Security Features
+            SECURITY FEATURES
           </ThemedText>
 
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🔒</Text>
+            <Ionicons name="lock-closed" size={24} color="#000" />
             <ThemedText style={styles.featureText}>
               Completely offline operation
             </ThemedText>
           </View>
 
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🛡️</Text>
+            <MaterialCommunityIcons
+              name="shield-check"
+              size={24}
+              color="#000"
+            />
             <ThemedText style={styles.featureText}>
               Private keys never leave this device
             </ThemedText>
           </View>
 
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>📱</Text>
+            <Ionicons name="phone-portrait" size={24} color="#000" />
             <ThemedText style={styles.featureText}>
               Sign transactions via QR codes
             </ThemedText>
           </View>
 
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🔐</Text>
+            <Ionicons name="finger-print" size={24} color="#000" />
             <ThemedText style={styles.featureText}>
               Biometric authentication protection
             </ThemedText>
@@ -71,8 +100,23 @@ export default function WelcomeScreen() {
         </View>
 
         {/* Security Warning */}
-        <View style={[styles.warningContainer, { backgroundColor: cardColor }]}>
-          <Text style={styles.warningIcon}>⚠️</Text>
+        <View
+          style={[
+            styles.warningContainer,
+            {
+              backgroundColor: warningColor,
+              borderColor,
+              borderWidth: BorderWidth.thick,
+              ...Shadows.medium,
+            },
+          ]}
+        >
+          <Ionicons
+            name="warning"
+            size={28}
+            color="#000"
+            style={styles.warningIcon}
+          />
           <ThemedText style={styles.warningText}>
             Keep this device offline at all times for maximum security
           </ThemedText>
@@ -91,7 +135,7 @@ export default function WelcomeScreen() {
           Your wallet will be generated with a 12-word recovery phrase. Write it
           down and store it safely offline.
         </ThemedText>
-      </View>
+      </ScrollView>
     </SafeThemedView>
   );
 }
@@ -100,92 +144,89 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: Spacing.lg,
+    paddingTop: Spacing.xxl,
+    paddingBottom: Spacing.xxl,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 0,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  ethereumIcon: {
-    fontSize: 48,
-    color: "white",
-    fontWeight: "bold",
+    marginBottom: Spacing.xl,
   },
   title: {
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 28,
   },
   subtitle: {
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: Spacing.xl,
     lineHeight: 24,
-    opacity: 0.8,
+    fontSize: 16,
+    fontWeight: "500",
+    paddingHorizontal: Spacing.md,
   },
   featuresContainer: {
-    padding: 24,
-    borderRadius: 16,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
     width: "100%",
-    maxWidth: 400,
   },
   featuresTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 18,
   },
   featureItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
-  },
-  featureIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    width: 24,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   featureText: {
     flex: 1,
-    lineHeight: 20,
+    lineHeight: 22,
+    fontSize: 15,
+    fontWeight: "600",
   },
   warningContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 32,
+    padding: Spacing.md,
+    borderRadius: 0,
+    marginBottom: Spacing.xl,
     width: "100%",
-    maxWidth: 400,
+    gap: Spacing.sm,
   },
   warningIcon: {
-    fontSize: 20,
-    marginRight: 12,
+    marginRight: Spacing.xs,
   },
   warningText: {
     flex: 1,
     lineHeight: 20,
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 14,
   },
   createButton: {
     width: "100%",
-    maxWidth: 300,
-    marginBottom: 16,
+    marginBottom: Spacing.md,
   },
   infoText: {
     textAlign: "center",
     lineHeight: 20,
-    opacity: 0.7,
-    maxWidth: 350,
+    fontSize: 13,
+    fontWeight: "500",
   },
 });

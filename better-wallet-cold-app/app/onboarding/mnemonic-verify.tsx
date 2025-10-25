@@ -13,6 +13,8 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import { useLocalSearchParams, router } from "expo-router";
 import { storePrivateKey } from "@/services/wallet";
 import { ethers } from "ethers";
+import { SafeThemedView } from "@/components/safe-themed-view";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function MnemonicVerifyScreen() {
   const { mnemonic } = useLocalSearchParams<{ mnemonic: string }>();
@@ -26,11 +28,11 @@ export default function MnemonicVerifyScreen() {
   const overlayColor = useThemeColor({}, "overlay");
   const successColor = useThemeColor({}, "success");
   const borderColor = useThemeColor({}, "border");
+  const cardColor = useThemeColor({}, "card");
 
   useEffect(() => {
     if (mnemonic) {
       const words = mnemonic.split(" ");
-      // Create shuffled words with original indices to handle duplicates
       const shuffled = words
         .map((word, index) => ({ word, originalIndex: index }))
         .sort(() => Math.random() - 0.5);
@@ -45,7 +47,6 @@ export default function MnemonicVerifyScreen() {
     );
 
     if (isSelected) {
-      // Remove word if already selected
       setSelectedWords((prev) =>
         prev.filter(
           (w, index) =>
@@ -53,7 +54,6 @@ export default function MnemonicVerifyScreen() {
         )
       );
     } else {
-      // Add word if not selected and we haven't reached 12 words
       if (selectedWords.length < 12) {
         setSelectedWords((prev) => [...prev, wordItem.word]);
       }
@@ -75,14 +75,10 @@ export default function MnemonicVerifyScreen() {
       );
 
       if (isCorrect) {
-        // Create wallet from the verified mnemonic
         const wallet = ethers.Wallet.fromPhrase(mnemonic);
         await storePrivateKey(wallet.privateKey, mnemonic);
-
-        // Navigate to success screen
         router.push("/onboarding/wallet-created");
       } else {
-        // Show shake animation and reset
         triggerShakeAnimation();
         setSelectedWords([]);
         Alert.alert(
@@ -132,34 +128,30 @@ export default function MnemonicVerifyScreen() {
     return [
       styles.wordButton,
       {
-        backgroundColor: isSelected ? successColor : overlayColor,
-        borderColor: isSelected ? successColor : borderColor,
+        backgroundColor: isSelected ? successColor : cardColor,
+        borderColor,
+        borderWidth: BorderWidth.thick,
+        ...Shadows.small,
       },
-    ];
-  };
-
-  const getSelectedWordStyle = (word: string, index: number) => {
-    const isCorrect = selectedWords[index] === word;
-    return [
-      styles.selectedWord,
-      {
-        backgroundColor: isCorrect ? successColor : overlayColor,
-        borderColor: isCorrect ? successColor : borderColor,
-      },
+      isSelected && styles.wordButtonSelected,
     ];
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
+    <SafeThemedView style={styles.container} edges={["top"]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <ThemedText type="title" style={styles.title}>
-          Verify Your Recovery Phrase
+          VERIFY RECOVERY PHRASE
         </ThemedText>
 
         <ThemedText style={styles.subtitle}>
-          Tap the words in the correct order to verify you&apos;ve written them
-          down correctly.
+          Tap the words in the correct order to verify you've written them down
+          correctly.
         </ThemedText>
 
         {/* Progress */}
@@ -167,7 +159,15 @@ export default function MnemonicVerifyScreen() {
           <ThemedText style={styles.progressText}>
             Word {selectedWords.length} of 12
           </ThemedText>
-          <View style={styles.progressBar}>
+          <View
+            style={[
+              styles.progressBar,
+              {
+                borderColor,
+                borderWidth: BorderWidth.thin,
+              },
+            ]}
+          >
             <View
               style={[
                 styles.progressFill,
@@ -184,12 +184,17 @@ export default function MnemonicVerifyScreen() {
         <Animated.View
           style={[
             styles.selectedContainer,
-            { backgroundColor: overlayColor, borderColor },
+            {
+              backgroundColor: overlayColor,
+              borderColor,
+              borderWidth: BorderWidth.thick,
+              ...Shadows.medium,
+            },
             { transform: [{ translateX: shakeAnimation }] },
           ]}
         >
           <ThemedText type="subtitle" style={styles.selectedTitle}>
-            Selected Words:
+            SELECTED WORDS:
           </ThemedText>
 
           <View style={styles.selectedWordsGrid}>
@@ -197,10 +202,16 @@ export default function MnemonicVerifyScreen() {
               <View key={index} style={styles.selectedWordSlot}>
                 <ThemedText style={styles.wordNumber}>{index + 1}.</ThemedText>
                 <View
-                  style={getSelectedWordStyle(
-                    selectedWords[index] || "",
-                    index
-                  )}
+                  style={[
+                    styles.selectedWord,
+                    {
+                      backgroundColor: selectedWords[index]
+                        ? successColor
+                        : cardColor,
+                      borderColor,
+                      borderWidth: BorderWidth.thin,
+                    },
+                  ]}
                 >
                   <ThemedText style={styles.selectedWordText}>
                     {selectedWords[index] || "___"}
@@ -214,47 +225,62 @@ export default function MnemonicVerifyScreen() {
         {/* Word Selection */}
         <View style={styles.wordSelectionContainer}>
           <ThemedText type="subtitle" style={styles.selectionTitle}>
-            Tap words in order:
+            TAP WORDS IN ORDER:
           </ThemedText>
 
           <View style={styles.wordsGrid}>
-            {shuffledWords.map((wordItem, index) => (
-              <TouchableOpacity
-                key={`${wordItem.word}-${wordItem.originalIndex}`}
-                style={getWordButtonStyle(index)}
-                onPress={() => handleWordPress(index)}
-                disabled={selectedWords.some(
-                  (w, i) => w === wordItem.word && i === wordItem.originalIndex
-                )}
-              >
-                <ThemedText style={styles.wordText}>{wordItem.word}</ThemedText>
-              </TouchableOpacity>
-            ))}
+            {shuffledWords.map((wordItem, index) => {
+              const isSelected = selectedWords.some(
+                (w, i) => w === wordItem.word && i === wordItem.originalIndex
+              );
+              return (
+                <TouchableOpacity
+                  key={`${wordItem.word}-${wordItem.originalIndex}`}
+                  style={getWordButtonStyle(index)}
+                  onPress={() => handleWordPress(index)}
+                  disabled={isSelected}
+                  activeOpacity={0.7}
+                >
+                  <ThemedText
+                    style={[styles.wordText, isSelected && { color: "#fff" }]}
+                  >
+                    {wordItem.word}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
+      </ScrollView>
 
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <ThemedButton
-            title="Verify Recovery Phrase"
-            variant="primary"
-            onPress={handleVerify}
-            disabled={selectedWords.length !== 12 || isVerifying}
-            style={[
-              styles.verifyButton,
-              selectedWords.length !== 12 && styles.disabledButton,
-            ]}
-          />
+      {/* Action Buttons */}
+      <View
+        style={[
+          styles.buttonContainer,
+          {
+            backgroundColor: useThemeColor({}, "background"),
+            borderTopColor: borderColor,
+            borderTopWidth: BorderWidth.thick,
+          },
+        ]}
+      >
+        <ThemedButton
+          title="Verify Recovery Phrase"
+          variant="success"
+          onPress={handleVerify}
+          disabled={selectedWords.length !== 12}
+          loading={isVerifying}
+          style={styles.verifyButton}
+        />
 
-          <ThemedButton
-            title="Start Over"
-            variant="secondary"
-            onPress={() => setSelectedWords([])}
-            style={styles.resetButton}
-          />
-        </View>
+        <ThemedButton
+          title="Start Over"
+          variant="secondary"
+          onPress={() => setSelectedWords([])}
+          style={styles.resetButton}
+        />
       </View>
-    </ScrollView>
+    </SafeThemedView>
   );
 }
 
@@ -262,112 +288,126 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scrollView: {
     flex: 1,
-    padding: 20,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   title: {
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 24,
   },
   subtitle: {
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
     lineHeight: 22,
-    opacity: 0.8,
+    fontSize: 15,
+    fontWeight: "600",
   },
   progressContainer: {
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
   },
   progressText: {
     textAlign: "center",
-    marginBottom: 8,
-    fontWeight: "600",
+    marginBottom: Spacing.sm,
+    fontWeight: "700",
+    fontSize: 16,
   },
   progressBar: {
-    height: 4,
-    backgroundColor: "rgba(0,0,0,0.1)",
-    borderRadius: 2,
+    height: 12,
+    backgroundColor: "transparent",
+    borderRadius: 0,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 2,
+    borderRadius: 0,
   },
   selectedContainer: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 24,
+    padding: Spacing.md,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
   },
   selectedTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   selectedWordsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: Spacing.xs,
   },
   selectedWordSlot: {
     width: "48%",
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: Spacing.xs,
   },
   wordNumber: {
     fontSize: 12,
-    fontWeight: "bold",
-    marginRight: 8,
-    width: 20,
+    fontWeight: "800",
+    marginRight: Spacing.xs,
+    width: 24,
   },
   selectedWord: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: 0,
     alignItems: "center",
+    minHeight: 36,
+    justifyContent: "center",
   },
   selectedWordText: {
     fontFamily: "monospace",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "700",
   },
   wordSelectionContainer: {
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
   },
   selectionTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   wordsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: Spacing.sm,
   },
   wordButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 8,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 0,
     width: "48%",
     alignItems: "center",
+    minHeight: 44,
+    justifyContent: "center",
+  },
+  wordButtonSelected: {
+    opacity: 0.6,
   },
   wordText: {
     fontFamily: "monospace",
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   buttonContainer: {
-    gap: 12,
+    padding: Spacing.md,
+    paddingBottom: Spacing.lg,
+    gap: Spacing.sm,
   },
   verifyButton: {
     width: "100%",
-  },
-  disabledButton: {
-    opacity: 0.5,
   },
   resetButton: {
     width: "100%",
