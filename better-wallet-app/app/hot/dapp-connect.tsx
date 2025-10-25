@@ -24,8 +24,9 @@ import {
 import {
   parseTransactionRequest,
   getSessionByTopic,
+  updateTransactionNonce,
 } from "@/services/walletconnect";
-import { broadcastTransaction } from "@/services/ethereum";
+import { broadcastTransaction, getProvider } from "@/services/ethereum";
 import { ethers } from "ethers";
 
 type Step =
@@ -88,16 +89,33 @@ export default function DappConnectScreen() {
   // Handle pending transaction request
   useEffect(() => {
     if (pendingRequest) {
-      try {
-        const parsed = parseTransactionRequest(pendingRequest);
-        setCurrentRequest(parsed);
-        setStep("show-unsigned");
-      } catch (error) {
-        console.error("Failed to parse request:", error);
-        Alert.alert("Error", "Unsupported transaction request");
-      }
+      handleTransactionRequest(pendingRequest);
     }
   }, [pendingRequest]);
+
+  const handleTransactionRequest = async (request: any) => {
+    try {
+      const parsed = parseTransactionRequest(request);
+
+      // Update nonce to prevent stale nonce errors
+      const provider = getProvider();
+      const updatedTransaction = await updateTransactionNonce(
+        parsed.transaction,
+        provider
+      );
+
+      const updatedRequest = {
+        ...parsed,
+        transaction: updatedTransaction,
+      };
+
+      setCurrentRequest(updatedRequest);
+      setStep("show-unsigned");
+    } catch (error) {
+      console.error("Failed to parse request:", error);
+      Alert.alert("Error", "Unsupported transaction request");
+    }
+  };
 
   const handlePairWithUri = async () => {
     if (!wcUri.trim()) {
@@ -167,11 +185,13 @@ export default function DappConnectScreen() {
       const { signedTransaction, metadata } =
         deserializeSignedTransaction(data);
 
-      // Broadcast to network
+      // Broadcast to network FIRST to get the transaction hash
       const hash = await broadcastTransaction(signedTransaction);
+      console.log("Transaction broadcasted with hash:", hash);
 
-      // Respond to dApp via WalletConnect
-      await respondTransaction(signedTransaction);
+      // Respond to dApp with the transaction HASH (not the raw tx)
+      // This is what eth_sendTransaction expects as a return value
+      await respondTransaction(hash);
 
       Alert.alert(
         "Success",

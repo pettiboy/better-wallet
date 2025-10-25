@@ -79,7 +79,7 @@ export function WalletConnectProvider({
       Alert.alert("Error", "Failed to initialize WalletConnect");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialized]);
 
   // Initialize WalletConnect only in hot wallet mode
   useEffect(() => {
