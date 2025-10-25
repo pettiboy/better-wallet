@@ -5,44 +5,56 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  ScrollView,
 } from "react-native";
-import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useLocalSearchParams, router } from "expo-router";
-import { storePrivateKey } from "@/services/wallet";
-import { generateWallet } from "@/services/wallet";
+import { storePrivateKey, generateWallet } from "@/services/wallet";
 
 export default function MnemonicVerifyScreen() {
   const { mnemonic } = useLocalSearchParams<{ mnemonic: string }>();
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
-  const [shuffledWords, setShuffledWords] = useState<string[]>([]);
+  const [shuffledWords, setShuffledWords] = useState<
+    { word: string; originalIndex: number }[]
+  >([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [shakeAnimation] = useState(new Animated.Value(0));
 
   const overlayColor = useThemeColor({}, "overlay");
   const successColor = useThemeColor({}, "success");
-  const dangerColor = useThemeColor({}, "danger");
   const borderColor = useThemeColor({}, "border");
 
   useEffect(() => {
     if (mnemonic) {
       const words = mnemonic.split(" ");
-      // Shuffle the words for verification
-      const shuffled = [...words].sort(() => Math.random() - 0.5);
+      // Create shuffled words with original indices to handle duplicates
+      const shuffled = words
+        .map((word, index) => ({ word, originalIndex: index }))
+        .sort(() => Math.random() - 0.5);
       setShuffledWords(shuffled);
     }
   }, [mnemonic]);
 
-  const handleWordPress = (word: string) => {
-    if (selectedWords.includes(word)) {
+  const handleWordPress = (wordIndex: number) => {
+    const wordItem = shuffledWords[wordIndex];
+    const isSelected = selectedWords.some(
+      (w, index) => w === wordItem.word && index === wordItem.originalIndex
+    );
+
+    if (isSelected) {
       // Remove word if already selected
-      setSelectedWords((prev) => prev.filter((w) => w !== word));
+      setSelectedWords((prev) =>
+        prev.filter(
+          (w, index) =>
+            !(w === wordItem.word && index === wordItem.originalIndex)
+        )
+      );
     } else {
       // Add word if not selected and we haven't reached 12 words
       if (selectedWords.length < 12) {
-        setSelectedWords((prev) => [...prev, word]);
+        setSelectedWords((prev) => [...prev, wordItem.word]);
       }
     }
   };
@@ -110,9 +122,11 @@ export default function MnemonicVerifyScreen() {
     ]).start();
   };
 
-  const getWordButtonStyle = (word: string) => {
-    const isSelected = selectedWords.includes(word);
-    const isCorrect = selectedWords.includes(word);
+  const getWordButtonStyle = (wordIndex: number) => {
+    const wordItem = shuffledWords[wordIndex];
+    const isSelected = selectedWords.some(
+      (w, index) => w === wordItem.word && index === wordItem.originalIndex
+    );
 
     return [
       styles.wordButton,
@@ -135,7 +149,7 @@ export default function MnemonicVerifyScreen() {
   };
 
   return (
-    <SafeThemedView style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.content}>
         {/* Header */}
         <ThemedText type="title" style={styles.title}>
@@ -143,8 +157,8 @@ export default function MnemonicVerifyScreen() {
         </ThemedText>
 
         <ThemedText style={styles.subtitle}>
-          Tap the words in the correct order to verify you've written them down
-          correctly.
+          Tap the words in the correct order to verify you&apos;ve written them
+          down correctly.
         </ThemedText>
 
         {/* Progress */}
@@ -203,14 +217,16 @@ export default function MnemonicVerifyScreen() {
           </ThemedText>
 
           <View style={styles.wordsGrid}>
-            {shuffledWords.map((word, index) => (
+            {shuffledWords.map((wordItem, index) => (
               <TouchableOpacity
-                key={`${word}-${index}`}
-                style={getWordButtonStyle(word)}
-                onPress={() => handleWordPress(word)}
-                disabled={selectedWords.includes(word)}
+                key={`${wordItem.word}-${wordItem.originalIndex}`}
+                style={getWordButtonStyle(index)}
+                onPress={() => handleWordPress(index)}
+                disabled={selectedWords.some(
+                  (w, i) => w === wordItem.word && i === wordItem.originalIndex
+                )}
               >
-                <ThemedText style={styles.wordText}>{word}</ThemedText>
+                <ThemedText style={styles.wordText}>{wordItem.word}</ThemedText>
               </TouchableOpacity>
             ))}
           </View>
@@ -237,7 +253,7 @@ export default function MnemonicVerifyScreen() {
           />
         </View>
       </View>
-    </SafeThemedView>
+    </ScrollView>
   );
 }
 

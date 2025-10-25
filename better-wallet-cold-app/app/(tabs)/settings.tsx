@@ -309,6 +309,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 20,
+    paddingBottom: 100, // Extra padding for tab bar
   },
   content: {
     flex: 1,
