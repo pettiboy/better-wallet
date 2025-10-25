@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { DeviceModeProvider } from './contexts/DeviceModeContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
+import { WalletConnectProvider } from './contexts/WalletConnectContext';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { SetupPage } from './pages/SetupPage';
 import { HotHomePage } from './pages/hot/HotHomePage';
 import { SendPage } from './pages/hot/SendPage';
+import { DappConnectPage } from './pages/hot/DappConnectPage';
 import { useDeviceMode } from './contexts/DeviceModeContext';
 import { useOnboarding } from './contexts/OnboardingContext';
 
@@ -42,6 +44,7 @@ function AppContent() {
           <>
             <Route path="/hot/home" element={<HotHomePage />} />
             <Route path="/hot/send" element={<SendPage />} />
+            <Route path="/hot/dapp-connect" element={<DappConnectPage />} />
             <Route path="*" element={<Navigate to="/hot/home" replace />} />
           </>
         )}
@@ -54,7 +57,9 @@ function App() {
   return (
     <OnboardingProvider>
       <DeviceModeProvider>
-        <AppContent />
+        <WalletConnectProvider>
+          <AppContent />
+        </WalletConnectProvider>
       </DeviceModeProvider>
     </OnboardingProvider>
   );
