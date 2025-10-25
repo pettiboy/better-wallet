@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { Plug, Plus, Camera, X, Lightbulb } from "lucide-react";
+import { useNotification } from "@blockscout/app-sdk";
 import { Button } from "../../components/Button";
 import { QRDisplay } from "../../components/QRDisplay";
 import { QRScanner } from "../../components/QRScanner";
@@ -38,6 +39,7 @@ export function DappConnectPage() {
     disconnectSession,
     clearPendingRequest,
   } = useWalletConnect();
+  const { openTxToast } = useNotification();
 
   const [step, setStep] = useState<Step>("connect");
   const [wcUri, setWcUri] = useState("");
@@ -164,6 +166,9 @@ export function DappConnectPage() {
       // Respond to dApp with the transaction HASH (not the raw tx)
       // This is what eth_sendTransaction expects as a return value
       await respondTransaction(hash);
+
+      // Show Blockscout transaction toast for real-time tracking
+      await openTxToast("11155111", hash);
 
       alert(`Transaction sent to dApp!\nHash: ${hash.substring(0, 10)}...`);
 

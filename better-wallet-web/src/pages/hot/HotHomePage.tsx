@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wallet, Send, Plug, RefreshCw } from "lucide-react";
+import { Wallet, Send, Plug, RefreshCw, History } from "lucide-react";
+import { useTransactionPopup } from "@blockscout/app-sdk";
 import { Button } from "../../components/Button";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
 import { useWalletConnect } from "../../contexts/WalletConnectContext";
@@ -11,6 +12,7 @@ export function HotHomePage() {
   const navigate = useNavigate();
   const { walletAddress } = useDeviceMode();
   const { sessions } = useWalletConnect();
+  const { openPopup } = useTransactionPopup();
   const [balance, setBalance] = useState<string>("0.0");
   const [pyusdBalance, setPyusdBalance] = useState<string>("0.0");
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,14 @@ export function HotHomePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewHistory = () => {
+    if (!walletAddress) return;
+    openPopup({
+      chainId: "11155111", // Sepolia testnet
+      address: walletAddress,
+    });
   };
 
   if (!walletAddress) {
@@ -252,6 +262,14 @@ export function HotHomePage() {
             icon={Plug}
             variant="primary"
             onClick={() => navigate("/hot/dapp-connect")}
+            fullWidth
+          />
+
+          <Button
+            title="Transaction History"
+            icon={History}
+            variant="secondary"
+            onClick={handleViewHistory}
             fullWidth
           />
 

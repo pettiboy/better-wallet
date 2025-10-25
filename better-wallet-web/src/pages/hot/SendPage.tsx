@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { Send, CheckCircle, Lightbulb, Coins } from "lucide-react";
+import { useNotification } from "@blockscout/app-sdk";
 import { Button } from "../../components/Button";
 import { QRDisplay } from "../../components/QRDisplay";
 import { QRScanner } from "../../components/QRScanner";
@@ -28,6 +29,7 @@ type Step =
 
 export function SendPage() {
   const { walletAddress } = useDeviceMode();
+  const { openTxToast } = useNotification();
   const [step, setStep] = useState<Step>("input");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -127,6 +129,10 @@ export function SendPage() {
       const hash = await broadcastTransaction(signedTransaction);
       setTxHash(hash);
       setStep("success");
+
+      // Show Blockscout transaction toast for real-time tracking
+      await openTxToast("11155111", hash);
+
       alert(`Transaction broadcasted!\nHash: ${hash.substring(0, 10)}...`);
     } catch (error) {
       console.error("Error broadcasting transaction:", error);

@@ -4,6 +4,10 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import {
+  NotificationProvider,
+  TransactionPopupProvider,
+} from "@blockscout/app-sdk";
 import { DeviceModeProvider } from "./contexts/DeviceModeContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { WalletConnectProvider } from "./contexts/WalletConnectContext";
@@ -86,13 +90,17 @@ function AppContent() {
 
 function App() {
   return (
-    <OnboardingProvider>
-      <DeviceModeProvider>
-        <WalletConnectProvider>
-          <AppContent />
-        </WalletConnectProvider>
-      </DeviceModeProvider>
-    </OnboardingProvider>
+    <NotificationProvider>
+      <TransactionPopupProvider>
+        <OnboardingProvider>
+          <DeviceModeProvider>
+            <WalletConnectProvider>
+              <AppContent />
+            </WalletConnectProvider>
+          </DeviceModeProvider>
+        </OnboardingProvider>
+      </TransactionPopupProvider>
+    </NotificationProvider>
   );
 }
 
