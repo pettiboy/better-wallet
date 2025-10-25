@@ -3,9 +3,6 @@ import { DeviceModeProvider } from './contexts/DeviceModeContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { SetupPage } from './pages/SetupPage';
-import { ColdHomePage } from './pages/cold/ColdHomePage';
-import { SignPage } from './pages/cold/SignPage';
-import { SettingsPage } from './pages/cold/SettingsPage';
 import { HotHomePage } from './pages/hot/HotHomePage';
 import { SendPage } from './pages/hot/SendPage';
 import { useDeviceMode } from './contexts/DeviceModeContext';
@@ -38,16 +35,6 @@ function AppContent() {
         {/* Setup mode */}
         {hasCompletedOnboarding && mode === 'setup' && (
           <Route path="*" element={<SetupPage />} />
-        )}
-        
-        {/* Cold wallet mode */}
-        {hasCompletedOnboarding && mode === 'cold' && (
-          <>
-            <Route path="/cold/home" element={<ColdHomePage />} />
-            <Route path="/cold/sign" element={<SignPage />} />
-            <Route path="/cold/settings" element={<SettingsPage />} />
-            <Route path="*" element={<Navigate to="/cold/home" replace />} />
-          </>
         )}
         
         {/* Hot wallet mode */}
