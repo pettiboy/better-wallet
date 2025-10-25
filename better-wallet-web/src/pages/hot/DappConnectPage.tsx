@@ -547,7 +547,6 @@ export function DappConnectPage() {
               variant="secondary"
               onClick={() => setStep("sessions")}
               fullWidth
-              style={{ marginBottom: "1.5rem" }}
             />
           )}
 
@@ -557,6 +556,7 @@ export function DappConnectPage() {
                 display: "block",
                 fontSize: "0.875rem",
                 fontWeight: 900,
+                marginTop: "1rem",
                 marginBottom: "0.5rem",
                 color: "var(--color-black)",
               }}
