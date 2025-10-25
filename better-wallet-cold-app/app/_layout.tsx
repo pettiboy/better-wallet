@@ -55,7 +55,6 @@ function AppContent() {
   return (
     <Stack>
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="receive" options={{ title: "Receive ETH" }} />
       <Stack.Screen
