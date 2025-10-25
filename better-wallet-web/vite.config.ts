@@ -70,7 +70,8 @@ export default defineConfig({
     }),
   ],
   server: {
-    host: "localhost",
+    allowedHosts: [".ngrok-free.app", "localhost"],
+    host: "0.0.0.0",
     port: 5173,
   },
 });

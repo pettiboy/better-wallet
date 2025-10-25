@@ -4,13 +4,15 @@ import { Wallet, Send, Plug, RefreshCw } from "lucide-react";
 import { Button } from "../../components/Button";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
 import { useWalletConnect } from "../../contexts/WalletConnectContext";
-import { getBalance } from "../../services/ethereum";
+import { getBalance, getERC20Balance } from "../../services/ethereum";
+import { SUPPORTED_TOKENS } from "../../config/tokens";
 
 export function HotHomePage() {
   const navigate = useNavigate();
   const { walletAddress } = useDeviceMode();
   const { sessions } = useWalletConnect();
   const [balance, setBalance] = useState<string>("0.0");
+  const [pyusdBalance, setPyusdBalance] = useState<string>("0.0");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,8 +26,19 @@ export function HotHomePage() {
 
     setLoading(true);
     try {
-      const bal = await getBalance(walletAddress);
-      setBalance(bal);
+      // Load ETH balance
+      const ethBal = await getBalance(walletAddress);
+      setBalance(ethBal);
+
+      // Load PYUSD balance
+      const pyusdToken = SUPPORTED_TOKENS.find((t) => t.symbol === "PYUSD");
+      if (pyusdToken) {
+        const { balance: pyusdBal } = await getERC20Balance(
+          pyusdToken.address,
+          walletAddress
+        );
+        setPyusdBalance(pyusdBal);
+      }
     } catch (error) {
       console.error("Error loading balance:", error);
       alert("Failed to load balance. Check your internet connection.");
@@ -102,38 +115,83 @@ export function HotHomePage() {
           Wallet
         </h1>
 
-        {/* Balance Card */}
+        {/* Balance Cards */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          {/* ETH Balance */}
+          <div
+            style={{
+              backgroundColor: "var(--color-primary)",
+              border: "4px solid var(--color-black)",
+              boxShadow: "8px 8px 0 var(--color-black)",
+              padding: "1.5rem",
+              textAlign: "center",
+              color: "var(--color-white)",
+              marginBottom: "1rem",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.875rem",
+                opacity: 0.9,
+                marginBottom: "0.5rem",
+                fontWeight: 700,
+              }}
+            >
+              ETH Balance
+            </p>
+            <p
+              style={{
+                fontSize: "2rem",
+                fontWeight: 900,
+              }}
+            >
+              {parseFloat(balance).toFixed(4)} ETH
+            </p>
+          </div>
+
+          {/* PYUSD Balance */}
+          <div
+            style={{
+              backgroundColor: "var(--color-success)",
+              border: "4px solid var(--color-black)",
+              boxShadow: "8px 8px 0 var(--color-black)",
+              padding: "1.5rem",
+              textAlign: "center",
+              color: "var(--color-white)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.875rem",
+                opacity: 0.9,
+                marginBottom: "0.5rem",
+                fontWeight: 700,
+              }}
+            >
+              PYUSD Balance
+            </p>
+            <p
+              style={{
+                fontSize: "2rem",
+                fontWeight: 900,
+              }}
+            >
+              {parseFloat(pyusdBalance).toFixed(2)} PYUSD
+            </p>
+          </div>
+        </div>
+
+        {/* Network Badge */}
         <div
           style={{
-            backgroundColor: "var(--color-primary)",
-            border: "4px solid var(--color-black)",
-            boxShadow: "8px 8px 0 var(--color-black)",
-            padding: "2rem",
+            backgroundColor: "var(--color-gray-100)",
+            border: "3px solid var(--color-black)",
+            padding: "0.75rem",
             textAlign: "center",
-            color: "var(--color-white)",
             marginBottom: "1.5rem",
           }}
         >
-          <p
-            style={{
-              fontSize: "0.875rem",
-              opacity: 0.9,
-              marginBottom: "0.5rem",
-              fontWeight: 700,
-            }}
-          >
-            Balance
-          </p>
-          <p
-            style={{
-              fontSize: "2.5rem",
-              fontWeight: 900,
-              marginBottom: "0.5rem",
-            }}
-          >
-            {parseFloat(balance).toFixed(4)} ETH
-          </p>
-          <p style={{ fontSize: "0.875rem", opacity: 0.8, fontWeight: 700 }}>
+          <p style={{ fontSize: "0.875rem", fontWeight: 900, margin: 0 }}>
             Sepolia Testnet
           </p>
         </div>

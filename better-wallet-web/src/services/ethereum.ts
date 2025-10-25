@@ -2,7 +2,8 @@ import { ethers } from "ethers";
 
 // Using public Ethereum RPC endpoints
 // const MAINNET_RPC = 'https://eth.llamarpc.com';
-const SEPOLIA_RPC = "https://1rpc.io/sepolia";
+const SEPOLIA_RPC =
+  "https://eth-sepolia.g.alchemy.com/v2/QUIEJhuCFwaqG_DsrOIXeSqdCHmsYLXH";
 
 // Default to Sepolia testnet for safety
 const DEFAULT_RPC = SEPOLIA_RPC;
@@ -161,13 +162,130 @@ export function parseEther(ether: string): bigint {
 }
 
 /**
+ * ERC20 ABI for common functions
+ */
+const ERC20_ABI = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
+  "function name() view returns (string)",
+  "function transfer(address to, uint256 amount) returns (bool)",
+];
+
+/**
+ * Get ERC20 token balance for an address
+ */
+export async function getERC20Balance(
+  tokenAddress: string,
+  walletAddress: string
+): Promise<{ balance: string; decimals: number; symbol: string }> {
+  try {
+    const provider = getProvider();
+    const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+
+    const [balance, decimals, symbol] = await Promise.all([
+      contract.balanceOf(walletAddress),
+      contract.decimals(),
+      contract.symbol(),
+    ]);
+
+    const formattedBalance = ethers.formatUnits(balance, decimals);
+
+    return {
+      balance: formattedBalance,
+      decimals: Number(decimals),
+      symbol,
+    };
+  } catch (error) {
+    console.error("Error fetching ERC20 balance:", error);
+    throw new Error("Failed to fetch token balance");
+  }
+}
+
+/**
+ * Get ERC20 token information
+ */
+export async function getERC20Info(tokenAddress: string): Promise<{
+  name: string;
+  symbol: string;
+  decimals: number;
+}> {
+  try {
+    const provider = getProvider();
+    const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+
+    const [name, symbol, decimals] = await Promise.all([
+      contract.name(),
+      contract.symbol(),
+      contract.decimals(),
+    ]);
+
+    return {
+      name,
+      symbol,
+      decimals: Number(decimals),
+    };
+  } catch (error) {
+    console.error("Error fetching token info:", error);
+    throw new Error("Failed to fetch token information");
+  }
+}
+
+/**
+ * Construct an unsigned ERC20 token transfer transaction
+ */
+export async function constructERC20Transfer(
+  tokenAddress: string,
+  from: string,
+  to: string,
+  amount: string,
+  decimals: number
+): Promise<ethers.TransactionRequest> {
+  try {
+    const provider = getProvider();
+    const nonce = await provider.getTransactionCount(from, "pending");
+    const feeData = await provider.getFeeData();
+
+    // Create the contract interface to encode the transfer function
+    const iface = new ethers.Interface(ERC20_ABI);
+    const amountInWei = ethers.parseUnits(amount, decimals);
+    const data = iface.encodeFunctionData("transfer", [to, amountInWei]);
+
+    // Estimate gas for the token transfer
+    const gasLimit = await provider.estimateGas({
+      from,
+      to: tokenAddress,
+      data,
+    });
+
+    const tx: ethers.TransactionRequest = {
+      from,
+      to: tokenAddress, // Token contract address
+      value: BigInt(0), // No ETH value for token transfer
+      data, // Encoded transfer function call
+      nonce,
+      gasLimit,
+      chainId: DEFAULT_CHAIN_ID,
+      type: 2, // EIP-1559 transaction
+      maxFeePerGas: feeData.maxFeePerGas,
+      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+    };
+
+    return tx;
+  } catch (error) {
+    console.error("Error constructing ERC20 transfer:", error);
+    throw new Error("Failed to construct token transfer");
+  }
+}
+
+/**
  * Update transaction with current nonce and gas prices from the network
  * This fixes issues where dApps send transactions with stale nonces/gas prices
  */
 export async function updateTransactionNonce(
-  transaction: any,
-  provider: any
-): Promise<any> {
+  transaction: ethers.TransactionRequest,
+  provider: ethers.JsonRpcProvider
+): Promise<ethers.TransactionRequest> {
   try {
     if (!transaction.from) {
       console.warn(
@@ -192,7 +310,7 @@ export async function updateTransactionNonce(
         }->${feeData.maxFeePerGas?.toString()}`
     );
 
-    const updates: any = {};
+    const updates: Partial<ethers.TransactionRequest> = {};
 
     // Update nonce if it's missing or outdated
     if (

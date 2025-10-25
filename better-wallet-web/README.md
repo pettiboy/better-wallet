@@ -9,11 +9,14 @@ This is a React web application that serves as the hot wallet interface for Bett
 ## Features
 
 ### Core Functionality
+
 - **Hot Wallet Mode**: Connect to blockchain, create transactions, broadcast signed transactions
+- **ERC20 Token Support**: Send ETH and ERC20 tokens (PYUSD supported)
 - **QR Code Communication**: Secure transaction flow via QR codes with mobile app
 - **Sepolia Testnet**: Safe testing environment (no real funds at risk)
 
 ### Security Features
+
 - **No Private Keys**: This web app never stores private keys
 - **Air-Gapped Signing**: Cold wallet mobile app never connects to internet
 - **Transaction Review**: Detailed transaction verification before signing
@@ -21,6 +24,7 @@ This is a React web application that serves as the hot wallet interface for Bett
 ## Getting Started
 
 ### Prerequisites
+
 - Modern web browser with camera access
 - Better Wallet mobile app set up as cold wallet
 - Two devices - mobile app for cold wallet, browser for hot wallet
@@ -28,11 +32,13 @@ This is a React web application that serves as the hot wallet interface for Bett
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -59,13 +65,16 @@ npm run dev
 ### Sending Transactions
 
 #### Step 1: Create Transaction (Web App)
+
 1. Navigate to "Send Transaction"
-2. Enter recipient address (0x...)
-3. Enter amount in ETH
-4. Tap "Create Transaction"
-5. An unsigned transaction QR code will appear
+2. Select asset (ETH or PYUSD) - your balance will be displayed
+3. Enter recipient address (0x...)
+4. Enter amount
+5. Tap "Create Transaction"
+6. An unsigned transaction QR code will appear
 
 #### Step 2: Sign Transaction (Mobile App)
+
 1. Open the Better Wallet mobile app
 2. Tap "Sign Transaction"
 3. Scan the unsigned transaction QR from web app
@@ -74,6 +83,7 @@ npm run dev
 6. A signed transaction QR code will appear
 
 #### Step 3: Broadcast Transaction (Web App)
+
 1. On the web app, tap "Scan Signed Transaction"
 2. Scan the signed transaction QR from mobile app
 3. Transaction will be broadcasted to the network
@@ -82,6 +92,7 @@ npm run dev
 ## Technical Details
 
 ### Architecture
+
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS
 - **Ethereum**: ethers.js v6 for blockchain interactions
 - **QR Codes**: qrcode.react for generation, @zxing/browser for scanning
@@ -89,38 +100,47 @@ npm run dev
 - **Routing**: react-router-dom for navigation
 
 ### Security Considerations
+
 - This web app never stores private keys
 - Cold wallet mobile app should be kept offline for maximum security
 - Recovery phrase should be stored securely offline
 - Currently configured for Sepolia testnet (safe for testing)
 
 ### File Structure
+
 ```
 src/
 ├── components/          # Reusable UI components
+├── config/             # Configuration (token list, etc.)
 ├── contexts/           # React contexts for state management
 ├── pages/             # Page components
 │   └── hot/          # Hot wallet pages
-├── services/         # Business logic services
-├── utils/           # Utility functions
+├── services/         # Business logic services (Ethereum, ERC20)
+├── utils/           # Utility functions (ERC20 detection)
 └── App.tsx          # Main app with routing
 ```
 
 ## Testing
 
 1. **Get Test ETH**: Visit a Sepolia faucet to get test ETH:
+
    - https://sepoliafaucet.com/
    - https://www.infura.io/faucet/sepolia
 
-2. **Test Transaction Flow**: 
+2. **Get Test PYUSD**: Use a Sepolia testnet exchange or faucet for PYUSD tokens
+
+   - PYUSD Contract: `0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9`
+
+3. **Test Transaction Flow**:
+   - Select asset (ETH or PYUSD)
    - Create transaction on web app
    - Sign on mobile app
    - Broadcast on web app
-   - Verify on Etherscan
+   - Verify on Sepolia Etherscan
 
 ## Limitations
 
-- Currently supports ETH transfers only (no ERC-20 tokens)
+- Limited ERC-20 token support (ETH and PYUSD currently)
 - Single-signature only (not multi-sig)
 - Sepolia testnet by default
 - Requires Better Wallet mobile app for cold wallet functionality
@@ -129,23 +149,27 @@ src/
 ## Development
 
 ### Available Scripts
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
 
 ### Adding Features
-- ERC-20 token support
+
+- More ERC-20 tokens (easy to add in `src/config/tokens.ts`)
 - Multiple blockchain support
 - Smart contract interaction
 - Advanced gas fee configuration
 - Transaction history
+- NFT (ERC-721/ERC-1155) support
 
 ## Security Warning
 
 This is a proof-of-concept application. While it implements security best practices, it should not be used for storing significant amounts of cryptocurrency without additional security measures.
 
 For production use, consider:
+
 - Hardware wallet integration
 - Multi-signature support
 - Additional encryption layers
