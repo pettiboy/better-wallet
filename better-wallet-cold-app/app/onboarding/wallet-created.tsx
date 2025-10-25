@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, Animated } from "react-native";
+import { View, StyleSheet, Animated, ScrollView } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useWallet } from "@/contexts/WalletContext";
 import { router } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function WalletCreatedScreen() {
   const { markSetupComplete, reloadWallet } = useWallet();
@@ -14,13 +16,13 @@ export default function WalletCreatedScreen() {
 
   const successColor = useThemeColor({}, "success");
   const overlayColor = useThemeColor({}, "overlay");
+  const borderColor = useThemeColor({}, "border");
 
   useEffect(() => {
-    // Animate the success screen
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -31,7 +33,6 @@ export default function WalletCreatedScreen() {
       }),
     ]).start();
 
-    // Mark setup as complete and reload wallet info
     markSetupComplete();
     reloadWallet();
   }, [fadeAnim, markSetupComplete, reloadWallet, scaleAnim]);
@@ -41,102 +42,166 @@ export default function WalletCreatedScreen() {
   };
 
   return (
-    <SafeThemedView style={styles.container}>
-      <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
+    <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Success Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: successColor }]}>
-          <Text style={styles.successIcon}>✓</Text>
-        </View>
-
-        {/* Main Message */}
-        <ThemedText type="title" style={styles.title}>
-          Wallet Created Successfully!
-        </ThemedText>
-
-        <ThemedText style={styles.subtitle}>
-          Your cold wallet is ready. You can now receive ETH or sign Ethereum
-          transactions.
-        </ThemedText>
-
-        {/* Security Features */}
-        <View
-          style={[styles.featuresContainer, { backgroundColor: overlayColor }]}
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
         >
-          <ThemedText type="subtitle" style={styles.featuresTitle}>
-            Your wallet is now secure with:
-          </ThemedText>
-
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🔒</Text>
-            <ThemedText style={styles.featureText}>
-              Offline private key storage
-            </ThemedText>
+          {/* Success Icon */}
+          <View
+            style={[
+              styles.iconContainer,
+              {
+                backgroundColor: successColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.large,
+              },
+            ]}
+          >
+            <Ionicons name="checkmark" size={72} color="white" />
           </View>
 
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🛡️</Text>
-            <ThemedText style={styles.featureText}>
-              Biometric authentication protection
+          {/* Main Message */}
+          <ThemedText type="title" style={styles.title}>
+            WALLET CREATED!
+          </ThemedText>
+
+          <ThemedText style={styles.subtitle}>
+            Your cold wallet is ready. You can now receive ETH or sign Ethereum
+            transactions.
+          </ThemedText>
+
+          {/* Security Features */}
+          <View
+            style={[
+              styles.featuresContainer,
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
+          >
+            <ThemedText type="subtitle" style={styles.featuresTitle}>
+              YOUR WALLET IS NOW SECURE WITH:
             </ThemedText>
+
+            <View style={styles.featureItem}>
+              <Ionicons name="lock-closed" size={24} color="#000" />
+              <ThemedText style={styles.featureText}>
+                Offline private key storage
+              </ThemedText>
+            </View>
+
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons
+                name="shield-check"
+                size={24}
+                color="#000"
+              />
+              <ThemedText style={styles.featureText}>
+                Biometric authentication protection
+              </ThemedText>
+            </View>
+
+            <View style={styles.featureItem}>
+              <Ionicons name="phone-portrait" size={24} color="#000" />
+              <ThemedText style={styles.featureText}>
+                QR code transaction signing
+              </ThemedText>
+            </View>
+
+            <View style={styles.featureItem}>
+              <Ionicons name="airplane" size={24} color="#000" />
+              <ThemedText style={styles.featureText}>
+                Airplane mode enforcement
+              </ThemedText>
+            </View>
           </View>
 
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>📱</Text>
-            <ThemedText style={styles.featureText}>
-              QR code transaction signing
+          {/* Next Steps */}
+          <View
+            style={[
+              styles.nextStepsContainer,
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.small,
+              },
+            ]}
+          >
+            <ThemedText type="subtitle" style={styles.nextStepsTitle}>
+              WHAT'S NEXT?
             </ThemedText>
+
+            <View style={styles.nextStepItem}>
+              <ThemedText style={styles.stepNumber}>1</ThemedText>
+              <ThemedText style={styles.stepText}>
+                Keep this device offline at all times
+              </ThemedText>
+            </View>
+
+            <View style={styles.nextStepItem}>
+              <ThemedText style={styles.stepNumber}>2</ThemedText>
+              <ThemedText style={styles.stepText}>
+                Use your hot wallet to create transactions
+              </ThemedText>
+            </View>
+
+            <View style={styles.nextStepItem}>
+              <ThemedText style={styles.stepNumber}>3</ThemedText>
+              <ThemedText style={styles.stepText}>
+                Scan transaction QR codes to sign them
+              </ThemedText>
+            </View>
+
+            <View style={styles.nextStepItem}>
+              <ThemedText style={styles.stepNumber}>4</ThemedText>
+              <ThemedText style={styles.stepText}>
+                Share signed transaction QR codes back to hot wallet
+              </ThemedText>
+            </View>
           </View>
 
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>✈️</Text>
-            <ThemedText style={styles.featureText}>
-              Airplane mode enforcement
+          {/* Action Button */}
+          <ThemedButton
+            title="Go to Dashboard"
+            variant="primary"
+            onPress={handleGoToDashboard}
+            style={styles.dashboardButton}
+          />
+
+          {/* Security Reminder */}
+          <View
+            style={[
+              styles.reminderContainer,
+              {
+                borderColor,
+                borderWidth: BorderWidth.thin,
+              },
+            ]}
+          >
+            <Ionicons name="information-circle" size={20} color="#000" />
+            <ThemedText style={styles.reminderText}>
+              Never connect this device to the internet while storing private
+              keys
             </ThemedText>
           </View>
-        </View>
-
-        {/* Next Steps */}
-        <View style={styles.nextStepsContainer}>
-          <ThemedText type="subtitle" style={styles.nextStepsTitle}>
-            What&apos;s Next?
-          </ThemedText>
-
-          <ThemedText style={styles.nextStepItem}>
-            1. Keep this device offline at all times
-          </ThemedText>
-          <ThemedText style={styles.nextStepItem}>
-            2. Use your hot wallet to create transactions
-          </ThemedText>
-          <ThemedText style={styles.nextStepItem}>
-            3. Scan transaction QR codes to sign them
-          </ThemedText>
-          <ThemedText style={styles.nextStepItem}>
-            4. Share signed transaction QR codes back to hot wallet
-          </ThemedText>
-        </View>
-
-        {/* Action Button */}
-        <ThemedButton
-          title="Go to Dashboard"
-          variant="primary"
-          onPress={handleGoToDashboard}
-          style={styles.dashboardButton}
-        />
-
-        {/* Security Reminder */}
-        <ThemedText style={styles.reminderText}>
-          Remember: Never connect this device to the internet while storing
-          private keys
-        </ThemedText>
-      </Animated.View>
+        </Animated.View>
+      </ScrollView>
     </SafeThemedView>
   );
 }
@@ -145,89 +210,112 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
+    padding: Spacing.lg,
+    paddingTop: Spacing.xxl,
+    paddingBottom: Spacing.xxl,
+  },
+  content: {
     alignItems: "center",
-    padding: 20,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 120,
+    height: 120,
+    borderRadius: 0,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  successIcon: {
-    fontSize: 48,
-    color: "white",
-    fontWeight: "bold",
+    marginBottom: Spacing.xl,
   },
   title: {
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 32,
   },
   subtitle: {
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: Spacing.xl,
     lineHeight: 24,
-    opacity: 0.8,
+    fontSize: 16,
+    fontWeight: "600",
+    paddingHorizontal: Spacing.md,
   },
   featuresContainer: {
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
     width: "100%",
-    maxWidth: 400,
   },
   featuresTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   featureItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
-  },
-  featureIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    width: 24,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   featureText: {
     flex: 1,
-    lineHeight: 20,
+    lineHeight: 22,
+    fontSize: 15,
+    fontWeight: "600",
   },
   nextStepsContainer: {
-    marginBottom: 32,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.xl,
     width: "100%",
-    maxWidth: 400,
   },
   nextStepsTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   nextStepItem: {
-    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    textAlign: "center",
+    fontWeight: "800",
+    fontSize: 14,
+  },
+  stepText: {
+    flex: 1,
     lineHeight: 20,
-    opacity: 0.8,
+    fontSize: 14,
+    fontWeight: "600",
   },
   dashboardButton: {
     width: "100%",
-    maxWidth: 300,
-    marginBottom: 16,
+    marginBottom: Spacing.md,
+  },
+  reminderContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.sm,
+    borderRadius: 0,
+    gap: Spacing.xs,
+    width: "100%",
   },
   reminderText: {
-    textAlign: "center",
-    lineHeight: 20,
-    opacity: 0.6,
-    maxWidth: 350,
-    fontStyle: "italic",
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 18,
   },
 });

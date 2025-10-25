@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { generateWallet } from "@/services/wallet";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function MnemonicDisplayScreen() {
   const [mnemonic, setMnemonic] = useState<string>("");
@@ -15,6 +23,7 @@ export default function MnemonicDisplayScreen() {
   const overlayColor = useThemeColor({}, "overlay");
   const dangerColor = useThemeColor({}, "danger");
   const borderColor = useThemeColor({}, "border");
+  const cardColor = useThemeColor({}, "card");
 
   useEffect(() => {
     generateNewWallet();
@@ -46,7 +55,6 @@ export default function MnemonicDisplayScreen() {
       return;
     }
 
-    // Navigate to verification screen with mnemonic
     router.push({
       pathname: "/onboarding/mnemonic-verify",
       params: { mnemonic },
@@ -59,8 +67,9 @@ export default function MnemonicDisplayScreen() {
     return (
       <SafeThemedView style={styles.container}>
         <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={borderColor} />
           <ThemedText type="title" style={styles.loadingTitle}>
-            Generating Wallet...
+            GENERATING WALLET...
           </ThemedText>
           <ThemedText style={styles.loadingText}>
             Creating your secure Ethereum wallet
@@ -71,17 +80,18 @@ export default function MnemonicDisplayScreen() {
   }
 
   return (
-    <SafeThemedView style={styles.container}>
+    <SafeThemedView style={styles.container} edges={["top"]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
           {/* Header */}
           <ThemedText type="title" style={styles.title}>
-            Your Recovery Phrase
+            YOUR RECOVERY PHRASE
           </ThemedText>
 
           <ThemedText style={styles.subtitle}>
@@ -91,10 +101,24 @@ export default function MnemonicDisplayScreen() {
 
           {/* Warning */}
           <View
-            style={[styles.warningContainer, { backgroundColor: dangerColor }]}
+            style={[
+              styles.warningContainer,
+              {
+                backgroundColor: dangerColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
           >
+            <Ionicons
+              name="warning"
+              size={24}
+              color="#fff"
+              style={styles.warningIcon}
+            />
             <ThemedText style={styles.warningText}>
-              ⚠️ These words are your wallet. Write them down and store them
+              These words are your wallet. Write them down and store them
               offline. This will not be shown again.
             </ThemedText>
           </View>
@@ -103,14 +127,27 @@ export default function MnemonicDisplayScreen() {
           <View
             style={[
               styles.mnemonicContainer,
-              { backgroundColor: overlayColor, borderColor },
+              {
+                backgroundColor: cardColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.large,
+              },
             ]}
           >
             {mnemonicWords.map((word, index) => (
-              <View key={index} style={styles.wordItem}>
-                <View
-                  style={[styles.wordNumber, { backgroundColor: borderColor }]}
-                >
+              <View
+                key={index}
+                style={[
+                  styles.wordItem,
+                  {
+                    backgroundColor: overlayColor,
+                    borderColor,
+                    borderWidth: BorderWidth.thin,
+                  },
+                ]}
+              >
+                <View style={styles.wordNumber}>
                   <ThemedText style={styles.wordNumberText}>
                     {index + 1}
                   </ThemedText>
@@ -121,28 +158,51 @@ export default function MnemonicDisplayScreen() {
           </View>
 
           {/* Instructions */}
-          <View style={styles.instructionsContainer}>
+          <View
+            style={[
+              styles.instructionsContainer,
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.small,
+              },
+            ]}
+          >
             <ThemedText type="subtitle" style={styles.instructionsTitle}>
-              Important Instructions:
+              IMPORTANT INSTRUCTIONS:
             </ThemedText>
 
-            <ThemedText style={styles.instructionItem}>
-              • Write down all 12 words in order
-            </ThemedText>
-            <ThemedText style={styles.instructionItem}>
-              • Store them in a safe, offline location
-            </ThemedText>
-            <ThemedText style={styles.instructionItem}>
-              • Never share these words with anyone
-            </ThemedText>
-            <ThemedText style={styles.instructionItem}>
-              • Anyone with these words can access your wallet
-            </ThemedText>
+            <View style={styles.instructionItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#000" />
+              <ThemedText style={styles.instructionText}>
+                Write down all 12 words in order
+              </ThemedText>
+            </View>
+            <View style={styles.instructionItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#000" />
+              <ThemedText style={styles.instructionText}>
+                Store them in a safe, offline location
+              </ThemedText>
+            </View>
+            <View style={styles.instructionItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#000" />
+              <ThemedText style={styles.instructionText}>
+                Never share these words with anyone
+              </ThemedText>
+            </View>
+            <View style={styles.instructionItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#000" />
+              <ThemedText style={styles.instructionText}>
+                Anyone with these words can access your wallet
+              </ThemedText>
+            </View>
           </View>
 
           {/* Scroll to bottom indicator */}
           {!hasScrolledToBottom && (
             <View style={styles.scrollIndicator}>
+              <Ionicons name="arrow-down" size={24} color="#000" />
               <ThemedText style={styles.scrollText}>
                 Scroll down to continue
               </ThemedText>
@@ -152,15 +212,21 @@ export default function MnemonicDisplayScreen() {
       </ScrollView>
 
       {/* Next Button */}
-      <View style={styles.buttonContainer}>
+      <View
+        style={[
+          styles.buttonContainer,
+          {
+            backgroundColor: useThemeColor({}, "background"),
+            borderTopColor: borderColor,
+            borderTopWidth: BorderWidth.thick,
+          },
+        ]}
+      >
         <ThemedButton
           title="I've Written Down My Words"
           variant="primary"
           onPress={handleNext}
-          style={[
-            styles.nextButton,
-            !hasScrolledToBottom && styles.disabledButton,
-          ]}
+          style={styles.nextButton}
           disabled={!hasScrolledToBottom}
         />
       </View>
@@ -176,109 +242,131 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   loadingTitle: {
-    marginBottom: 16,
+    marginTop: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
   },
   loadingText: {
     textAlign: "center",
-    opacity: 0.7,
+    fontSize: 16,
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
   content: {
     flex: 1,
   },
   title: {
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 24,
   },
   subtitle: {
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: Spacing.lg,
     lineHeight: 22,
-    opacity: 0.8,
+    fontSize: 15,
+    fontWeight: "600",
   },
   warningContainer: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
+    flexDirection: "row",
+    padding: Spacing.md,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  warningIcon: {
+    marginRight: Spacing.xs,
   },
   warningText: {
-    textAlign: "center",
-    fontWeight: "600",
+    flex: 1,
+    fontWeight: "700",
     lineHeight: 20,
+    fontSize: 14,
+    color: "#fff",
   },
   mnemonicContainer: {
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 24,
+    padding: Spacing.md,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    gap: Spacing.sm,
   },
   wordItem: {
     flexDirection: "row",
     alignItems: "center",
     width: "48%",
-    marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: 0,
   },
   wordNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 0,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
+    marginRight: Spacing.xs,
   },
   wordNumberText: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "800",
   },
   wordText: {
     flex: 1,
     fontFamily: "monospace",
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
   },
   instructionsContainer: {
-    marginBottom: 24,
+    padding: Spacing.md,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
   },
   instructionsTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 16,
   },
   instructionItem: {
-    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  instructionText: {
+    flex: 1,
     lineHeight: 20,
+    fontSize: 14,
+    fontWeight: "600",
   },
   scrollIndicator: {
     alignItems: "center",
-    paddingVertical: 16,
+    paddingVertical: Spacing.md,
+    gap: Spacing.xs,
   },
   scrollText: {
-    opacity: 0.6,
-    fontStyle: "italic",
+    fontWeight: "700",
+    fontSize: 14,
   },
   buttonContainer: {
-    padding: 20,
-    paddingTop: 0,
+    padding: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
   nextButton: {
     width: "100%",
-  },
-  disabledButton: {
-    opacity: 0.5,
   },
 });

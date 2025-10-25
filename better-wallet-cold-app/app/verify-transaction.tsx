@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
@@ -16,6 +17,8 @@ import { authenticateIfRequired } from "@/services/biometric";
 import { ethers } from "ethers";
 import { SerializedTransaction } from "@/utils/transaction-serializer";
 import { detectERC20Transfer, formatTokenAmount } from "@/utils/erc20-detector";
+import { Ionicons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function VerifyTransactionScreen() {
   const { transactionData } = useLocalSearchParams<{
@@ -28,9 +31,10 @@ export default function VerifyTransactionScreen() {
 
   const overlayColor = useThemeColor({}, "overlay");
   const warningColor = useThemeColor({}, "warning");
-  const dangerColor = useThemeColor({}, "danger");
   const successColor = useThemeColor({}, "success");
   const borderColor = useThemeColor({}, "border");
+  const cardColor = useThemeColor({}, "card");
+  const backgroundColor = useThemeColor({}, "background");
 
   useEffect(() => {
     if (transactionData) {
@@ -51,7 +55,6 @@ export default function VerifyTransactionScreen() {
     try {
       setIsSigning(true);
 
-      // Authenticate user if biometric authentication is enabled
       const isAuthenticated = await authenticateIfRequired(
         "Authenticate to sign this transaction"
       );
@@ -78,7 +81,6 @@ export default function VerifyTransactionScreen() {
         privateKey
       );
 
-      // Navigate to signing complete screen
       router.push({
         pathname: "/signing-complete",
         params: { signedTransaction: signedTx },
@@ -110,8 +112,9 @@ export default function VerifyTransactionScreen() {
     return (
       <SafeThemedView style={styles.container}>
         <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={borderColor} />
           <ThemedText type="title" style={styles.loadingTitle}>
-            Loading Transaction...
+            LOADING TRANSACTION...
           </ThemedText>
         </View>
       </SafeThemedView>
@@ -132,26 +135,28 @@ export default function VerifyTransactionScreen() {
     ? ethers.formatUnits(transaction.maxPriorityFeePerGas, "gwei")
     : "N/A";
 
-  // Calculate total cost
   const totalCost =
     transaction.maxFeePerGas && transaction.gasLimit
-      ? ethers.formatEther(transaction.maxFeePerGas * transaction.gasLimit)
+      ? ethers.formatEther(
+          BigInt(transaction.maxFeePerGas.toString()) *
+            BigInt(transaction.gasLimit.toString())
+        )
       : "N/A";
 
-  // Detect ERC-20 token transfer
   const erc20Transfer = hasData
     ? detectERC20Transfer(transaction.data as string)
     : null;
 
   return (
-    <SafeThemedView style={styles.container}>
+    <SafeThemedView style={styles.container} edges={["top"]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
           <ThemedText type="title" style={styles.title}>
-            Review Transaction
+            REVIEW TRANSACTION
           </ThemedText>
 
           {/* Transaction Source */}
@@ -160,21 +165,39 @@ export default function VerifyTransactionScreen() {
               styles.sourceContainer,
               {
                 backgroundColor: isWalletConnect ? successColor : overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.small,
               },
             ]}
           >
-            <ThemedText style={styles.sourceLabel}>
-              {isWalletConnect ? "📱 dApp Request" : "✏️ Manual Transaction"}
+            <Ionicons
+              name={isWalletConnect ? "phone-portrait" : "create"}
+              size={24}
+              color={isWalletConnect ? "#fff" : "#000"}
+            />
+            <ThemedText
+              style={[styles.sourceLabel, isWalletConnect && { color: "#fff" }]}
+            >
+              {isWalletConnect ? "dApp Request" : "Manual Transaction"}
             </ThemedText>
           </View>
 
-          {/* dApp Information (if from WalletConnect) */}
+          {/* dApp Information */}
           {isWalletConnect && metadata.dappMetadata && (
             <View
-              style={[styles.dappContainer, { backgroundColor: overlayColor }]}
+              style={[
+                styles.dappContainer,
+                {
+                  backgroundColor: cardColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
+              ]}
             >
               <ThemedText type="subtitle" style={styles.dappTitle}>
-                dApp Information
+                DAPP INFORMATION
               </ThemedText>
               <DetailRow label="Name" value={metadata.dappMetadata.name} />
               <DetailRow label="URL" value={metadata.dappMetadata.url} />
@@ -191,13 +214,21 @@ export default function VerifyTransactionScreen() {
             </View>
           )}
 
-          {/* ERC-20 Token Transfer Detection */}
+          {/* ERC-20 Token Transfer */}
           {erc20Transfer && (
             <View
-              style={[styles.tokenContainer, { backgroundColor: overlayColor }]}
+              style={[
+                styles.tokenContainer,
+                {
+                  backgroundColor: cardColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
+              ]}
             >
               <ThemedText type="subtitle" style={styles.tokenTitle}>
-                Token Transfer Detected
+                TOKEN TRANSFER DETECTED
               </ThemedText>
 
               <View style={styles.tokenRow}>
@@ -262,25 +293,41 @@ export default function VerifyTransactionScreen() {
             <View
               style={[
                 styles.warningContainer,
-                { backgroundColor: warningColor },
+                {
+                  backgroundColor: warningColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
               ]}
             >
-              <ThemedText style={styles.warningText}>
-                ⚠️ Contract Interaction
-              </ThemedText>
-              <ThemedText style={styles.warningDescription}>
-                This transaction includes contract data. Verify the recipient
-                and dApp before signing.
-              </ThemedText>
+              <Ionicons name="warning" size={24} color="#000" />
+              <View style={styles.warningTextContainer}>
+                <ThemedText style={styles.warningText}>
+                  CONTRACT INTERACTION
+                </ThemedText>
+                <ThemedText style={styles.warningDescription}>
+                  This transaction includes contract data. Verify the recipient
+                  and dApp before signing.
+                </ThemedText>
+              </View>
             </View>
           )}
 
           {/* Transaction Details */}
           <View
-            style={[styles.detailsContainer, { backgroundColor: overlayColor }]}
+            style={[
+              styles.detailsContainer,
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
           >
             <ThemedText type="subtitle" style={styles.detailsTitle}>
-              Transaction Details
+              TRANSACTION DETAILS
             </ThemedText>
 
             <DetailRow label="To" value={transaction.to as string} />
@@ -301,18 +348,32 @@ export default function VerifyTransactionScreen() {
 
           {/* Gas Fee Details */}
           <View
-            style={[styles.feesContainer, { backgroundColor: overlayColor }]}
+            style={[
+              styles.feesContainer,
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
           >
             <View style={styles.feesHeader}>
               <ThemedText type="subtitle" style={styles.feesTitle}>
-                Gas Fees
+                GAS FEES
               </ThemedText>
               <TouchableOpacity
                 onPress={() => setShowDetailedFees(!showDetailedFees)}
-                style={styles.toggleButton}
+                style={[
+                  styles.toggleButton,
+                  {
+                    borderColor,
+                    borderWidth: BorderWidth.thin,
+                  },
+                ]}
               >
                 <ThemedText style={styles.toggleText}>
-                  {showDetailedFees ? "Simple View" : "Detailed View"}
+                  {showDetailedFees ? "SIMPLE" : "DETAILED"}
                 </ThemedText>
               </TouchableOpacity>
             </View>
@@ -328,7 +389,15 @@ export default function VerifyTransactionScreen() {
                   value={`${maxPriorityFeePerGas} Gwei`}
                 />
                 <DetailRow label="Gas Limit" value={gasLimit} />
-                <View style={styles.totalCostRow}>
+                <View
+                  style={[
+                    styles.totalCostRow,
+                    {
+                      borderTopColor: borderColor,
+                      borderTopWidth: BorderWidth.thin,
+                    },
+                  ]}
+                >
                   <ThemedText style={styles.totalCostLabel}>
                     Total Cost:
                   </ThemedText>
@@ -348,26 +417,36 @@ export default function VerifyTransactionScreen() {
               </View>
             )}
           </View>
-
-          {/* Action Buttons */}
-          <View style={styles.buttonContainer}>
-            <ThemedButton
-              title={isSigning ? "Signing..." : "Sign Transaction"}
-              variant="success"
-              onPress={handleSign}
-              disabled={isSigning}
-              style={styles.signButton}
-            />
-
-            <ThemedButton
-              title="Cancel"
-              variant="danger"
-              onPress={handleCancel}
-              style={styles.cancelButton}
-            />
-          </View>
         </View>
       </ScrollView>
+
+      {/* Action Buttons */}
+      <View
+        style={[
+          styles.buttonContainer,
+          {
+            backgroundColor,
+            borderTopColor: borderColor,
+            borderTopWidth: BorderWidth.thick,
+          },
+        ]}
+      >
+        <ThemedButton
+          title="Sign Transaction"
+          variant="success"
+          onPress={handleSign}
+          loading={isSigning}
+          disabled={isSigning}
+          style={styles.signButton}
+        />
+
+        <ThemedButton
+          title="Cancel"
+          variant="danger"
+          onPress={handleCancel}
+          style={styles.cancelButton}
+        />
+      </View>
     </SafeThemedView>
   );
 }
@@ -395,124 +474,144 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    gap: Spacing.md,
   },
   loadingTitle: {
     textAlign: "center",
+    fontWeight: "800",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   content: {
     flex: 1,
   },
   title: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 24,
   },
   sourceContainer: {
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
   },
   sourceLabel: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "800",
   },
   dappContainer: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
   },
   dappTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
+    fontWeight: "800",
+    fontSize: 16,
   },
   descriptionContainer: {
-    marginTop: 8,
+    marginTop: Spacing.xs,
   },
   description: {
     fontSize: 14,
     marginTop: 4,
-    opacity: 0.8,
+    fontWeight: "600",
   },
   warningContainer: {
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+  },
+  warningTextContainer: {
+    flex: 1,
   },
   warningText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "800",
     marginBottom: 4,
   },
   warningDescription: {
     fontSize: 14,
-    opacity: 0.9,
+    fontWeight: "600",
   },
   detailsContainer: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
   },
   detailsTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
+    fontWeight: "800",
+    fontSize: 16,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
   },
   detailLabel: {
-    fontWeight: "600",
-    marginRight: 8,
+    fontWeight: "700",
+    fontSize: 14,
   },
   detailValue: {
     flex: 1,
     textAlign: "right",
     fontFamily: "monospace",
+    fontSize: 13,
+    fontWeight: "700",
   },
   feesContainer: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
   },
   feesHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
   },
   feesTitle: {
     marginBottom: 0,
+    fontWeight: "800",
+    fontSize: 16,
   },
   toggleButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    backgroundColor: "rgba(0,0,0,0.1)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: 0,
   },
   toggleText: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 11,
+    fontWeight: "800",
   },
   totalCostRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.1)",
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
   },
   totalCostLabel: {
-    fontWeight: "bold",
+    fontWeight: "800",
     fontSize: 16,
   },
   totalCostValue: {
-    fontWeight: "bold",
+    fontWeight: "800",
     fontSize: 16,
     fontFamily: "monospace",
   },
@@ -522,16 +621,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   simpleFeeLabel: {
-    fontWeight: "600",
+    fontWeight: "700",
     fontSize: 16,
   },
   simpleFeeValue: {
-    fontWeight: "bold",
+    fontWeight: "800",
     fontSize: 16,
     fontFamily: "monospace",
   },
   buttonContainer: {
-    gap: 12,
+    padding: Spacing.md,
+    paddingBottom: Spacing.lg,
+    gap: Spacing.sm,
   },
   signButton: {
     width: "100%",
@@ -540,26 +641,31 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   tokenContainer: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
   },
   tokenTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   tokenRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: Spacing.xs,
+    gap: Spacing.sm,
   },
   tokenLabel: {
-    fontWeight: "600",
-    marginRight: 8,
+    fontWeight: "700",
+    fontSize: 14,
   },
   tokenValue: {
     flex: 1,
     textAlign: "right",
     fontFamily: "monospace",
+    fontSize: 13,
+    fontWeight: "700",
   },
 });

@@ -8,6 +8,8 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import { useLocalSearchParams, router } from "expo-router";
 import { serializeSignedTransaction } from "@/utils/transaction-serializer";
 import * as Clipboard from "expo-clipboard";
+import { Ionicons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function SigningCompleteScreen() {
   const { signedTransaction } = useLocalSearchParams<{
@@ -23,17 +25,15 @@ export default function SigningCompleteScreen() {
 
   useEffect(() => {
     if (signedTransaction) {
-      // Serialize the signed transaction with metadata for QR display
       const serialized = serializeSignedTransaction(signedTransaction, {
         source: "manual",
       });
       setSignedTxData(serialized);
 
-      // Animate the success screen
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 600,
           useNativeDriver: true,
         }),
         Animated.spring(scaleAnim, {
@@ -44,7 +44,7 @@ export default function SigningCompleteScreen() {
         }),
       ]).start();
     }
-  }, [signedTransaction]);
+  }, [signedTransaction, fadeAnim, scaleAnim]);
 
   const handleCopyTransaction = async () => {
     if (signedTransaction) {
@@ -62,17 +62,12 @@ export default function SigningCompleteScreen() {
     router.push("/(tabs)");
   };
 
-  const handleShowQRAgain = () => {
-    // This will just re-render the QR code
-    setSignedTxData((serialized) => serialized);
-  };
-
   if (!signedTransaction || !signedTxData) {
     return (
       <SafeThemedView style={styles.container}>
         <View style={styles.errorContainer}>
           <ThemedText type="title" style={styles.errorTitle}>
-            No Signed Transaction
+            NO SIGNED TRANSACTION
           </ThemedText>
           <ThemedText style={styles.errorText}>
             Signed transaction not available. Please try signing again.
@@ -89,8 +84,11 @@ export default function SigningCompleteScreen() {
   }
 
   return (
-    <SafeThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View
           style={[
             styles.content,
@@ -102,14 +100,22 @@ export default function SigningCompleteScreen() {
         >
           {/* Success Icon */}
           <View
-            style={[styles.iconContainer, { backgroundColor: successColor }]}
+            style={[
+              styles.iconContainer,
+              {
+                backgroundColor: successColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.large,
+              },
+            ]}
           >
-            <ThemedText style={styles.successIcon}>✓</ThemedText>
+            <Ionicons name="checkmark" size={64} color="#fff" />
           </View>
 
           {/* Success Message */}
           <ThemedText type="title" style={styles.title}>
-            Transaction Signed Successfully!
+            TRANSACTION SIGNED!
           </ThemedText>
 
           <ThemedText style={styles.subtitle}>
@@ -119,30 +125,39 @@ export default function SigningCompleteScreen() {
 
           {/* QR Code */}
           <View style={styles.qrContainer}>
-            <QRDisplay
-              data={signedTxData}
-              title="Signed Transaction"
-              description="Scan this with your hot wallet to broadcast"
-              size={280}
-            />
+            <QRDisplay data={signedTxData} title="" description="" size={280} />
           </View>
 
           {/* Transaction Details */}
           <View
             style={[
               styles.detailsContainer,
-              { backgroundColor: overlayColor, borderColor },
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.small,
+              },
             ]}
           >
             <ThemedText type="subtitle" style={styles.detailsTitle}>
-              Transaction Details
+              TRANSACTION STATUS
             </ThemedText>
 
             <View style={styles.detailRow}>
               <ThemedText style={styles.detailLabel}>Status:</ThemedText>
-              <ThemedText style={[styles.detailValue, { color: successColor }]}>
-                ✓ Signed
-              </ThemedText>
+              <View style={styles.statusBadge}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color={successColor}
+                />
+                <ThemedText
+                  style={[styles.detailValue, { color: successColor }]}
+                >
+                  SIGNED
+                </ThemedText>
+              </View>
             </View>
 
             <View style={styles.detailRow}>
@@ -157,29 +172,34 @@ export default function SigningCompleteScreen() {
           <View
             style={[
               styles.instructionsContainer,
-              { backgroundColor: overlayColor },
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.small,
+              },
             ]}
           >
             <ThemedText type="subtitle" style={styles.instructionsTitle}>
-              What's Next?
+              WHAT'S NEXT?
             </ThemedText>
 
             <View style={styles.instructionItem}>
-              <ThemedText style={styles.instructionNumber}>1.</ThemedText>
+              <ThemedText style={styles.instructionNumber}>1</ThemedText>
               <ThemedText style={styles.instructionText}>
                 Open your hot wallet app
               </ThemedText>
             </View>
 
             <View style={styles.instructionItem}>
-              <ThemedText style={styles.instructionNumber}>2.</ThemedText>
+              <ThemedText style={styles.instructionNumber}>2</ThemedText>
               <ThemedText style={styles.instructionText}>
                 Scan this QR code with your hot wallet
               </ThemedText>
             </View>
 
             <View style={styles.instructionItem}>
-              <ThemedText style={styles.instructionNumber}>3.</ThemedText>
+              <ThemedText style={styles.instructionNumber}>3</ThemedText>
               <ThemedText style={styles.instructionText}>
                 Your hot wallet will broadcast the transaction
               </ThemedText>
@@ -192,21 +212,14 @@ export default function SigningCompleteScreen() {
               title="Copy Transaction"
               variant="primary"
               onPress={handleCopyTransaction}
-              style={styles.copyButton}
-            />
-
-            <ThemedButton
-              title="Show QR Again"
-              variant="secondary"
-              onPress={handleShowQRAgain}
-              style={styles.showQRButton}
+              style={styles.button}
             />
 
             <ThemedButton
               title="Sign Another Transaction"
               variant="success"
               onPress={handleSignAnother}
-              style={styles.signAnotherButton}
+              style={styles.button}
             />
           </View>
         </Animated.View>
@@ -221,116 +234,122 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   content: {
     flex: 1,
+    alignItems: "center",
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: Spacing.lg,
   },
   errorTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
   },
   errorText: {
     textAlign: "center",
-    marginBottom: 24,
-    opacity: 0.7,
+    marginBottom: Spacing.lg,
+    fontSize: 15,
+    fontWeight: "600",
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 120,
+    height: 120,
+    borderRadius: 0,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 24,
-    alignSelf: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  successIcon: {
-    fontSize: 40,
-    color: "white",
-    fontWeight: "bold",
+    marginBottom: Spacing.xl,
   },
   title: {
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 28,
   },
   subtitle: {
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: Spacing.xl,
     lineHeight: 22,
-    opacity: 0.8,
+    fontSize: 15,
+    fontWeight: "600",
+    paddingHorizontal: Spacing.md,
   },
   qrContainer: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: Spacing.xl,
+    width: "100%",
   },
   detailsContainer: {
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.md,
+    width: "100%",
   },
   detailsTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    alignItems: "center",
+    marginBottom: Spacing.sm,
   },
   detailLabel: {
-    fontWeight: "600",
-    marginRight: 8,
+    fontWeight: "700",
+    fontSize: 14,
   },
   detailValue: {
-    flex: 1,
-    textAlign: "right",
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
   instructionsContainer: {
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
+    width: "100%",
   },
   instructionsTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   instructionItem: {
     flexDirection: "row",
-    marginBottom: 12,
+    alignItems: "flex-start",
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
   },
   instructionNumber: {
+    width: 24,
+    fontWeight: "800",
     fontSize: 16,
-    fontWeight: "bold",
-    marginRight: 8,
-    width: 20,
   },
   instructionText: {
     flex: 1,
     lineHeight: 20,
+    fontSize: 14,
+    fontWeight: "600",
   },
   buttonContainer: {
-    gap: 12,
-  },
-  copyButton: {
+    gap: Spacing.sm,
     width: "100%",
   },
-  showQRButton: {
-    width: "100%",
-  },
-  signAnotherButton: {
+  button: {
     width: "100%",
   },
   backButton: {

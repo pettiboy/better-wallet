@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Text, TouchableOpacity, Alert } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
@@ -9,6 +9,8 @@ import {
   type NetworkStatus,
 } from "@/services/network";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { Ionicons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function OfflineCheckScreen() {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus | null>(
@@ -17,13 +19,13 @@ export default function OfflineCheckScreen() {
   const [isChecking, setIsChecking] = useState(true);
 
   const dangerColor = useThemeColor({}, "danger");
-  const warningColor = useThemeColor({}, "warning");
+  const successColor = useThemeColor({}, "success");
   const overlayColor = useThemeColor({}, "overlay");
+  const borderColor = useThemeColor({}, "border");
 
   useEffect(() => {
     checkNetworkStatus();
 
-    // Subscribe to network changes
     const unsubscribe = subscribeToNetworkChanges((status) => {
       setNetworkStatus(status);
       setIsChecking(false);
@@ -39,7 +41,6 @@ export default function OfflineCheckScreen() {
       setNetworkStatus(status);
     } catch (error) {
       console.error("Error checking network status:", error);
-      Alert.alert("Error", "Failed to check network status");
     } finally {
       setIsChecking(false);
     }
@@ -53,16 +54,26 @@ export default function OfflineCheckScreen() {
   const activeConnections = networkStatus?.activeConnections ?? [];
 
   return (
-    <SafeThemedView style={styles.container}>
+    <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
       <View style={styles.content}>
         {/* Warning Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: dangerColor }]}>
-          <Text style={styles.warningIcon}>⚠️</Text>
+        <View
+          style={[
+            styles.iconContainer,
+            {
+              backgroundColor: dangerColor,
+              borderColor,
+              borderWidth: BorderWidth.thick,
+              ...Shadows.large,
+            },
+          ]}
+        >
+          <Ionicons name="warning" size={64} color="#fff" />
         </View>
 
         {/* Main Message */}
         <ThemedText type="title" style={styles.title}>
-          Airplane Mode Required
+          AIRPLANE MODE REQUIRED
         </ThemedText>
 
         <ThemedText style={styles.message}>
@@ -73,30 +84,40 @@ export default function OfflineCheckScreen() {
         {/* Network Status */}
         {!isChecking && (
           <View
-            style={[styles.statusContainer, { backgroundColor: overlayColor }]}
+            style={[
+              styles.statusContainer,
+              {
+                backgroundColor: isOffline ? successColor : dangerColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
           >
             <ThemedText type="subtitle" style={styles.statusTitle}>
-              Current Status
+              CURRENT STATUS
             </ThemedText>
 
             {isOffline ? (
               <View style={styles.offlineStatus}>
-                <Text style={styles.checkmark}>✅</Text>
+                <Ionicons name="checkmark-circle" size={32} color="#fff" />
                 <ThemedText style={styles.statusText}>
                   Device is offline - Safe to proceed
                 </ThemedText>
               </View>
             ) : (
               <View style={styles.onlineStatus}>
-                <Text style={styles.warningIcon}>⚠️</Text>
-                <ThemedText style={styles.statusText}>
-                  Active connections detected:
-                </ThemedText>
-                {activeConnections.map((connection, index) => (
-                  <ThemedText key={index} style={styles.connectionItem}>
-                    • {connection}
+                <Ionicons name="warning" size={32} color="#fff" />
+                <View style={styles.onlineTextContainer}>
+                  <ThemedText style={styles.statusText}>
+                    Active connections detected:
                   </ThemedText>
-                ))}
+                  {activeConnections.map((connection, index) => (
+                    <ThemedText key={index} style={styles.connectionItem}>
+                      • {connection}
+                    </ThemedText>
+                  ))}
+                </View>
               </View>
             )}
           </View>
@@ -104,7 +125,18 @@ export default function OfflineCheckScreen() {
 
         {/* Loading State */}
         {isChecking && (
-          <View style={styles.loadingContainer}>
+          <View
+            style={[
+              styles.loadingContainer,
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.small,
+              },
+            ]}
+          >
+            <ActivityIndicator size="large" color={borderColor} />
             <ThemedText style={styles.loadingText}>
               Checking network status...
             </ThemedText>
@@ -115,21 +147,38 @@ export default function OfflineCheckScreen() {
         <View
           style={[
             styles.instructionsContainer,
-            { backgroundColor: overlayColor },
+            {
+              backgroundColor: overlayColor,
+              borderColor,
+              borderWidth: BorderWidth.thick,
+              ...Shadows.small,
+            },
           ]}
         >
           <ThemedText type="subtitle" style={styles.instructionsTitle}>
-            How to enable airplane mode:
+            HOW TO ENABLE AIRPLANE MODE:
           </ThemedText>
-          <ThemedText style={styles.instructionItem}>
-            1. Open Control Center (swipe down from top-right)
-          </ThemedText>
-          <ThemedText style={styles.instructionItem}>
-            2. Tap the airplane icon
-          </ThemedText>
-          <ThemedText style={styles.instructionItem}>
-            3. Ensure Wi-Fi and Bluetooth are also disabled
-          </ThemedText>
+
+          <View style={styles.instructionItem}>
+            <ThemedText style={styles.instructionNumber}>1</ThemedText>
+            <ThemedText style={styles.instructionText}>
+              Open Control Center (swipe down from top-right)
+            </ThemedText>
+          </View>
+
+          <View style={styles.instructionItem}>
+            <ThemedText style={styles.instructionNumber}>2</ThemedText>
+            <ThemedText style={styles.instructionText}>
+              Tap the airplane icon
+            </ThemedText>
+          </View>
+
+          <View style={styles.instructionItem}>
+            <ThemedText style={styles.instructionNumber}>3</ThemedText>
+            <ThemedText style={styles.instructionText}>
+              Ensure Wi-Fi and Bluetooth are also disabled
+            </ThemedText>
+          </View>
         </View>
 
         {/* Action Buttons */}
@@ -138,20 +187,9 @@ export default function OfflineCheckScreen() {
             title="Retry Check"
             variant="primary"
             onPress={handleRetry}
+            loading={isChecking}
             style={styles.retryButton}
           />
-
-          {isOffline && (
-            <ThemedButton
-              title="Continue to App"
-              variant="success"
-              onPress={() => {
-                // This will be handled by the parent navigation
-                // The app will check this screen's result
-              }}
-              style={styles.continueButton}
-            />
-          )}
         </View>
       </View>
     </SafeThemedView>
@@ -166,93 +204,119 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: Spacing.lg,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 120,
+    height: 120,
+    borderRadius: 0,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 24,
-  },
-  warningIcon: {
-    fontSize: 40,
+    marginBottom: Spacing.xl,
   },
   title: {
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 24,
   },
   message: {
     textAlign: "center",
-    marginBottom: 32,
+    marginBottom: Spacing.xl,
     lineHeight: 24,
-    opacity: 0.8,
+    fontSize: 15,
+    fontWeight: "600",
+    maxWidth: 400,
   },
   statusContainer: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
     width: "100%",
     maxWidth: 400,
   },
   statusTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 18,
+    color: "#fff",
   },
   offlineStatus: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: Spacing.sm,
   },
   onlineStatus: {
     alignItems: "center",
+    gap: Spacing.sm,
   },
-  checkmark: {
-    fontSize: 24,
-    marginRight: 8,
+  onlineTextContainer: {
+    alignItems: "center",
   },
   statusText: {
     textAlign: "center",
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 16,
+    color: "#fff",
   },
   connectionItem: {
     marginTop: 4,
-    color: "#ff4444",
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 14,
+    color: "#fff",
   },
   loadingContainer: {
-    padding: 20,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
+    alignItems: "center",
+    gap: Spacing.md,
+    width: "100%",
+    maxWidth: 400,
   },
   loadingText: {
     textAlign: "center",
-    opacity: 0.7,
+    fontWeight: "700",
+    fontSize: 16,
   },
   instructionsContainer: {
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 32,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.xl,
     width: "100%",
     maxWidth: 400,
   },
   instructionsTitle: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   instructionItem: {
-    marginBottom: 8,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  instructionNumber: {
+    width: 24,
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  instructionText: {
+    flex: 1,
     lineHeight: 20,
+    fontSize: 14,
+    fontWeight: "600",
   },
   buttonContainer: {
     width: "100%",
     maxWidth: 300,
-    gap: 12,
+    gap: Spacing.sm,
   },
   retryButton: {
-    marginBottom: 8,
-  },
-  continueButton: {
-    backgroundColor: "#28a745",
+    width: "100%",
   },
 });

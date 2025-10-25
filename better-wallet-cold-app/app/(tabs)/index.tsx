@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Text,
-} from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedButton } from "@/components/themed-button";
 import { QRDisplay } from "@/components/QRDisplay";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useWallet } from "@/contexts/WalletContext";
 import { router } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function DashboardScreen() {
   const { address, isLoading, isSetupComplete } = useWallet();
@@ -22,8 +17,9 @@ export default function DashboardScreen() {
   const overlayColor = useThemeColor({}, "overlay");
   const borderColor = useThemeColor({}, "border");
   const primaryColor = useThemeColor({}, "primary");
+  const successColor = useThemeColor({}, "success");
+  const cardColor = useThemeColor({}, "card");
 
-  // Redirect to welcome if no wallet setup
   useEffect(() => {
     if (!isLoading && !isSetupComplete) {
       router.replace("/welcome");
@@ -35,7 +31,7 @@ export default function DashboardScreen() {
       <SafeThemedView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ThemedText type="title" style={styles.loadingTitle}>
-            Loading Wallet...
+            LOADING WALLET...
           </ThemedText>
         </View>
       </SafeThemedView>
@@ -43,7 +39,7 @@ export default function DashboardScreen() {
   }
 
   if (!isSetupComplete) {
-    return null; // Will redirect to welcome
+    return null;
   }
 
   const handleShowAddress = () => {
@@ -54,34 +50,27 @@ export default function DashboardScreen() {
     router.push("/scan-transaction");
   };
 
-  // const handleSettings = () => {
-  //   router.push("/(tabs)/settings");
-  // };
-
   if (showQR && address) {
     return (
-      <SafeThemedView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+      <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.content}>
             <ThemedText type="title" style={styles.title}>
-              Your Ethereum Address
+              YOUR ETHEREUM ADDRESS
             </ThemedText>
 
             <ThemedText style={styles.subtitle}>
               Safe to share - Scan with your hot wallet
             </ThemedText>
 
-            {/* QR Code */}
-            <QRDisplay
-              data={address}
-              title="Your Ethereum Address"
-              description="Scan with your hot wallet"
-              size={280}
-            />
+            <QRDisplay data={address} title="" description="" size={280} />
 
             <ThemedButton
               title="Hide QR Code"
-              variant="primary"
+              variant="secondary"
               onPress={() => setShowQR(false)}
               style={styles.hideButton}
             />
@@ -92,19 +81,30 @@ export default function DashboardScreen() {
   }
 
   return (
-    <SafeThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.content}>
           {/* Header */}
           <ThemedText type="title" style={styles.title}>
-            Cold Wallet Dashboard
+            COLD WALLET
           </ThemedText>
 
           {/* Offline Indicator */}
           <View
-            style={[styles.offlineIndicator, { backgroundColor: warningColor }]}
+            style={[
+              styles.offlineIndicator,
+              {
+                backgroundColor: successColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
           >
-            <Text style={styles.offlineIcon}>✈️</Text>
+            <Ionicons name="airplane" size={24} color="#fff" />
             <ThemedText style={styles.offlineText}>
               OFFLINE MODE - SECURE
             </ThemedText>
@@ -114,11 +114,16 @@ export default function DashboardScreen() {
           <View
             style={[
               styles.walletInfo,
-              { backgroundColor: overlayColor, borderColor },
+              {
+                backgroundColor: cardColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
             ]}
           >
             <ThemedText type="subtitle" style={styles.walletTitle}>
-              Your Wallet
+              YOUR WALLET
             </ThemedText>
 
             <View style={styles.addressContainer}>
@@ -141,12 +146,21 @@ export default function DashboardScreen() {
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: primaryColor }]}
+              style={[
+                styles.actionButton,
+                {
+                  backgroundColor: primaryColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.large,
+                },
+              ]}
               onPress={handleShowAddress}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionIcon}>📱</Text>
+              <Ionicons name="qr-code" size={40} color="#fff" />
               <ThemedText style={styles.actionTitle}>
-                Receive ETH/Tokens
+                RECEIVE ETH/TOKENS
               </ThemedText>
               <ThemedText style={styles.actionSubtitle}>
                 Show address QR code
@@ -154,12 +168,21 @@ export default function DashboardScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: primaryColor }]}
+              style={[
+                styles.actionButton,
+                {
+                  backgroundColor: successColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.large,
+                },
+              ]}
               onPress={handleScanTransaction}
+              activeOpacity={0.8}
             >
-              <Text style={styles.actionIcon}>📷</Text>
+              <Ionicons name="camera" size={40} color="#fff" />
               <ThemedText style={styles.actionTitle}>
-                Scan Transaction
+                SCAN TRANSACTION
               </ThemedText>
               <ThemedText style={styles.actionSubtitle}>
                 Sign transaction from hot wallet
@@ -169,28 +192,36 @@ export default function DashboardScreen() {
 
           {/* Security Status */}
           <View
-            style={[styles.securityStatus, { backgroundColor: overlayColor }]}
+            style={[
+              styles.securityStatus,
+              {
+                backgroundColor: overlayColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.small,
+              },
+            ]}
           >
             <ThemedText type="subtitle" style={styles.securityTitle}>
-              Security Status
+              SECURITY STATUS
             </ThemedText>
 
             <View style={styles.securityItem}>
-              <Text style={styles.securityIcon}>🔒</Text>
+              <Ionicons name="lock-closed" size={20} color="#000" />
               <ThemedText style={styles.securityText}>
                 Private keys stored offline
               </ThemedText>
             </View>
 
             <View style={styles.securityItem}>
-              <Text style={styles.securityIcon}>✈️</Text>
+              <Ionicons name="airplane" size={20} color="#000" />
               <ThemedText style={styles.securityText}>
                 Airplane mode enforced
               </ThemedText>
             </View>
 
             <View style={styles.securityItem}>
-              <Text style={styles.securityIcon}>🛡️</Text>
+              <Ionicons name="finger-print" size={20} color="#000" />
               <ThemedText style={styles.securityText}>
                 Biometric authentication enabled
               </ThemedText>
@@ -201,6 +232,9 @@ export default function DashboardScreen() {
     </SafeThemedView>
   );
 }
+
+// Import ThemedButton here at the top with other imports
+import { ThemedButton } from "@/components/themed-button";
 
 const styles = StyleSheet.create({
   container: {
@@ -213,130 +247,124 @@ const styles = StyleSheet.create({
   },
   loadingTitle: {
     textAlign: "center",
+    fontWeight: "800",
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
-    paddingBottom: 100, // Extra padding for tab bar
+    padding: Spacing.md,
+    paddingBottom: 100,
   },
   content: {
     flex: 1,
   },
   title: {
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 28,
   },
   subtitle: {
     textAlign: "center",
-    marginBottom: 24,
-    opacity: 0.7,
+    marginBottom: Spacing.lg,
+    fontSize: 15,
+    fontWeight: "600",
   },
   offlineIndicator: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  offlineIcon: {
-    fontSize: 20,
-    marginRight: 8,
+    padding: Spacing.md,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
+    gap: Spacing.sm,
   },
   offlineText: {
-    fontWeight: "bold",
+    fontWeight: "800",
     fontSize: 16,
+    color: "#fff",
+    letterSpacing: 0.5,
   },
   walletInfo: {
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 24,
+    padding: Spacing.lg,
+    borderRadius: 0,
+    marginBottom: Spacing.lg,
   },
   walletTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 18,
   },
   addressContainer: {
-    marginBottom: 12,
+    marginBottom: Spacing.sm,
   },
   addressLabel: {
     fontSize: 14,
-    opacity: 0.7,
     marginBottom: 4,
+    fontWeight: "700",
   },
   addressText: {
     fontFamily: "monospace",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   balanceContainer: {
-    marginBottom: 8,
+    marginBottom: Spacing.xs,
   },
   balanceLabel: {
     fontSize: 14,
-    opacity: 0.7,
     marginBottom: 4,
+    fontWeight: "700",
   },
   balanceText: {
     fontSize: 18,
-    fontWeight: "600",
-    opacity: 0.8,
+    fontWeight: "700",
   },
   actionButtons: {
-    gap: 16,
-    marginBottom: 24,
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   actionButton: {
-    padding: 20,
-    borderRadius: 16,
+    padding: Spacing.lg,
+    borderRadius: 0,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  actionIcon: {
-    fontSize: 32,
-    marginBottom: 8,
+    gap: Spacing.sm,
   },
   actionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 4,
+    fontWeight: "800",
     color: "white",
+    letterSpacing: 0.5,
   },
   actionSubtitle: {
     fontSize: 14,
-    opacity: 0.9,
     color: "white",
     textAlign: "center",
+    fontWeight: "600",
   },
   securityStatus: {
-    padding: 20,
-    borderRadius: 16,
+    padding: Spacing.lg,
+    borderRadius: 0,
   },
   securityTitle: {
-    marginBottom: 16,
+    marginBottom: Spacing.md,
     textAlign: "center",
+    fontWeight: "800",
+    fontSize: 16,
   },
   securityItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
-  },
-  securityIcon: {
-    fontSize: 16,
-    marginRight: 12,
-    width: 20,
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
   },
   securityText: {
     flex: 1,
     fontSize: 14,
+    fontWeight: "600",
   },
   hideButton: {
     width: "100%",
-    maxWidth: 300,
+    marginTop: Spacing.lg,
   },
 });
