@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { useDeviceMode } from '../../contexts/DeviceModeContext';
+import { useWalletConnect } from '../../contexts/WalletConnectContext';
 import { getBalance } from '../../services/ethereum';
 
 export function HotHomePage() {
   const navigate = useNavigate();
   const { walletAddress } = useDeviceMode();
+  const { sessions } = useWalletConnect();
   const [balance, setBalance] = useState<string>("0.0");
   const [loading, setLoading] = useState(false);
 
@@ -76,6 +78,13 @@ export function HotHomePage() {
               title="Send Transaction"
               variant="success"
               onClick={() => navigate("/hot/send")}
+              className="w-full"
+            />
+
+            <Button
+              title={`Connect to dApps${sessions.length > 0 ? ` (${sessions.length})` : ''}`}
+              variant="primary"
+              onClick={() => navigate("/hot/dapp-connect")}
               className="w-full"
             />
 

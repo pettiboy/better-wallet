@@ -6,7 +6,7 @@ const SEPOLIA_RPC = "https://1rpc.io/sepolia";
 
 // Default to Sepolia testnet for safety
 const DEFAULT_RPC = SEPOLIA_RPC;
-const DEFAULT_CHAIN_ID = 11155111; // Sepolia
+export const DEFAULT_CHAIN_ID = 11155111; // Sepolia
 
 let provider: ethers.JsonRpcProvider;
 
@@ -158,4 +158,106 @@ export function formatEther(wei: bigint): string {
  */
 export function parseEther(ether: string): bigint {
   return ethers.parseEther(ether);
+}
+
+/**
+ * Update transaction with current nonce and gas prices from the network
+ * This fixes issues where dApps send transactions with stale nonces/gas prices
+ */
+export async function updateTransactionNonce(
+  transaction: any,
+  provider: any
+): Promise<any> {
+  try {
+    if (!transaction.from) {
+      console.warn(
+        "Transaction missing 'from' field, cannot update transaction"
+      );
+      return transaction;
+    }
+
+    // Get current nonce from network
+    const currentNonce = await provider.getTransactionCount(
+      transaction.from,
+      "pending"
+    );
+
+    // Get current fee data (gas prices)
+    const feeData = await provider.getFeeData();
+
+    console.log(
+      `Updating transaction: nonce ${transaction.nonce}->${currentNonce}, ` +
+        `maxFee ${
+          transaction.maxFeePerGas
+        }->${feeData.maxFeePerGas?.toString()}`
+    );
+
+    const updates: any = {};
+
+    // Update nonce if it's missing or outdated
+    if (
+      transaction.nonce === undefined ||
+      transaction.nonce === null ||
+      transaction.nonce < currentNonce
+    ) {
+      updates.nonce = currentNonce;
+    }
+
+    // Update gas prices if they're missing or too low
+    // For EIP-1559 transactions (type 2)
+    if (transaction.type === 2 || transaction.type === undefined) {
+      if (feeData.maxFeePerGas) {
+        // Only update if current fee is higher or missing
+        const currentMaxFee = transaction.maxFeePerGas
+          ? BigInt(transaction.maxFeePerGas)
+          : BigInt(0);
+        if (
+          currentMaxFee === BigInt(0) ||
+          feeData.maxFeePerGas > currentMaxFee
+        ) {
+          updates.maxFeePerGas = feeData.maxFeePerGas;
+        }
+      }
+
+      if (feeData.maxPriorityFeePerGas) {
+        const currentPriorityFee = transaction.maxPriorityFeePerGas
+          ? BigInt(transaction.maxPriorityFeePerGas)
+          : BigInt(0);
+        if (
+          currentPriorityFee === BigInt(0) ||
+          feeData.maxPriorityFeePerGas > currentPriorityFee
+        ) {
+          updates.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+        }
+      }
+
+      // Remove legacy gasPrice if present (EIP-1559 uses maxFeePerGas)
+      if ("gasPrice" in transaction) {
+        updates.gasPrice = undefined;
+      }
+    }
+    // For legacy transactions (type 0 or 1)
+    else if (feeData.gasPrice) {
+      const currentGasPrice = transaction.gasPrice
+        ? BigInt(transaction.gasPrice)
+        : BigInt(0);
+      if (currentGasPrice === BigInt(0) || feeData.gasPrice > currentGasPrice) {
+        updates.gasPrice = feeData.gasPrice;
+      }
+    }
+
+    // Return updated transaction if there were any updates
+    if (Object.keys(updates).length > 0) {
+      return {
+        ...transaction,
+        ...updates,
+      };
+    }
+
+    return transaction;
+  } catch (error) {
+    console.error("Failed to update transaction:", error);
+    // Return original transaction if update fails
+    return transaction;
+  }
 }
