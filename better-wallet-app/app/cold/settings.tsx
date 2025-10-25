@@ -7,13 +7,16 @@ import { ThemedButton } from "@/components/themed-button";
 import { QRDisplay } from "@/components/QRDisplay";
 import { loadPrivateKey, loadMnemonic, getAddress } from "@/services/wallet";
 import { useDeviceMode } from "@/contexts/DeviceModeContext";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useThemeColor } from "@/hooks/use-theme-color";
+import { router } from "expo-router";
 
 export default function SettingsScreen() {
   const [address, setAddress] = useState<string>("");
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [mnemonic, setMnemonic] = useState<string>("");
   const { walletAddress } = useDeviceMode();
+  const { resetOnboarding } = useOnboarding();
 
   const warningColor = useThemeColor({}, "warning");
   const overlayColor = useThemeColor({}, "overlay");
@@ -52,6 +55,16 @@ export default function SettingsScreen() {
   const handleHideMnemonic = () => {
     setShowMnemonic(false);
     setMnemonic("");
+  };
+
+  const handleViewOnboardingAgain = async () => {
+    try {
+      await resetOnboarding();
+      router.push("/(tabs)");
+    } catch (error) {
+      console.error("Error resetting onboarding:", error);
+      Alert.alert("Error", "Failed to reset onboarding");
+    }
   };
 
   return (
@@ -151,6 +164,17 @@ export default function SettingsScreen() {
                 />
               </View>
             )}
+          </View>
+
+          <View style={styles.section}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              Help & Support
+            </ThemedText>
+            <ThemedButton
+              title="View Onboarding Again"
+              variant="secondary"
+              onPress={handleViewOnboardingAgain}
+            />
           </View>
         </ThemedView>
       </ScrollView>
