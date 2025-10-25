@@ -12,6 +12,8 @@ import { ThemedView } from "@/components/themed-view";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedButton } from "@/components/themed-button";
 import { useDeviceMode } from "@/contexts/DeviceModeContext";
+import { useOnboarding } from "@/contexts/OnboardingContext";
+import { OnboardingScreens } from "@/components/OnboardingScreens";
 import { QRScanner } from "@/components/QRScanner";
 import { QRDisplay } from "@/components/QRDisplay";
 import {
@@ -26,6 +28,17 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 
 export default function HomeScreen() {
   const { mode, setMode, setWalletAddress } = useDeviceMode();
+  const { hasCompletedOnboarding, isLoading } = useOnboarding();
+
+  // Show loading while checking onboarding status
+  if (isLoading) {
+    return null;
+  }
+
+  // Show onboarding if not completed
+  if (!hasCompletedOnboarding) {
+    return <OnboardingScreens onComplete={() => {}} />;
+  }
 
   // Setup mode
   if (mode === "setup") {
