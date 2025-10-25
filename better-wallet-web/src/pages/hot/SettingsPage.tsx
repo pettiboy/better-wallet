@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Settings, Unplug, Info, Lightbulb } from "lucide-react";
+import { Settings, Unplug, Lightbulb } from "lucide-react";
 import { Button } from "../../components/Button";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
 

@@ -1,19 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
-import { Send, CheckCircle, Lightbulb } from "lucide-react";
+import { Send, CheckCircle, Lightbulb, Coins } from "lucide-react";
 import { Button } from "../../components/Button";
 import { QRDisplay } from "../../components/QRDisplay";
 import { QRScanner } from "../../components/QRScanner";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
 import {
   constructTransaction,
+  constructERC20Transfer,
   broadcastTransaction,
   isValidAddress,
+  getBalance,
+  getERC20Balance,
 } from "../../services/ethereum";
 import {
   serializeTransaction,
   deserializeSignedTransaction,
 } from "../../utils/transaction-serializer";
+import { SUPPORTED_TOKENS, type TokenInfo } from "../../config/tokens";
 
 type Step =
   | "input"
@@ -27,9 +31,38 @@ export function SendPage() {
   const [step, setStep] = useState<Step>("input");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
+  const [selectedToken, setSelectedToken] = useState<TokenInfo>(
+    SUPPORTED_TOKENS[0]
+  );
+  const [tokenBalance, setTokenBalance] = useState<string | null>(null);
   const [unsignedTx, setUnsignedTx] =
     useState<ethers.TransactionRequest | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+
+  // Load token balance when token changes
+  useEffect(() => {
+    loadTokenBalance();
+  }, [selectedToken, walletAddress]);
+
+  const loadTokenBalance = async () => {
+    if (!walletAddress) return;
+
+    try {
+      if (selectedToken.isNative) {
+        const balance = await getBalance(walletAddress);
+        setTokenBalance(balance);
+      } else {
+        const { balance } = await getERC20Balance(
+          selectedToken.address,
+          walletAddress
+        );
+        setTokenBalance(balance);
+      }
+    } catch (error) {
+      console.error("Error loading balance:", error);
+      setTokenBalance(null);
+    }
+  };
 
   const handleCreateTransaction = async () => {
     if (!walletAddress) {
@@ -54,7 +87,22 @@ export function SendPage() {
     }
 
     try {
-      const tx = await constructTransaction(walletAddress, recipient, amount);
+      let tx: ethers.TransactionRequest;
+
+      if (selectedToken.isNative) {
+        // ETH transfer
+        tx = await constructTransaction(walletAddress, recipient, amount);
+      } else {
+        // ERC20 token transfer
+        tx = await constructERC20Transfer(
+          selectedToken.address,
+          walletAddress,
+          recipient,
+          amount,
+          selectedToken.decimals
+        );
+      }
+
       setUnsignedTx(tx);
       setStep("show-unsigned");
     } catch (error) {
@@ -93,6 +141,32 @@ export function SendPage() {
     setAmount("");
     setUnsignedTx(null);
     setTxHash(null);
+    loadTokenBalance();
+  };
+
+  const getTransactionDisplayValue = (tx: ethers.TransactionRequest) => {
+    if (selectedToken.isNative) {
+      return `${ethers.formatEther(tx.value || 0)} ${selectedToken.symbol}`;
+    } else {
+      // For ERC20, decode the data to get the amount
+      if (tx.data) {
+        try {
+          const iface = new ethers.Interface([
+            "function transfer(address to, uint256 amount)",
+          ]);
+          const decoded = iface.decodeFunctionData("transfer", tx.data);
+          const formattedAmount = ethers.formatUnits(
+            decoded[1],
+            selectedToken.decimals
+          );
+          return `${formattedAmount} ${selectedToken.symbol}`;
+        } catch (error: unknown) {
+          console.error("Error decoding transaction data:", error);
+          return `${amount} ${selectedToken.symbol}`;
+        }
+      }
+      return `${amount} ${selectedToken.symbol}`;
+    }
   };
 
   if (step === "scan-signed") {
@@ -161,11 +235,19 @@ export function SendPage() {
                 marginBottom: "1.5rem",
               }}
             >
-              <DetailRow label="To" value={unsignedTx.to as string} />
+              <DetailRow
+                label="To"
+                value={
+                  selectedToken.isNative ? (unsignedTx.to as string) : recipient
+                }
+              />
               <DetailRow
                 label="Amount"
-                value={`${ethers.formatEther(unsignedTx.value || 0)} ETH`}
+                value={getTransactionDisplayValue(unsignedTx)}
               />
+              {!selectedToken.isNative && (
+                <DetailRow label="Token" value={selectedToken.name} />
+              )}
             </div>
 
             <div
@@ -389,6 +471,64 @@ export function SendPage() {
                   color: "var(--color-black)",
                 }}
               >
+                Asset
+              </label>
+              <select
+                value={selectedToken.symbol}
+                onChange={(e) => {
+                  const token = SUPPORTED_TOKENS.find(
+                    (t) => t.symbol === e.target.value
+                  );
+                  if (token) {
+                    setSelectedToken(token);
+                    setAmount(""); // Reset amount when changing token
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  padding: "0.75rem",
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  border: "3px solid var(--color-black)",
+                  borderRadius: "0",
+                  backgroundColor: "var(--color-white)",
+                  cursor: "pointer",
+                }}
+              >
+                {SUPPORTED_TOKENS.map((token) => (
+                  <option key={token.symbol} value={token.symbol}>
+                    {token.symbol} - {token.name}
+                  </option>
+                ))}
+              </select>
+              {tokenBalance !== null && (
+                <div
+                  style={{
+                    marginTop: "0.5rem",
+                    fontSize: "0.875rem",
+                    fontWeight: 700,
+                    color: "var(--color-gray-800)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                  }}
+                >
+                  <Coins size={14} />
+                  Balance: {tokenBalance} {selectedToken.symbol}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.875rem",
+                  fontWeight: 900,
+                  marginBottom: "0.5rem",
+                  color: "var(--color-black)",
+                }}
+              >
                 Recipient Address
               </label>
               <input
@@ -410,11 +550,11 @@ export function SendPage() {
                   color: "var(--color-black)",
                 }}
               >
-                Amount (ETH)
+                Amount ({selectedToken.symbol})
               </label>
               <input
                 type="number"
-                step="0.00001"
+                step={selectedToken.decimals === 6 ? "0.000001" : "0.00001"}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
