@@ -1,98 +1,360 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+} from "react-native";
+import { SafeThemedView } from "@/components/safe-themed-view";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedButton } from "@/components/themed-button";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { useWallet } from "@/contexts/WalletContext";
+import { router } from "expo-router";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function DashboardScreen() {
+  const { address, isLoading, isSetupComplete } = useWallet();
+  const [showQR, setShowQR] = useState(false);
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
+  const warningColor = useThemeColor({}, "warning");
+  const overlayColor = useThemeColor({}, "overlay");
+  const borderColor = useThemeColor({}, "border");
+  const primaryColor = useThemeColor({}, "primary");
+
+  // Redirect to welcome if no wallet setup
+  useEffect(() => {
+    if (!isLoading && !isSetupComplete) {
+      router.replace("/welcome");
+    }
+  }, [isLoading, isSetupComplete]);
+
+  if (isLoading) {
+    return (
+      <SafeThemedView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ThemedText type="title" style={styles.loadingTitle}>
+            Loading Wallet...
+          </ThemedText>
+        </View>
+      </SafeThemedView>
+    );
+  }
+
+  if (!isSetupComplete) {
+    return null; // Will redirect to welcome
+  }
+
+  const handleShowAddress = () => {
+    setShowQR(true);
+  };
+
+  const handleScanTransaction = () => {
+    router.push("/scan-transaction");
+  };
+
+  const handleSettings = () => {
+    router.push("/(tabs)/settings");
+  };
+
+  if (showQR && address) {
+    return (
+      <SafeThemedView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.content}>
+            <ThemedText type="title" style={styles.title}>
+              Your Ethereum Address
+            </ThemedText>
+
+            <ThemedText style={styles.subtitle}>
+              Safe to share - Scan with your hot wallet
+            </ThemedText>
+
+            {/* QR Code would go here - using QRDisplay component */}
+            <View
+              style={[
+                styles.qrPlaceholder,
+                { backgroundColor: overlayColor, borderColor },
+              ]}
+            >
+              <Text style={styles.qrText}>QR Code</Text>
+              <ThemedText style={styles.addressText}>{address}</ThemedText>
+            </View>
+
+            <ThemedButton
+              title="Hide QR Code"
+              variant="primary"
+              onPress={() => setShowQR(false)}
+              style={styles.hideButton}
             />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+          </View>
+        </ScrollView>
+      </SafeThemedView>
+    );
+  }
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <SafeThemedView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.content}>
+          {/* Header */}
+          <ThemedText type="title" style={styles.title}>
+            Cold Wallet Dashboard
+          </ThemedText>
+
+          {/* Offline Indicator */}
+          <View
+            style={[styles.offlineIndicator, { backgroundColor: warningColor }]}
+          >
+            <Text style={styles.offlineIcon}>✈️</Text>
+            <ThemedText style={styles.offlineText}>
+              OFFLINE MODE - SECURE
+            </ThemedText>
+          </View>
+
+          {/* Wallet Info */}
+          <View
+            style={[
+              styles.walletInfo,
+              { backgroundColor: overlayColor, borderColor },
+            ]}
+          >
+            <ThemedText type="subtitle" style={styles.walletTitle}>
+              Your Wallet
+            </ThemedText>
+
+            <View style={styles.addressContainer}>
+              <ThemedText style={styles.addressLabel}>Address:</ThemedText>
+              <ThemedText style={styles.addressText}>
+                {address
+                  ? `${address.substring(0, 6)}...${address.substring(
+                      address.length - 4
+                    )}`
+                  : "Not available"}
+              </ThemedText>
+            </View>
+
+            <View style={styles.balanceContainer}>
+              <ThemedText style={styles.balanceLabel}>Balance:</ThemedText>
+              <ThemedText style={styles.balanceText}>Offline Mode</ThemedText>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: primaryColor }]}
+              onPress={handleShowAddress}
+            >
+              <Text style={styles.actionIcon}>📱</Text>
+              <ThemedText style={styles.actionTitle}>
+                Receive ETH/Tokens
+              </ThemedText>
+              <ThemedText style={styles.actionSubtitle}>
+                Show address QR code
+              </ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: primaryColor }]}
+              onPress={handleScanTransaction}
+            >
+              <Text style={styles.actionIcon}>📷</Text>
+              <ThemedText style={styles.actionTitle}>
+                Scan Transaction
+              </ThemedText>
+              <ThemedText style={styles.actionSubtitle}>
+                Sign transaction from hot wallet
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {/* Security Status */}
+          <View
+            style={[styles.securityStatus, { backgroundColor: overlayColor }]}
+          >
+            <ThemedText type="subtitle" style={styles.securityTitle}>
+              Security Status
+            </ThemedText>
+
+            <View style={styles.securityItem}>
+              <Text style={styles.securityIcon}>🔒</Text>
+              <ThemedText style={styles.securityText}>
+                Private keys stored offline
+              </ThemedText>
+            </View>
+
+            <View style={styles.securityItem}>
+              <Text style={styles.securityIcon}>✈️</Text>
+              <ThemedText style={styles.securityText}>
+                Airplane mode enforced
+              </ThemedText>
+            </View>
+
+            <View style={styles.securityItem}>
+              <Text style={styles.securityIcon}>🛡️</Text>
+              <ThemedText style={styles.securityText}>
+                Biometric authentication enabled
+              </ThemedText>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingTitle: {
+    textAlign: "center",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  content: {
+    flex: 1,
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  subtitle: {
+    textAlign: "center",
+    marginBottom: 24,
+    opacity: 0.7,
+  },
+  offlineIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  offlineIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  offlineText: {
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  walletInfo: {
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  walletTitle: {
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  addressContainer: {
+    marginBottom: 12,
+  },
+  addressLabel: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginBottom: 4,
+  },
+  addressText: {
+    fontFamily: "monospace",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  balanceContainer: {
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  balanceLabel: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginBottom: 4,
+  },
+  balanceText: {
+    fontSize: 18,
+    fontWeight: "600",
+    opacity: 0.8,
+  },
+  actionButtons: {
+    gap: 16,
+    marginBottom: 24,
+  },
+  actionButton: {
+    padding: 20,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  actionIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  actionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 4,
+    color: "white",
+  },
+  actionSubtitle: {
+    fontSize: 14,
+    opacity: 0.9,
+    color: "white",
+    textAlign: "center",
+  },
+  securityStatus: {
+    padding: 20,
+    borderRadius: 16,
+  },
+  securityTitle: {
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  securityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  securityIcon: {
+    fontSize: 16,
+    marginRight: 12,
+    width: 20,
+  },
+  securityText: {
+    flex: 1,
+    fontSize: 14,
+  },
+  qrPlaceholder: {
+    padding: 40,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  qrText: {
+    fontSize: 24,
+    marginBottom: 16,
+    opacity: 0.5,
+  },
+  addressText: {
+    fontFamily: "monospace",
+    fontSize: 12,
+    textAlign: "center",
+  },
+  hideButton: {
+    width: "100%",
+    maxWidth: 300,
   },
 });
