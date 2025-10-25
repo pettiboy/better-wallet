@@ -26,10 +26,12 @@ Communication between devices happens exclusively through QR codes, ensuring the
 
 - Import watch-only address from cold wallet via QR code
 - View wallet balance (Sepolia testnet)
-- Construct unsigned transactions with recipient address and amount
-- Display unsigned transaction as QR code
+- **WalletConnect Integration**: Connect to dApps (Uniswap, OpenSea, etc.)
+- Construct unsigned transactions (manual or from dApps)
+- Display unsigned transaction as QR code with source information
 - Scan signed transaction from cold wallet
 - Broadcast transactions to Ethereum network
+- Relay transaction confirmations back to dApps via WalletConnect
 - Transaction history and confirmation
 
 ## 📋 Prerequisites
@@ -48,13 +50,29 @@ cd better-wallet-app
 npm install
 ```
 
-2. Start the Expo development server:
+2. Set up WalletConnect (for dApp integration):
+
+Create a `.env` file in the `better-wallet-app` directory:
+
+```bash
+# Get your project ID from https://cloud.reown.com
+EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
+```
+
+To get a WalletConnect Project ID:
+
+- Visit https://cloud.reown.com
+- Sign up / log in
+- Create a new project
+- Copy the Project ID
+
+3. Start the Expo development server:
 
 ```bash
 npm start
 ```
 
-3. Build and install on both devices:
+4. Build and install on both devices:
 
 ```bash
 # For iOS
@@ -107,6 +125,50 @@ npm run android
 2. Scan the signed transaction QR from Device B
 3. Tap "Broadcast" to send to the network
 4. Transaction hash will be displayed
+
+## 🌐 Using WalletConnect with dApps
+
+### Connecting to a dApp
+
+1. **On Device A (Hot Wallet)**:
+
+   - Tap "Connect to dApps" button on the home screen
+   - Choose one of two options:
+     - Scan a WalletConnect QR code from a dApp
+     - Or paste the WalletConnect URI manually
+
+2. **Approve Connection**:
+   - Review the dApp details (name, URL)
+   - Tap "Approve" to connect your wallet
+   - The dApp is now connected and can request transactions
+
+### Signing dApp Transactions
+
+1. **Receive Transaction Request**:
+
+   - When a dApp sends a transaction, you'll see the request
+   - Review the dApp information and transaction details
+   - An unsigned transaction QR code will be displayed
+
+2. **Sign on Cold Wallet (Device B)**:
+
+   - Scan the QR code on your cold wallet
+   - **Important**: The cold wallet will show:
+     - Transaction source: "📱 dApp Request"
+     - dApp name and URL
+     - Complete transaction details
+   - Review carefully and tap "Sign Transaction"
+
+3. **Complete Transaction (Device A)**:
+   - Scan the signed transaction QR code
+   - The transaction is broadcasted to the network
+   - The result is automatically sent back to the dApp
+
+### Managing Connections
+
+- View all connected dApps in the "Connected dApps" screen
+- Disconnect from any dApp at any time
+- Sessions persist across app restarts
 
 ## 🔒 Security Considerations
 

@@ -22,7 +22,10 @@ import {
 } from "@/services/ethereum";
 import { ethers } from "ethers";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { serializeTransaction } from "@/utils/transaction-serializer";
+import {
+  serializeTransaction,
+  deserializeSignedTransaction,
+} from "@/utils/transaction-serializer";
 
 type Step =
   | "input"
@@ -87,11 +90,13 @@ export default function SendScreen() {
     broadcastSignedTransaction(data);
   };
 
-  const broadcastSignedTransaction = async (signedTx: string) => {
+  const broadcastSignedTransaction = async (data: string) => {
     setStep("broadcasting");
 
     try {
-      const hash = await broadcastTransaction(signedTx);
+      // Deserialize to handle both legacy and new formats
+      const { signedTransaction } = deserializeSignedTransaction(data);
+      const hash = await broadcastTransaction(signedTransaction);
       setTxHash(hash);
       setStep("success");
       Alert.alert(
@@ -140,7 +145,7 @@ export default function SendScreen() {
             </ThemedText>
 
             <QRDisplay
-              data={serializeTransaction(unsignedTx)}
+              data={serializeTransaction(unsignedTx, { source: "manual" })}
               title="Transaction to Sign"
               size={280}
             />

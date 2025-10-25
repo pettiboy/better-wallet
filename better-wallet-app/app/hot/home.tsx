@@ -121,6 +121,13 @@ export default function HotHomeScreen() {
             onPress={() => router.push("/hot/send")}
           />
 
+          <ThemedButton
+            title="Connect to dApps"
+            variant="primary"
+            onPress={() => router.push("/hot/dapp-connect")}
+            style={styles.marginTop}
+          />
+
           <View style={[styles.infoSection, { backgroundColor: overlayColor }]}>
             <ThemedText type="subtitle" style={styles.infoTitle}>
               How to Use
@@ -221,5 +228,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 6,
     lineHeight: 20,
+  },
+  marginTop: {
+    marginTop: 12,
   },
 });
