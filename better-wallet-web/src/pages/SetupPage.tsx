@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { QRScanner } from '../components/QRScanner';
-import { useDeviceMode } from '../contexts/DeviceModeContext';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { QRScanner } from "../components/QRScanner";
+import { useDeviceMode } from "../contexts/DeviceModeContext";
 
 export function SetupPage() {
   const navigate = useNavigate();
@@ -37,42 +37,162 @@ export function SetupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-center mb-4 text-gray-900 dark:text-white">
+    <div
+      style={{
+        flex: 1,
+        backgroundColor: "var(--color-bg-main)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1.5rem",
+        overflowY: "auto",
+      }}
+    >
+      <div style={{ width: "100%", maxWidth: "400px" }}>
+        <div
+          style={{
+            backgroundColor: "var(--color-white)",
+            border: "4px solid var(--color-black)",
+            boxShadow: "8px 8px 0 var(--color-black)",
+            padding: "2rem",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "2rem",
+              fontWeight: 900,
+              textAlign: "center",
+              marginBottom: "1rem",
+              color: "var(--color-black)",
+            }}
+          >
             Connect Hot Wallet
           </h1>
-          
-          <p className="text-center text-gray-600 dark:text-gray-300 mb-8">
+
+          <p
+            style={{
+              textAlign: "center",
+              color: "var(--color-gray-800)",
+              marginBottom: "2rem",
+              fontWeight: 500,
+            }}
+          >
             Connect to your cold wallet to manage transactions
           </p>
 
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 mb-8">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          <div
+            style={{
+              backgroundColor: "var(--color-gray-100)",
+              border: "3px solid var(--color-black)",
+              padding: "1.5rem",
+              marginBottom: "2rem",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: 900,
+                marginBottom: "1rem",
+                color: "var(--color-black)",
+              }}
+            >
               How It Works
             </h2>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <li>• <span className="font-semibold">Cold Wallet:</span> Mobile app stores private keys offline</li>
-              <li>• <span className="font-semibold">Hot Wallet:</span> Web app connects to blockchain, broadcasts transactions</li>
-              <li>• Communication via QR codes only</li>
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+              }}
+            >
+              <li
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--color-gray-800)",
+                  marginBottom: "0.75rem",
+                  fontWeight: 500,
+                }}
+              >
+                • <span style={{ fontWeight: 900 }}>Cold Wallet:</span> Mobile
+                app stores private keys offline
+              </li>
+              <li
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--color-gray-800)",
+                  marginBottom: "0.75rem",
+                  fontWeight: 500,
+                }}
+              >
+                • <span style={{ fontWeight: 900 }}>Hot Wallet:</span> Web app
+                connects to blockchain, broadcasts transactions
+              </li>
+              <li
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--color-gray-800)",
+                  fontWeight: 500,
+                }}
+              >
+                • Communication via QR codes only
+              </li>
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <button
-              onClick={handleConnectWallet}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex flex-col items-center"
-            >
-              <span className="text-3xl mb-2">📱</span>
-              <span className="text-lg">Connect to Cold Wallet</span>
-              <span className="text-sm opacity-90">Scan wallet address QR code</span>
-            </button>
-          </div>
+          <button
+            onClick={handleConnectWallet}
+            style={{
+              width: "100%",
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-white)",
+              border: "4px solid var(--color-black)",
+              padding: "1.5rem",
+              fontSize: "1rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "6px 6px 0 var(--color-black)",
+              transition: "all 0.1s ease",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              marginBottom: "1.5rem",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translate(-2px, -2px)";
+              e.currentTarget.style.boxShadow = "8px 8px 0 var(--color-black)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translate(0, 0)";
+              e.currentTarget.style.boxShadow = "6px 6px 0 var(--color-black)";
+            }}
+          >
+            <span style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
+              📱
+            </span>
+            <span style={{ fontSize: "1.125rem" }}>Connect to Cold Wallet</span>
+            <span style={{ fontSize: "0.875rem", opacity: 0.9 }}>
+              Scan wallet address QR code
+            </span>
+          </button>
 
-          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-            <p className="text-sm text-blue-800 dark:text-blue-200 text-center">
-              📱 Make sure you have the Better Wallet mobile app set up as your cold wallet first
+          <div
+            style={{
+              backgroundColor: "var(--color-info)",
+              border: "3px solid var(--color-black)",
+              padding: "1rem",
+              color: "var(--color-white)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "0.875rem",
+                textAlign: "center",
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
+              📱 Make sure you have the Better Wallet mobile app set up as your
+              cold wallet first
             </p>
           </div>
         </div>

@@ -13,6 +13,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { WalletProvider, useWallet } from "@/contexts/WalletContext";
 import { isDeviceOffline } from "@/services/network";
 import OfflineCheckScreen from "./offline-check";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -103,7 +104,9 @@ export default function RootLayout() {
   return (
     <WalletProvider>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <AppContent />
+        <SafeAreaView style={{ flex: 1 }}>
+          <AppContent />
+        </SafeAreaView>
         <StatusBar style="auto" />
       </ThemeProvider>
     </WalletProvider>

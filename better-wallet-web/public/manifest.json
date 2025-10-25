@@ -1,0 +1,52 @@
+{
+  "name": "Better Wallet - Hot Wallet",
+  "short_name": "Better Wallet",
+  "description": "Secure hot wallet interface for Better Wallet cold storage",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FEFCE8",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Send Transaction",
+      "short_name": "Send",
+      "description": "Send a transaction",
+      "url": "/hot/send",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Connect dApp",
+      "short_name": "dApps",
+      "description": "Connect to decentralized applications",
+      "url": "/hot/dapp-connect",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
