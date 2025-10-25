@@ -1,25 +1,34 @@
 {
   "expo": {
-    "name": "better-wallet-cold-app",
-    "slug": "better-wallet-cold-app",
+    "name": "Ethereum Cold Wallet",
+    "slug": "ethereum-cold-wallet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "betterwalletcoldapp",
+    "scheme": "ethereumcoldwallet",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "description": "A secure, offline-only Ethereum cold wallet for maximum security",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ethereumcoldwallet.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs camera access to scan QR codes for transaction signing.",
+        "NSFaceIDUsageDescription": "This app uses Face ID for secure transaction signing.",
+        "NSLocalAuthenticationUsageDescription": "This app uses biometric authentication for secure transaction signing."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#627EEA",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ethereumcoldwallet.app",
+      "permissions": ["CAMERA", "USE_BIOMETRIC", "USE_FINGERPRINT"]
     },
     "web": {
       "output": "static",
@@ -33,10 +42,22 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#627EEA",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#1a1a1a"
           }
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "This app needs camera access to scan QR codes for transaction signing."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "This app uses Face ID for secure transaction signing."
         }
       ]
     ],

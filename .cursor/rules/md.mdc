@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+
+- rule: do not make unwanted md files after implementing each feature
+  do: creat/update normal readme file is fine (if required)
+  focus on quality with less quantity
+- rule: do not directly add dependencies to package.json
+  do: run npm i <dependency> in the terminal
+  try to use the latest version instead of @1.2.3
