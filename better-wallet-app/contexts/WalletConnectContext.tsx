@@ -6,6 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { WalletKitTypes } from "@reown/walletkit";
+import { SessionTypes } from "@walletconnect/types";
 import {
   initWalletConnect,
   getWalletKit,
@@ -17,14 +18,15 @@ import {
   disconnectSession as disconnectSessionFromDapp,
   getActiveSessions,
   parseTransactionRequest,
-  getSessionByTopic,
+  isTransactionMethod,
+  handleNonTransactionMethod,
 } from "@/services/walletconnect";
 import { useDeviceMode } from "./DeviceModeContext";
 import { Alert } from "react-native";
 
 interface WalletConnectContextType {
   initialized: boolean;
-  sessions: WalletKitTypes.SessionTypes.Struct[];
+  sessions: SessionTypes.Struct[];
   pendingProposal: WalletKitTypes.SessionProposal | null;
   pendingRequest: WalletKitTypes.SessionRequest | null;
   pair: (uri: string) => Promise<void>;
@@ -47,22 +49,13 @@ export function WalletConnectProvider({
 }) {
   const { mode, walletAddress } = useDeviceMode();
   const [initialized, setInitialized] = useState(false);
-  const [sessions, setSessions] = useState<
-    WalletKitTypes.SessionTypes.Struct[]
-  >([]);
+  const [sessions, setSessions] = useState<SessionTypes.Struct[]>([]);
   const [pendingProposal, setPendingProposal] =
     useState<WalletKitTypes.SessionProposal | null>(null);
   const [pendingRequest, setPendingRequest] =
     useState<WalletKitTypes.SessionRequest | null>(null);
 
-  // Initialize WalletConnect only in hot wallet mode
-  useEffect(() => {
-    if (mode === "hot") {
-      initializeWalletConnect();
-    }
-  }, [mode]);
-
-  const initializeWalletConnect = async () => {
+  const initializeWalletConnect = useCallback(async () => {
     try {
       const kit = await initWalletConnect();
 
@@ -85,7 +78,15 @@ export function WalletConnectProvider({
       console.error("Failed to initialize WalletConnect:", error);
       Alert.alert("Error", "Failed to initialize WalletConnect");
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Initialize WalletConnect only in hot wallet mode
+  useEffect(() => {
+    if (mode === "hot") {
+      initializeWalletConnect();
+    }
+  }, [mode, initializeWalletConnect]);
 
   const handleSessionProposal = useCallback(
     (proposal: WalletKitTypes.SessionProposal) => {
@@ -96,36 +97,76 @@ export function WalletConnectProvider({
   );
 
   const handleSessionRequest = useCallback(
-    (request: WalletKitTypes.SessionRequest) => {
+    async (request: WalletKitTypes.SessionRequest) => {
       console.log("Session request received:", request);
 
-      try {
-        // Parse the request to ensure it's a supported method
-        const parsed = parseTransactionRequest(request);
-        console.log("Parsed request:", parsed);
+      const method = request.params.request.method;
 
-        setPendingRequest(request);
-      } catch (error) {
-        console.error("Unsupported request:", error);
-        Alert.alert(
-          "Unsupported Request",
-          "This wallet does not support this type of request."
-        );
+      // Check if this is a transaction that needs user approval
+      if (isTransactionMethod(method)) {
+        try {
+          // Parse the transaction request
+          const parsed = parseTransactionRequest(request);
+          console.log("Transaction request parsed:", parsed);
 
-        // Reject unsupported requests
+          // Show to user for approval
+          setPendingRequest(request);
+        } catch (error) {
+          console.error("Failed to parse transaction:", error);
+          Alert.alert(
+            "Invalid Transaction",
+            "Unable to parse the transaction request."
+          );
+
+          // Reject invalid transaction
+          const kit = getWalletKit();
+          if (kit) {
+            kit.respondSessionRequest({
+              topic: request.topic,
+              response: {
+                id: request.id,
+                jsonrpc: "2.0",
+                error: {
+                  code: 5001,
+                  message: "Invalid transaction request",
+                },
+              },
+            });
+          }
+        }
+      } else {
+        // Auto-handle non-transaction methods
+        console.log(`Auto-handling non-transaction method: ${method}`);
         const kit = getWalletKit();
         if (kit) {
-          kit.respondSessionRequest({
-            topic: request.topic,
-            response: {
-              id: request.id,
-              jsonrpc: "2.0",
-              error: {
-                code: 5001,
-                message: "Unsupported method",
+          try {
+            const result = await handleNonTransactionMethod(request);
+            kit.respondSessionRequest({
+              topic: request.topic,
+              response: {
+                id: request.id,
+                jsonrpc: "2.0",
+                result,
               },
-            },
-          });
+            });
+            console.log(`Successfully handled ${method}`);
+          } catch (error) {
+            console.error(`Error handling ${method}:`, error);
+            kit.respondSessionRequest({
+              topic: request.topic,
+              response: {
+                id: request.id,
+                jsonrpc: "2.0",
+                error: {
+                  code: 5001,
+                  message:
+                    error instanceof Error
+                      ? error.message
+                      : "Method not supported",
+                },
+              },
+            });
+          }
         }
       }
     },
