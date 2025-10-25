@@ -290,7 +290,7 @@ function ColdHomeScreen() {
 
             <ThemedButton
               title="Settings"
-              variant="secondary"
+              variant="primary"
               onPress={() => router.push("/cold/settings")}
               style={styles.marginTop}
             />
