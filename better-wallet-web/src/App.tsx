@@ -1,45 +1,76 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { DeviceModeProvider } from './contexts/DeviceModeContext';
+import { OnboardingProvider } from './contexts/OnboardingContext';
+import { OnboardingPage } from './pages/OnboardingPage';
+import { SetupPage } from './pages/SetupPage';
+import { ColdHomePage } from './pages/cold/ColdHomePage';
+import { SignPage } from './pages/cold/SignPage';
+import { SettingsPage } from './pages/cold/SettingsPage';
+import { HotHomePage } from './pages/hot/HotHomePage';
+import { SendPage } from './pages/hot/SendPage';
+import { useDeviceMode } from './contexts/DeviceModeContext';
+import { useOnboarding } from './contexts/OnboardingContext';
 
-function App() {
-  const [count, setCount] = useState(0)
+function AppContent() {
+  const { mode, isLoading: deviceLoading } = useDeviceMode();
+  const { hasCompletedOnboarding, isLoading: onboardingLoading } = useOnboarding();
+
+  // Show loading while checking contexts
+  if (deviceLoading || onboardingLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-      <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-        <div className="flex justify-center space-x-4 mb-8">
-          <a href="https://vite.dev" target="_blank" className="hover:opacity-80 transition-opacity">
-            <img src={viteLogo} className="h-16 w-16" alt="Vite logo" />
-          </a>
-          <a href="https://react.dev" target="_blank" className="hover:opacity-80 transition-opacity">
-            <img src={reactLogo} className="h-16 w-16 animate-spin" alt="React logo" />
-          </a>
-        </div>
+    <Router>
+      <Routes>
+        {/* Show onboarding if not completed */}
+        {!hasCompletedOnboarding && (
+          <Route path="*" element={<OnboardingPage />} />
+        )}
         
-        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
-          Vite + React + Tailwind
-        </h1>
+        {/* Setup mode */}
+        {hasCompletedOnboarding && mode === 'setup' && (
+          <Route path="*" element={<SetupPage />} />
+        )}
         
-        <div className="text-center">
-          <button 
-            onClick={() => setCount((count) => count + 1)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
-          >
-            count is {count}
-          </button>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">
-            Edit <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">src/App.tsx</code> and save to test HMR
-          </p>
-        </div>
+        {/* Cold wallet mode */}
+        {hasCompletedOnboarding && mode === 'cold' && (
+          <>
+            <Route path="/cold/home" element={<ColdHomePage />} />
+            <Route path="/cold/sign" element={<SignPage />} />
+            <Route path="/cold/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/cold/home" replace />} />
+          </>
+        )}
         
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-          Click on the Vite and React logos to learn more
-        </p>
-      </div>
-    </div>
-  )
+        {/* Hot wallet mode */}
+        {hasCompletedOnboarding && mode === 'hot' && (
+          <>
+            <Route path="/hot/home" element={<HotHomePage />} />
+            <Route path="/hot/send" element={<SendPage />} />
+            <Route path="*" element={<Navigate to="/hot/home" replace />} />
+          </>
+        )}
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <OnboardingProvider>
+      <DeviceModeProvider>
+        <AppContent />
+      </DeviceModeProvider>
+    </OnboardingProvider>
+  );
+}
+
+export default App;
