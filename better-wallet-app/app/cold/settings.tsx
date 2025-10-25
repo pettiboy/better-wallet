@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Alert, ScrollView } from "react-native";
+import { View, StyleSheet, Alert, ScrollView, Switch } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { SafeThemedView } from "@/components/safe-themed-view";
@@ -10,11 +10,22 @@ import { useDeviceMode } from "@/contexts/DeviceModeContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";
+import {
+  getBiometricInfo,
+  isBiometricEnabled,
+  setBiometricEnabled as setBiometricEnabledSetting,
+  getAuthenticationTypeName,
+  type BiometricInfo,
+} from "@/services/biometric";
 
 export default function SettingsScreen() {
   const [address, setAddress] = useState<string>("");
   const [showMnemonic, setShowMnemonic] = useState(false);
   const [mnemonic, setMnemonic] = useState<string>("");
+  const [biometricInfo, setBiometricInfo] = useState<BiometricInfo | null>(
+    null
+  );
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const { walletAddress } = useDeviceMode();
   const { resetOnboarding } = useOnboarding();
 
@@ -24,6 +35,7 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     loadWalletInfo();
+    loadBiometricInfo();
   }, []);
 
   const loadWalletInfo = async () => {
@@ -35,6 +47,41 @@ export default function SettingsScreen() {
       }
     } catch (error) {
       console.error("Error loading wallet info:", error);
+    }
+  };
+
+  const loadBiometricInfo = async () => {
+    try {
+      const [biometricData, isEnabled] = await Promise.all([
+        getBiometricInfo(),
+        isBiometricEnabled(),
+      ]);
+      setBiometricInfo(biometricData);
+      setBiometricEnabled(isEnabled);
+    } catch (error) {
+      console.error("Error loading biometric info:", error);
+    }
+  };
+
+  const handleBiometricToggle = async (enabled: boolean) => {
+    try {
+      if (
+        enabled &&
+        biometricInfo &&
+        (!biometricInfo.isAvailable || !biometricInfo.isEnrolled)
+      ) {
+        Alert.alert(
+          "Biometric Not Available",
+          "Biometric authentication is not available or not enrolled on this device. Please set up fingerprint, Face ID, or device PIN in your device settings."
+        );
+        return;
+      }
+
+      await setBiometricEnabledSetting(enabled);
+      setBiometricEnabled(enabled);
+    } catch (error) {
+      console.error("Error updating biometric setting:", error);
+      Alert.alert("Error", "Failed to update biometric setting");
     }
   };
 
@@ -120,6 +167,62 @@ export default function SettingsScreen() {
               size={220}
             />
           )}
+
+          <View style={styles.section}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              Security
+            </ThemedText>
+
+            <View
+              style={[
+                styles.securityContainer,
+                { backgroundColor: overlayColor },
+              ]}
+            >
+              <View style={styles.securityRow}>
+                <View style={styles.securityInfo}>
+                  <ThemedText style={styles.securityLabel}>
+                    Require Authentication Before Signing
+                  </ThemedText>
+                  <ThemedText style={styles.securityDescription}>
+                    {biometricInfo
+                      ? `Use ${getAuthenticationTypeName(
+                          biometricInfo
+                        )} to authenticate before signing transactions`
+                      : "Checking authentication availability..."}
+                  </ThemedText>
+                </View>
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={handleBiometricToggle}
+                  disabled={
+                    biometricInfo
+                      ? !biometricInfo.isAvailable || !biometricInfo.isEnrolled
+                      : true
+                  }
+                />
+              </View>
+
+              {biometricInfo && !biometricInfo.isAvailable && (
+                <ThemedText
+                  style={[styles.securityWarningText, { color: dangerColor }]}
+                >
+                  ⚠️ Biometric authentication is not available on this device
+                </ThemedText>
+              )}
+
+              {biometricInfo &&
+                biometricInfo.isAvailable &&
+                !biometricInfo.isEnrolled && (
+                  <ThemedText
+                    style={[styles.securityWarningText, { color: dangerColor }]}
+                  >
+                    ⚠️ Please set up biometric authentication in your device
+                    settings
+                  </ThemedText>
+                )}
+            </View>
+          </View>
 
           <View style={styles.section}>
             <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -260,5 +363,32 @@ const styles = StyleSheet.create({
   },
   marginTop: {
     marginTop: 16,
+  },
+  securityContainer: {
+    borderRadius: 12,
+    padding: 16,
+  },
+  securityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  securityInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  securityLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  securityDescription: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  securityWarningText: {
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: "center",
   },
 });

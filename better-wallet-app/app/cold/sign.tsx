@@ -14,6 +14,7 @@ import {
   serializeSignedTransaction,
   SerializedTransaction,
 } from "@/utils/transaction-serializer";
+import * as Biometric from "@/services/biometric";
 
 export default function SignScreen() {
   const [scanning, setScanning] = useState(false);
@@ -41,6 +42,19 @@ export default function SignScreen() {
     if (!transactionData) return;
 
     try {
+      // Authenticate user if biometric authentication is enabled
+      const isAuthenticated = await Biometric.authenticateIfRequired(
+        "Authenticate to sign this transaction"
+      );
+
+      if (!isAuthenticated) {
+        Alert.alert(
+          "Authentication Failed",
+          "Authentication is required to sign transactions. Please try again."
+        );
+        return;
+      }
+
       const privateKey = await loadPrivateKey();
 
       if (!privateKey) {
@@ -69,7 +83,19 @@ export default function SignScreen() {
       );
     } catch (error) {
       console.error("Error signing transaction:", error);
-      Alert.alert("Error", "Failed to sign transaction");
+
+      // Check if it's a biometric authentication error
+      if (
+        error instanceof Error &&
+        error.message.includes("Biometric authentication is required")
+      ) {
+        Alert.alert(
+          "Authentication Required",
+          "Biometric authentication is required but not available. Please check your device settings or disable biometric authentication in the app settings."
+        );
+      } else {
+        Alert.alert("Error", "Failed to sign transaction");
+      }
     }
   };
 
