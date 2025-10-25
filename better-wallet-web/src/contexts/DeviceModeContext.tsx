@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type DeviceMode = 'hot' | 'cold' | 'setup';
+export type DeviceMode = 'hot' | 'setup';
 
 interface DeviceModeContextType {
   mode: DeviceMode;

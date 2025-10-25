@@ -40,7 +40,7 @@ export function HotHomePage() {
               Hot Wallet
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              No wallet connected. Please set up your cold wallet first.
+              No wallet connected. Please connect to your cold wallet mobile app first.
             </p>
           </div>
         </div>
@@ -91,9 +91,9 @@ export function HotHomePage() {
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mt-6">
             <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">How to Use</h3>
             <ol className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-              <li>1. Create a transaction on this device</li>
-              <li>2. Show the QR code to your cold wallet</li>
-              <li>3. Sign it on the cold wallet (offline)</li>
+              <li>1. Create a transaction on this web app</li>
+              <li>2. Show the QR code to your cold wallet mobile app</li>
+              <li>3. Sign it on the mobile app (offline)</li>
               <li>4. Scan the signed transaction back here</li>
               <li>5. Broadcast to the network</li>
             </ol>
