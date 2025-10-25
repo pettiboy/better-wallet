@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { Plug, Plus, Camera, X, Lightbulb } from "lucide-react";
 import { Button } from "../../components/Button";
 import { QRDisplay } from "../../components/QRDisplay";
 import { QRScanner } from "../../components/QRScanner";
@@ -448,9 +449,14 @@ export function DappConnectPage() {
                 fontWeight: 900,
                 textAlign: "center",
                 marginBottom: "1.5rem",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
               }}
             >
-              🔌 Connected dApps
+              <Plug size={28} strokeWidth={2.5} />
+              Connected dApps
             </h1>
 
             <div
@@ -489,7 +495,8 @@ export function DappConnectPage() {
                     </p>
                   </div>
                   <Button
-                    title="✕"
+                    title="Disconnect"
+                    icon={X}
                     variant="danger"
                     onClick={() => handleDisconnect(session.topic)}
                   />
@@ -499,7 +506,7 @@ export function DappConnectPage() {
 
             <Button
               title="Connect New dApp"
-              icon="+"
+              icon={Plus}
               variant="primary"
               onClick={() => setStep("connect")}
               fullWidth
@@ -536,9 +543,14 @@ export function DappConnectPage() {
               fontWeight: 900,
               textAlign: "center",
               marginBottom: "1.5rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
             }}
           >
-            🔌 Connect to dApp
+            <Plug size={28} strokeWidth={2.5} />
+            Connect to dApp
           </h1>
 
           {sessions.length > 0 && (
@@ -592,7 +604,7 @@ export function DappConnectPage() {
 
             <Button
               title="Scan QR Code"
-              icon="📷"
+              icon={Camera}
               variant="secondary"
               onClick={() => setStep("scan-uri")}
               fullWidth
@@ -607,9 +619,25 @@ export function DappConnectPage() {
               color: "var(--color-white)",
             }}
           >
-            <p style={{ fontSize: "0.875rem", fontWeight: 700, margin: 0 }}>
-              💡 Scan a WalletConnect QR code from a dApp (like Uniswap,
-              OpenSea) or paste the connection URI to connect.
+            <p
+              style={{
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                margin: 0,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "0.5rem",
+              }}
+            >
+              <Lightbulb
+                size={16}
+                strokeWidth={2.5}
+                style={{ flexShrink: 0, marginTop: "0.125rem" }}
+              />
+              <span>
+                Scan a WalletConnect QR code from a dApp (like Uniswap, OpenSea)
+                or paste the connection URI to connect.
+              </span>
             </p>
           </div>
         </div>

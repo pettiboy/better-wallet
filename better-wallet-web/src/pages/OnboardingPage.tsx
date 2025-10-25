@@ -1,5 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  Lock,
+  Smartphone,
+  QrCode,
+  Rocket,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "../components/Button";
 import { useOnboarding } from "../contexts/OnboardingContext";
 
@@ -7,7 +14,7 @@ interface OnboardingSlide {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
+  icon: LucideIcon;
   description: string;
   details?: string[];
 }
@@ -17,7 +24,7 @@ const slides: OnboardingSlide[] = [
     id: "1",
     title: "Welcome to Better Wallet",
     subtitle: "Hot wallet interface for secure transactions",
-    icon: "🔐",
+    icon: Lock,
     description:
       "Connect to your cold wallet mobile app for secure transaction management.",
     details: [
@@ -30,7 +37,7 @@ const slides: OnboardingSlide[] = [
     id: "2",
     title: "Hot Wallet",
     subtitle: "Your online interface",
-    icon: "📱",
+    icon: Smartphone,
     description:
       "Connects to the blockchain to broadcast transactions and check balances.",
     details: [
@@ -43,7 +50,7 @@ const slides: OnboardingSlide[] = [
     id: "3",
     title: "QR Code Workflow",
     subtitle: "Secure communication",
-    icon: "📷",
+    icon: QrCode,
     description:
       "Devices communicate only through QR codes - no network connection between them.",
     details: [
@@ -56,7 +63,7 @@ const slides: OnboardingSlide[] = [
     id: "4",
     title: "Ready to Get Started",
     subtitle: "Connect to your cold wallet",
-    icon: "🚀",
+    icon: Rocket,
     description:
       "Connect to your existing cold wallet mobile app to start managing transactions.",
     details: [
@@ -95,6 +102,7 @@ export function OnboardingPage() {
   };
 
   const currentSlide = slides[currentIndex];
+  const IconComponent = currentSlide.icon;
 
   return (
     <div
@@ -118,8 +126,18 @@ export function OnboardingPage() {
           }}
         >
           <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <div style={{ fontSize: "4rem", marginBottom: "1.5rem" }}>
-              {currentSlide.icon}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <IconComponent
+                size={80}
+                strokeWidth={2.5}
+                style={{ color: "var(--color-primary)" }}
+              />
             </div>
 
             <h1

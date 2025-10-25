@@ -1,19 +1,20 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { Wallet, Send, Plug, Settings } from "lucide-react";
 
 type Tab = "home" | "send" | "dapps" | "settings";
 
 interface TabConfig {
   id: Tab;
   label: string;
-  icon: string;
+  icon: typeof Wallet;
   path: string;
 }
 
 const tabs: TabConfig[] = [
-  { id: "home", label: "Wallet", icon: "💼", path: "/hot/home" },
-  { id: "send", label: "Send", icon: "📤", path: "/hot/send" },
-  { id: "dapps", label: "dApps", icon: "🔌", path: "/hot/dapp-connect" },
-  { id: "settings", label: "Settings", icon: "⚙️", path: "/hot/settings" },
+  { id: "home", label: "Wallet", icon: Wallet, path: "/hot/home" },
+  { id: "send", label: "Send", icon: Send, path: "/hot/send" },
+  { id: "dapps", label: "dApps", icon: Plug, path: "/hot/dapp-connect" },
+  { id: "settings", label: "Settings", icon: Settings, path: "/hot/settings" },
 ];
 
 export function BottomTabBar() {
@@ -52,6 +53,7 @@ export function BottomTabBar() {
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
+        const Icon = tab.icon;
         return (
           <button
             key={tab.id}
@@ -91,9 +93,11 @@ export function BottomTabBar() {
               e.currentTarget.style.transform = "scale(1)";
             }}
           >
-            <span style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>
-              {tab.icon}
-            </span>
+            <Icon
+              size={24}
+              strokeWidth={2.5}
+              style={{ marginBottom: "0.25rem" }}
+            />
             <span>{tab.label}</span>
           </button>
         );

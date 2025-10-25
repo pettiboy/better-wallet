@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Smartphone } from "lucide-react";
 import { QRScanner } from "../components/QRScanner";
 import { useDeviceMode } from "../contexts/DeviceModeContext";
 
@@ -166,9 +167,11 @@ export function SetupPage() {
               e.currentTarget.style.boxShadow = "6px 6px 0 var(--color-black)";
             }}
           >
-            <span style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
-              📱
-            </span>
+            <Smartphone
+              size={48}
+              strokeWidth={2.5}
+              style={{ marginBottom: "0.5rem" }}
+            />
             <span style={{ fontSize: "1.125rem" }}>Connect to Cold Wallet</span>
             <span style={{ fontSize: "0.875rem", opacity: 0.9 }}>
               Scan wallet address QR code
@@ -189,9 +192,14 @@ export function SetupPage() {
                 textAlign: "center",
                 fontWeight: 700,
                 margin: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
               }}
             >
-              📱 Make sure you have the Better Wallet mobile app set up as your
+              <Smartphone size={16} strokeWidth={2.5} />
+              Make sure you have the Better Wallet mobile app set up as your
               cold wallet first
             </p>
           </div>
