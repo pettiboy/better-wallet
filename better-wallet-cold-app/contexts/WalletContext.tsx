@@ -18,6 +18,7 @@ interface WalletContextType extends WalletState {
   setWalletAddress: (address: string) => void;
   markSetupComplete: () => void;
   resetWallet: () => void;
+  reloadWallet: () => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -73,6 +74,10 @@ export function WalletProvider({ children }: WalletProviderProps) {
     setIsSetupComplete(false);
   };
 
+  const reloadWallet = () => {
+    loadWalletInfo();
+  };
+
   const value: WalletContextType = {
     address,
     hasWallet: hasWalletStored,
@@ -81,6 +86,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     setWalletAddress,
     markSetupComplete,
     resetWallet,
+    reloadWallet,
   };
 
   return (

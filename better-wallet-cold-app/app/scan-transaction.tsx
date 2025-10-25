@@ -3,25 +3,35 @@ import { View, StyleSheet, Alert } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { QRScanner } from "@/components/QRScanner";
-import { useThemeColor } from "@/hooks/use-theme-color";
 import { router } from "expo-router";
 import { deserializeTransaction } from "@/utils/transaction-serializer";
 
 export default function ScanTransactionScreen() {
   const [isScanning, setIsScanning] = useState(true);
 
-  const overlayColor = useThemeColor({}, "overlay");
-
   const handleScan = (data: string) => {
     try {
       // Try to parse the transaction data
       const transactionData = deserializeTransaction(data);
 
+      // Convert BigInt values to strings for JSON serialization
+      const serializableTransaction = {
+        ...transactionData,
+        transaction: {
+          ...transactionData.transaction,
+          value: transactionData.transaction.value?.toString(),
+          gasLimit: transactionData.transaction.gasLimit?.toString(),
+          maxFeePerGas: transactionData.transaction.maxFeePerGas?.toString(),
+          maxPriorityFeePerGas:
+            transactionData.transaction.maxPriorityFeePerGas?.toString(),
+        },
+      };
+
       // Navigate to verification screen with the parsed transaction
       router.push({
         pathname: "/verify-transaction",
         params: {
-          transactionData: JSON.stringify(transactionData),
+          transactionData: JSON.stringify(serializableTransaction),
         },
       });
     } catch (error) {

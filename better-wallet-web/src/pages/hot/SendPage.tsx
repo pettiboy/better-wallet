@@ -223,7 +223,7 @@ export function SendPage() {
               </label>
               <input
                 type="number"
-                step="0.0001"
+                step="0.00001"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
