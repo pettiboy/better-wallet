@@ -36,8 +36,10 @@ better-wallet/
 
 - ✅ **View-Only**: No private keys stored
 - ✅ **Balance Tracking**: Real-time ETH and ERC-20 token balances
+- ✅ **PYUSD Support**: Store and send PayPal USD stablecoin (feels like storing actual dollars)
 - ✅ **Transaction Creation**: Build unsigned transactions with gas estimation
 - ✅ **WalletConnect**: Connect to dApps (Uniswap, OpenSea, etc.)
+- ✅ **Blockscout Integration**: Real-time transaction tracking with visual notifications
 - ✅ **PWA**: Install as mobile app with offline UI support
 - ✅ **Broadcasting**: Send signed transactions to blockchain
 
@@ -86,7 +88,8 @@ Visit `https://localhost:5173` in your browser (HTTPS required for camera access
 
 1. Scan the wallet address QR from your cold device
 2. Your wallet is now connected!
-3. View balance (Sepolia testnet by default)
+3. View balances for both ETH and PYUSD (Sepolia testnet)
+4. Get transaction notifications via Blockscout integration
 
 **For Production Build:**
 
@@ -95,21 +98,30 @@ npm run build
 # Deploy the 'dist' folder to any static host
 ```
 
-### 3. Get Test ETH
+### 3. Get Test Funds
+
+**Get Test ETH:**
 
 1. Visit [Sepolia Faucet](https://sepoliafaucet.com/)
 2. Enter your wallet address
 3. Request test ETH (0.5 ETH)
 4. Wait 30-60 seconds and refresh your hot wallet
 
+**Get Test PYUSD (Optional):**
+
+1. Use Sepolia testnet exchanges or PYUSD faucets
+2. Your wallet will display both ETH and PYUSD balances
+3. PYUSD gives you a stable "dollar" balance experience
+
 ### 4. Send Your First Transaction
 
 **Manual Transaction:**
 
-1. **Hot Wallet**: Create transaction → scan displayed QR code
+1. **Hot Wallet**: Select asset (ETH or PYUSD) → Create transaction → scan displayed QR code
 2. **Cold Wallet**: Open app → Scan Transaction → review → sign (with biometric)
 3. **Cold Wallet**: Signed TX QR code appears
 4. **Hot Wallet**: Scan signed QR → transaction broadcasts automatically
+5. **Blockscout**: Real-time notification popup appears to track your transaction
 
 **dApp Transaction (WalletConnect):**
 
@@ -169,6 +181,7 @@ npm run preview
 
 - `ethers` - Blockchain interaction
 - `@reown/walletkit` - WalletConnect integration
+- `@blockscout/app-sdk` - Transaction tracking and notifications
 - `vite-plugin-pwa` - Progressive Web App support
 - `html5-qrcode` - QR scanning in browser
 
@@ -228,6 +241,48 @@ npm run build  # Production build
 7. Signed transaction displayed as QR code
 8. Hot wallet scans, broadcasts to network
 
+## 💰 PayPal USD (PYUSD) Integration
+
+Better Wallet supports **PayPal USD (PYUSD)**, a dollar-backed stablecoin that gives you the feeling of storing actual US dollars in your wallet:
+
+### Why PYUSD?
+
+- **1:1 USD Peg**: Each PYUSD token equals $1 USD
+- **Stable Value**: Unlike volatile cryptocurrencies, your balance stays stable
+- **Dollar Experience**: See your balance in PYUSD and know exactly how many dollars you have
+- **PayPal Backed**: Issued and backed by PayPal, a trusted financial institution
+- **Fast Transfers**: Send "dollars" anywhere in the world instantly via blockchain
+
+### Using PYUSD
+
+1. View your PYUSD balance alongside ETH on the home screen
+2. Send PYUSD to any Ethereum address
+3. Receive PYUSD just like ETH (same wallet address)
+4. Track PYUSD transactions with Blockscout
+
+**Sepolia Testnet Contract**: `0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9`
+
+## 🔍 Blockscout Transaction Tracking
+
+Better Wallet integrates with **Blockscout** to provide real-time transaction monitoring:
+
+### Features
+
+- **Visual Notifications**: Toast popups when transactions are broadcasted
+- **Live Tracking**: Watch your transaction progress in real-time
+- **Block Explorer**: Direct links to Blockscout for transaction details
+- **Status Updates**: See confirmations as they happen
+- **Transaction History**: View complete transaction details on Blockscout
+
+### How It Works
+
+1. When you broadcast a transaction, a notification popup appears
+2. Click the notification to open Blockscout transaction page
+3. Watch real-time updates as your transaction gets confirmed
+4. View all transaction details (gas used, block number, etc.)
+
+Blockscout provides transparent, open-source blockchain exploration without relying on centralized services.
+
 ## 🌐 Network Support
 
 **Currently Supported:**
@@ -262,9 +317,11 @@ Update RPC URL in `better-wallet-hot-app/src/services/ethereum.ts`
 ### Test on Sepolia Testnet
 
 1. **Get testnet ETH**: [sepoliafaucet.com](https://sepoliafaucet.com/)
-2. **Test transactions**: Send small amounts between addresses
-3. **Test dApps**: Use [WalletConnect test dApp](https://react-app.walletconnect.com)
-4. **Verify on Etherscan**: [sepolia.etherscan.io](https://sepolia.etherscan.io)
+2. **Get testnet PYUSD**: Use Sepolia testnet exchanges or request from PYUSD faucets
+3. **Test transactions**: Send ETH and PYUSD between addresses
+4. **Test dApps**: Use [WalletConnect test dApp](https://react-app.walletconnect.com)
+5. **Track transactions**: Watch real-time updates via Blockscout notifications
+6. **Verify on Explorer**: [sepolia.etherscan.io](https://sepolia.etherscan.io) or Blockscout
 
 ### Security Testing
 
@@ -393,14 +450,6 @@ Transactions are serialized as JSON with metadata:
 - ✅ Safe to test with Sepolia testnet
 - ✅ Use test ETH (no real value)
 - ✅ Experiment with all features
-
-### Before Mainnet Use
-
-- ⚠️ Conduct thorough security audit
-- ⚠️ Test all features extensively
-- ⚠️ Start with small amounts
-- ⚠️ Consider professional security review
-- ⚠️ Understand risks of self-custody
 
 ### Best Practices
 
