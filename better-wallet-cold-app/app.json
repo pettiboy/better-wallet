@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Ethereum Cold Wallet",
-    "slug": "ethereum-cold-wallet",
+    "name": "Better Wallet - Cold",
+    "slug": "betterwallet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "ethereumcoldwallet",
+    "scheme": "betterwallet",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "description": "A secure, offline-only Ethereum cold wallet for maximum security",
+    "description": "A secure, offline-only Better Wallet cold wallet for maximum security",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ethereumcoldwallet.app",
+      "bundleIdentifier": "web.app.betterwallet",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to scan QR codes for transaction signing.",
         "NSFaceIDUsageDescription": "This app uses Face ID for secure transaction signing.",
@@ -27,8 +27,16 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ethereumcoldwallet.app",
-      "permissions": ["CAMERA", "USE_BIOMETRIC", "USE_FINGERPRINT"]
+      "package": "web.app.betterwallet",
+      "permissions": [
+        "CAMERA",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "output": "static",
@@ -64,6 +72,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "12f7df43-f23a-4b78-a3cd-c0972bbd17d4"
+      }
     }
   }
 }
