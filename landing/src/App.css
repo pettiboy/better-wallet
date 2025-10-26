@@ -12,6 +12,22 @@
   max-width: 800px;
 }
 
+.hero-logo {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
+  display: block;
+  border-radius: 24px;
+  border: var(--border-width) solid var(--color-black);
+  box-shadow: 8px 8px 0 var(--color-black);
+  transition: transform 0.3s ease;
+}
+
+.hero-logo:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 10px 10px 0 var(--color-black);
+}
+
 .hero h1 {
   margin-bottom: 1.5rem;
   line-height: 1.1;
@@ -237,5 +253,11 @@
     width: 50px;
     height: 50px;
     font-size: 1.25rem;
+  }
+
+  .hero-logo {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1.5rem;
   }
 }

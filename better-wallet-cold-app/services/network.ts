@@ -18,8 +18,8 @@ export async function isDeviceOffline(): Promise<boolean> {
 
     // Check if device is connected to any network
     if (netInfo.isConnected && netInfo.isInternetReachable) {
-      return true;
-      // return false;
+      // return true;
+      return false;
     }
 
     // Additional check for airplane mode

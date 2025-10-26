@@ -19,23 +19,24 @@ function App() {
       <section className="hero">
         <div className="container">
           <div className="hero-content">
+            {/* Logo */}
+            <img
+              src="/logo.png"
+              alt="Better Wallet Logo"
+              className="hero-logo"
+            />
             {/* name of the app */}
             <h1>Better Wallet</h1>
             <h3>Turn Any Device Into a Hardware Wallet</h3>
             <p className="hero-subtitle">
               Air-gapped security meets simplicity. Use your spare phone as a
-              secure cold wallet and manage crypto safely with QR code signing.
+              secure cold wallet and manage crypto safely with QR code signing
             </p>
             <div className="cta-buttons">
               <a
-                href="#download-apk"
+                href="/builds/app-release.apk"
                 className="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert(
-                    "APK download coming soon! Check back later or contact us for early access."
-                  );
-                }}
+                download="better-wallet-cold.apk"
               >
                 <Smartphone size={20} strokeWidth={2.5} /> Download Cold Wallet
               </a>
@@ -247,14 +248,9 @@ function App() {
           </p>
           <div className="cta-buttons">
             <a
-              href="#download-apk"
+              href="/builds/app-release.apk"
               className="button"
-              onClick={(e) => {
-                e.preventDefault();
-                alert(
-                  "APK download coming soon! Check back later or contact us for early access."
-                );
-              }}
+              download="better-wallet-cold.apk"
             >
               <Smartphone size={20} strokeWidth={2.5} /> Download Cold Wallet
               APK
