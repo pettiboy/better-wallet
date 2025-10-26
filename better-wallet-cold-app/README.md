@@ -79,5 +79,5 @@ after apk ready
 
 ```zsh
 adb devices              # verify phone
-adb install ./name.apk   # install
+adb -s <DEVICE_ID> install ./name.apk   # install
 ```
