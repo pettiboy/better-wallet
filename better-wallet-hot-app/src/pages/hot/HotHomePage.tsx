@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Wallet, RefreshCw, History } from "lucide-react";
+import { RefreshCw, History } from "lucide-react";
 import { useTransactionPopup } from "@blockscout/app-sdk";
 import { Button } from "../../components/Button";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
@@ -104,7 +104,7 @@ export function HotHomePage() {
       }}
     >
       <div style={{ maxWidth: "400px", margin: "0 auto" }}>
-        <h1
+        <div
           style={{
             fontSize: "2.5rem",
             fontWeight: 900,
@@ -117,9 +117,27 @@ export function HotHomePage() {
             gap: "0.75rem",
           }}
         >
-          <Wallet size={40} strokeWidth={2.5} />
-          Wallet
-        </h1>
+          {/* image inside a outline circle */}
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "50%",
+              padding: "0.25rem",
+              border: "2px solid var(--color-black)",
+              boxShadow: "4px 4px 0 var(--color-black)",
+            }}
+          >
+            <img
+              src="/android-chrome-512x512.png"
+              alt="Better Wallet"
+              width={70}
+              height={70}
+            />
+          </div>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, margin: 0 }}>
+            Better Wallet
+          </h1>
+        </div>
 
         {/* Balance Cards */}
         <div style={{ marginBottom: "1.5rem" }}>

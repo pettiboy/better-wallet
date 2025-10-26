@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
@@ -11,6 +11,7 @@ import {
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
+import { router } from "expo-router";
 
 export default function OfflineCheckScreen() {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus | null>(
@@ -55,79 +56,102 @@ export default function OfflineCheckScreen() {
 
   return (
     <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
-      <View style={styles.content}>
-        {/* Warning Icon */}
-        <View
-          style={[
-            styles.iconContainer,
-            {
-              backgroundColor: dangerColor,
-              borderColor,
-              borderWidth: BorderWidth.thick,
-              ...Shadows.large,
-            },
-          ]}
-        >
-          <Ionicons name="warning" size={64} color="#fff" />
-        </View>
-
-        {/* Main Message */}
-        <ThemedText type="title" style={styles.title}>
-          AIRPLANE MODE REQUIRED
-        </ThemedText>
-
-        <ThemedText style={styles.message}>
-          For security, this cold wallet can only run offline. Please enable
-          airplane mode and disable Wi-Fi, cellular data, and Bluetooth.
-        </ThemedText>
-
-        {/* Network Status */}
-        {!isChecking && (
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          {/* Warning Icon */}
           <View
             style={[
-              styles.statusContainer,
+              styles.iconContainer,
               {
-                backgroundColor: isOffline ? successColor : dangerColor,
+                backgroundColor: dangerColor,
                 borderColor,
                 borderWidth: BorderWidth.thick,
-                ...Shadows.medium,
+                ...Shadows.large,
               },
             ]}
           >
-            <ThemedText type="subtitle" style={styles.statusTitle}>
-              CURRENT STATUS
-            </ThemedText>
-
-            {isOffline ? (
-              <View style={styles.offlineStatus}>
-                <Ionicons name="checkmark-circle" size={32} color="#fff" />
-                <ThemedText style={styles.statusText}>
-                  Device is offline - Safe to proceed
-                </ThemedText>
-              </View>
-            ) : (
-              <View style={styles.onlineStatus}>
-                <Ionicons name="warning" size={32} color="#fff" />
-                <View style={styles.onlineTextContainer}>
-                  <ThemedText style={styles.statusText}>
-                    Active connections detected:
-                  </ThemedText>
-                  {activeConnections.map((connection, index) => (
-                    <ThemedText key={index} style={styles.connectionItem}>
-                      • {connection}
-                    </ThemedText>
-                  ))}
-                </View>
-              </View>
-            )}
+            <Ionicons name="warning" size={64} color="#fff" />
           </View>
-        )}
 
-        {/* Loading State */}
-        {isChecking && (
+          {/* Main Message */}
+          <ThemedText type="title" style={styles.title}>
+            AIRPLANE MODE REQUIRED
+          </ThemedText>
+
+          <ThemedText style={styles.message}>
+            For security, this cold wallet can only run offline. Please enable
+            airplane mode and disable Wi-Fi, cellular data, and Bluetooth.
+          </ThemedText>
+
+          {/* Network Status */}
+          {!isChecking && (
+            <View
+              style={[
+                styles.statusContainer,
+                {
+                  backgroundColor: isOffline ? successColor : dangerColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
+              ]}
+            >
+              <ThemedText type="subtitle" style={styles.statusTitle}>
+                CURRENT STATUS
+              </ThemedText>
+
+              {isOffline ? (
+                <View style={styles.offlineStatus}>
+                  <Ionicons name="checkmark-circle" size={32} color="#fff" />
+                  <ThemedText style={styles.statusText}>
+                    Device is offline - Safe to proceed
+                  </ThemedText>
+                </View>
+              ) : (
+                <View style={styles.onlineStatus}>
+                  <Ionicons name="warning" size={32} color="#fff" />
+                  <View style={styles.onlineTextContainer}>
+                    <ThemedText style={styles.statusText}>
+                      Active connections detected:
+                    </ThemedText>
+                    {activeConnections.map((connection, index) => (
+                      <ThemedText key={index} style={styles.connectionItem}>
+                        • {connection}
+                      </ThemedText>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Loading State */}
+          {isChecking && (
+            <View
+              style={[
+                styles.loadingContainer,
+                {
+                  backgroundColor: overlayColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.small,
+                },
+              ]}
+            >
+              <ActivityIndicator size="large" color={borderColor} />
+              <ThemedText style={styles.loadingText}>
+                Checking network status...
+              </ThemedText>
+            </View>
+          )}
+
+          {/* Instructions */}
           <View
             style={[
-              styles.loadingContainer,
+              styles.instructionsContainer,
               {
                 backgroundColor: overlayColor,
                 borderColor,
@@ -136,62 +160,50 @@ export default function OfflineCheckScreen() {
               },
             ]}
           >
-            <ActivityIndicator size="large" color={borderColor} />
-            <ThemedText style={styles.loadingText}>
-              Checking network status...
+            <ThemedText type="subtitle" style={styles.instructionsTitle}>
+              HOW TO ENABLE AIRPLANE MODE:
             </ThemedText>
-          </View>
-        )}
 
-        {/* Instructions */}
-        <View
-          style={[
-            styles.instructionsContainer,
-            {
-              backgroundColor: overlayColor,
-              borderColor,
-              borderWidth: BorderWidth.thick,
-              ...Shadows.small,
-            },
-          ]}
-        >
-          <ThemedText type="subtitle" style={styles.instructionsTitle}>
-            HOW TO ENABLE AIRPLANE MODE:
-          </ThemedText>
+            <View style={styles.instructionItem}>
+              <ThemedText style={styles.instructionNumber}>1</ThemedText>
+              <ThemedText style={styles.instructionText}>
+                Open Control Center (swipe down from top-right)
+              </ThemedText>
+            </View>
 
-          <View style={styles.instructionItem}>
-            <ThemedText style={styles.instructionNumber}>1</ThemedText>
-            <ThemedText style={styles.instructionText}>
-              Open Control Center (swipe down from top-right)
-            </ThemedText>
+            <View style={styles.instructionItem}>
+              <ThemedText style={styles.instructionNumber}>2</ThemedText>
+              <ThemedText style={styles.instructionText}>
+                Tap the airplane icon
+              </ThemedText>
+            </View>
+
+            <View style={styles.instructionItem}>
+              <ThemedText style={styles.instructionNumber}>3</ThemedText>
+              <ThemedText style={styles.instructionText}>
+                Ensure Wi-Fi and Bluetooth are also disabled
+              </ThemedText>
+            </View>
           </View>
 
-          <View style={styles.instructionItem}>
-            <ThemedText style={styles.instructionNumber}>2</ThemedText>
-            <ThemedText style={styles.instructionText}>
-              Tap the airplane icon
-            </ThemedText>
-          </View>
-
-          <View style={styles.instructionItem}>
-            <ThemedText style={styles.instructionNumber}>3</ThemedText>
-            <ThemedText style={styles.instructionText}>
-              Ensure Wi-Fi and Bluetooth are also disabled
-            </ThemedText>
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <ThemedButton
+              title="Retry Check"
+              variant="primary"
+              onPress={handleRetry}
+              loading={isChecking}
+              style={styles.retryButton}
+            />
+            {/* navigate to dashboard screen */}
+            <ThemedButton
+              title="Home"
+              variant="secondary"
+              onPress={() => router.push("/(tabs)")}
+            />
           </View>
         </View>
-
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <ThemedButton
-            title="Retry Check"
-            variant="primary"
-            onPress={handleRetry}
-            loading={isChecking}
-            style={styles.retryButton}
-          />
-        </View>
-      </View>
+      </ScrollView>
     </SafeThemedView>
   );
 }
@@ -200,11 +212,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   content: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   iconContainer: {
     width: 120,

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, Image } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
@@ -30,19 +30,23 @@ export default function WelcomeScreen() {
           style={[
             styles.iconContainer,
             {
-              backgroundColor: primaryColor,
+              backgroundColor: "white",
               borderColor,
               borderWidth: BorderWidth.thick,
               ...Shadows.large,
             },
           ]}
         >
-          <MaterialCommunityIcons name="ethereum" size={64} color="white" />
+          {/* use logo from assets/images/icon.png */}
+          <Image
+            source={require("../assets/images/icon.png")}
+            style={{ width: 100, height: 100 }}
+          />
         </View>
 
         {/* Main Title */}
         <ThemedText type="title" style={styles.title}>
-          ETHEREUM COLD WALLET
+          Better Wallet
         </ThemedText>
 
         {/* Subtitle */}

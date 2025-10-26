@@ -28,6 +28,19 @@ export default function VerifyTransactionScreen() {
     useState<SerializedTransaction | null>(null);
   const [isSigning, setIsSigning] = useState(false);
   const [showDetailedFees, setShowDetailedFees] = useState(true);
+  const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
+
+  const toggleField = (field: string) => {
+    setExpandedFields((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(field)) {
+        newSet.delete(field);
+      } else {
+        newSet.add(field);
+      }
+      return newSet;
+    });
+  };
 
   const overlayColor = useThemeColor({}, "overlay");
   const warningColor = useThemeColor({}, "warning");
@@ -200,7 +213,13 @@ export default function VerifyTransactionScreen() {
                 DAPP INFORMATION
               </ThemedText>
               <DetailRow label="Name" value={metadata.dappMetadata.name} />
-              <DetailRow label="URL" value={metadata.dappMetadata.url} />
+              <ExpandableDetailRow
+                label="URL"
+                value={metadata.dappMetadata.url}
+                fieldKey="dapp-url"
+                isExpanded={expandedFields.has("dapp-url")}
+                onToggle={() => toggleField("dapp-url")}
+              />
               {metadata.dappMetadata.description && (
                 <View style={styles.descriptionContainer}>
                   <ThemedText style={styles.detailLabel}>
@@ -244,45 +263,35 @@ export default function VerifyTransactionScreen() {
 
               {erc20Transfer.type === "transfer" && (
                 <>
-                  <View style={styles.tokenRow}>
-                    <ThemedText style={styles.tokenLabel}>To:</ThemedText>
-                    <ThemedText
-                      style={styles.tokenValue}
-                      numberOfLines={1}
-                      ellipsizeMode="middle"
-                    >
-                      {erc20Transfer.to}
-                    </ThemedText>
-                  </View>
+                  <ExpandableDetailRow
+                    label="To"
+                    value={erc20Transfer.to}
+                    fieldKey="erc20-to"
+                    isExpanded={expandedFields.has("erc20-to")}
+                    onToggle={() => toggleField("erc20-to")}
+                  />
 
-                  <View style={styles.tokenRow}>
-                    <ThemedText style={styles.tokenLabel}>Amount:</ThemedText>
-                    <ThemedText style={styles.tokenValue}>
-                      {formatTokenAmount(erc20Transfer.amount)}
-                    </ThemedText>
-                  </View>
+                  <DetailRow
+                    label="Amount"
+                    value={formatTokenAmount(erc20Transfer.amount)}
+                  />
                 </>
               )}
 
               {erc20Transfer.type === "approve" && (
                 <>
-                  <View style={styles.tokenRow}>
-                    <ThemedText style={styles.tokenLabel}>Spender:</ThemedText>
-                    <ThemedText
-                      style={styles.tokenValue}
-                      numberOfLines={1}
-                      ellipsizeMode="middle"
-                    >
-                      {erc20Transfer.spender}
-                    </ThemedText>
-                  </View>
+                  <ExpandableDetailRow
+                    label="Spender"
+                    value={erc20Transfer.spender || ""}
+                    fieldKey="erc20-spender"
+                    isExpanded={expandedFields.has("erc20-spender")}
+                    onToggle={() => toggleField("erc20-spender")}
+                  />
 
-                  <View style={styles.tokenRow}>
-                    <ThemedText style={styles.tokenLabel}>Amount:</ThemedText>
-                    <ThemedText style={styles.tokenValue}>
-                      {formatTokenAmount(erc20Transfer.amount)}
-                    </ThemedText>
-                  </View>
+                  <DetailRow
+                    label="Amount"
+                    value={formatTokenAmount(erc20Transfer.amount)}
+                  />
                 </>
               )}
             </View>
@@ -330,7 +339,13 @@ export default function VerifyTransactionScreen() {
               TRANSACTION DETAILS
             </ThemedText>
 
-            <DetailRow label="To" value={transaction.to as string} />
+            <ExpandableDetailRow
+              label="To"
+              value={transaction.to as string}
+              fieldKey="to-address"
+              isExpanded={expandedFields.has("to-address")}
+              onToggle={() => toggleField("to-address")}
+            />
             <DetailRow label="Amount" value={`${amount} ETH`} />
             <DetailRow label="Gas Limit" value={gasLimit} />
             <DetailRow
@@ -339,9 +354,12 @@ export default function VerifyTransactionScreen() {
             />
 
             {hasData && (
-              <DetailRow
+              <ExpandableDetailRow
                 label="Data"
-                value={`${(transaction.data as string).substring(0, 20)}...`}
+                value={transaction.data as string}
+                fieldKey="tx-data"
+                isExpanded={expandedFields.has("tx-data")}
+                onToggle={() => toggleField("tx-data")}
               />
             )}
           </View>
@@ -455,13 +473,70 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.detailRow}>
       <ThemedText style={styles.detailLabel}>{label}:</ThemedText>
-      <ThemedText
-        style={styles.detailValue}
-        numberOfLines={1}
-        ellipsizeMode="middle"
-      >
-        {value}
-      </ThemedText>
+      <ThemedText style={styles.detailValue}>{value}</ThemedText>
+    </View>
+  );
+}
+
+function ExpandableDetailRow({
+  label,
+  value,
+  fieldKey,
+  isExpanded,
+  onToggle,
+}: {
+  label: string;
+  value: string;
+  fieldKey: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const borderColor = useThemeColor({}, "border");
+  const primaryColor = useThemeColor({}, "primary");
+  const shouldTruncate = value.length > 20;
+
+  if (!shouldTruncate) {
+    return <DetailRow label={label} value={value} />;
+  }
+
+  return (
+    <View style={styles.expandableRow}>
+      <View style={styles.expandableHeader}>
+        <ThemedText style={styles.detailLabel}>{label}:</ThemedText>
+        <TouchableOpacity
+          onPress={onToggle}
+          style={[
+            styles.expandButton,
+            { borderColor, borderWidth: BorderWidth.thin },
+          ]}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={isExpanded ? "chevron-up" : "chevron-down"}
+            size={16}
+            color={primaryColor}
+          />
+          <ThemedText
+            style={[styles.expandButtonText, { color: primaryColor }]}
+          >
+            {isExpanded ? "HIDE" : "SHOW"}
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.expandableValueContainer}>
+        <ThemedText
+          style={styles.expandableValue}
+          numberOfLines={isExpanded ? undefined : 1}
+          ellipsizeMode="middle"
+        >
+          {value}
+        </ThemedText>
+        {!isExpanded && (
+          <ThemedText style={styles.expandHint}>
+            (Tap SHOW to view full {label.toLowerCase()})
+          </ThemedText>
+        )}
+      </View>
     </View>
   );
 }
@@ -492,10 +567,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
     textAlign: "center",
     fontWeight: "800",
-    fontSize: 24,
+    fontSize: 26,
+    letterSpacing: 0.5,
   },
   sourceContainer: {
     borderRadius: 0,
@@ -509,6 +585,7 @@ const styles = StyleSheet.create({
   sourceLabel: {
     fontSize: 16,
     fontWeight: "800",
+    letterSpacing: 0.5,
   },
   dappContainer: {
     borderRadius: 0,
@@ -516,17 +593,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   dappTitle: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 17,
+    letterSpacing: 0.5,
   },
   descriptionContainer: {
     marginTop: Spacing.xs,
   },
   description: {
-    fontSize: 14,
+    fontSize: 15,
     marginTop: 4,
     fontWeight: "600",
+    lineHeight: 22,
   },
   warningContainer: {
     borderRadius: 0,
@@ -540,13 +619,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   warningText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "800",
     marginBottom: 4,
+    letterSpacing: 0.5,
   },
   warningDescription: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
+    lineHeight: 22,
   },
   detailsContainer: {
     borderRadius: 0,
@@ -554,26 +635,69 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   detailsTitle: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 17,
+    letterSpacing: 0.5,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
   detailLabel: {
     fontWeight: "700",
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 22,
   },
   detailValue: {
     flex: 1,
     textAlign: "right",
     fontFamily: "monospace",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 22,
+  },
+  expandableRow: {
+    marginBottom: Spacing.md,
+  },
+  expandableHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+    gap: Spacing.sm,
+  },
+  expandButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
+    borderRadius: 0,
+  },
+  expandButtonText: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  expandableValueContainer: {
+    width: "100%",
+    marginTop: Spacing.xs,
+  },
+  expandableValue: {
+    fontFamily: "monospace",
     fontSize: 13,
     fontWeight: "700",
+    lineHeight: 20,
+  },
+  expandHint: {
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 4,
+    opacity: 0.6,
+    fontStyle: "italic",
   },
   feesContainer: {
     borderRadius: 0,
@@ -589,7 +713,8 @@ const styles = StyleSheet.create({
   feesTitle: {
     marginBottom: 0,
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 17,
+    letterSpacing: 0.5,
   },
   toggleButton: {
     paddingHorizontal: Spacing.sm,
@@ -608,12 +733,14 @@ const styles = StyleSheet.create({
   },
   totalCostLabel: {
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 17,
+    lineHeight: 24,
   },
   totalCostValue: {
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: "monospace",
+    lineHeight: 24,
   },
   simpleFeeRow: {
     flexDirection: "row",
@@ -622,12 +749,14 @@ const styles = StyleSheet.create({
   },
   simpleFeeLabel: {
     fontWeight: "700",
-    fontSize: 16,
+    fontSize: 17,
+    lineHeight: 24,
   },
   simpleFeeValue: {
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: "monospace",
+    lineHeight: 24,
   },
   buttonContainer: {
     padding: Spacing.md,
@@ -646,26 +775,29 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   tokenTitle: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     textAlign: "center",
     fontWeight: "800",
-    fontSize: 16,
+    fontSize: 17,
+    letterSpacing: 0.5,
   },
   tokenRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
   tokenLabel: {
     fontWeight: "700",
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 22,
   },
   tokenValue: {
     flex: 1,
     textAlign: "right",
     fontFamily: "monospace",
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
+    lineHeight: 22,
   },
 });

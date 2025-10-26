@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
+import { ThemedButton } from "@/components/themed-button";
 import { QRDisplay } from "@/components/QRDisplay";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useWallet } from "@/contexts/WalletContext";
 import { router } from "expo-router";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
+import * as Clipboard from "expo-clipboard";
 
 export default function DashboardScreen() {
   const { address, isLoading, isSetupComplete } = useWallet();
   const [showQR, setShowQR] = useState(false);
 
-  const warningColor = useThemeColor({}, "warning");
   const overlayColor = useThemeColor({}, "overlay");
   const borderColor = useThemeColor({}, "border");
   const primaryColor = useThemeColor({}, "primary");
@@ -48,6 +56,13 @@ export default function DashboardScreen() {
 
   const handleScanTransaction = () => {
     router.push("/scan-transaction");
+  };
+
+  const handleCopyAddress = async () => {
+    if (address) {
+      await Clipboard.setStringAsync(address);
+      Alert.alert("Copied!", "Address copied to clipboard");
+    }
   };
 
   if (showQR && address) {
@@ -88,9 +103,18 @@ export default function DashboardScreen() {
       >
         <View style={styles.content}>
           {/* Header */}
-          <ThemedText type="title" style={styles.title}>
-            COLD WALLET
-          </ThemedText>
+          <View style={styles.header}>
+            <Image
+              source={require("../../assets/images/icon.png")}
+              style={styles.logo}
+            />
+            <ThemedText type="title" style={styles.appTitle}>
+              BETTER WALLET
+            </ThemedText>
+            <ThemedText style={styles.tagline}>
+              COLD STORAGE - OFFLINE ONLY
+            </ThemedText>
+          </View>
 
           {/* Offline Indicator */}
           <View
@@ -128,18 +152,24 @@ export default function DashboardScreen() {
 
             <View style={styles.addressContainer}>
               <ThemedText style={styles.addressLabel}>Address:</ThemedText>
-              <ThemedText style={styles.addressText}>
-                {address
-                  ? `${address.substring(0, 6)}...${address.substring(
-                      address.length - 4
-                    )}`
-                  : "Not available"}
-              </ThemedText>
-            </View>
-
-            <View style={styles.balanceContainer}>
-              <ThemedText style={styles.balanceLabel}>Balance:</ThemedText>
-              <ThemedText style={styles.balanceText}>Offline Mode</ThemedText>
+              <View style={styles.addressRow}>
+                <ThemedText style={styles.addressText}>
+                  {address ? address : "Not available"}
+                </ThemedText>
+                {address && (
+                  <TouchableOpacity
+                    onPress={handleCopyAddress}
+                    style={styles.copyButton}
+                    activeOpacity={0.6}
+                  >
+                    <Ionicons
+                      name="copy-outline"
+                      size={20}
+                      color={primaryColor}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
 
@@ -233,9 +263,6 @@ export default function DashboardScreen() {
   );
 }
 
-// Import ThemedButton here at the top with other imports
-import { ThemedButton } from "@/components/themed-button";
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -256,6 +283,29 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+    gap: Spacing.xs,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: Spacing.xs,
+  },
+  appTitle: {
+    textAlign: "center",
+    fontWeight: "900",
+    fontSize: 26,
+    letterSpacing: 1,
+  },
+  tagline: {
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    opacity: 0.7,
   },
   title: {
     textAlign: "center",
@@ -303,10 +353,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontWeight: "700",
   },
+  addressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
   addressText: {
     fontFamily: "monospace",
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "700",
+    flex: 1,
+  },
+  copyButton: {
+    padding: Spacing.xs,
   },
   balanceContainer: {
     marginBottom: Spacing.xs,
