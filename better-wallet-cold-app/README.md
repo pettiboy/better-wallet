@@ -51,6 +51,33 @@ Join our community of developers creating universal apps.
 
 ---
 
+## Build APK
+
+```zsh
+npx expo prebuild
+cd android
+./gradlew assembleRelease
 ```
+
+OR
+
+(optional)
+
+```zsh
+eas prebuild
+```
+
+very slow
+
+```zsh
 eas build --platform android --local
+```
+
+## Install on device
+
+after apk ready
+
+```zsh
+adb devices              # verify phone
+adb install ./name.apk   # install
 ```
