@@ -70,7 +70,12 @@ export default defineConfig({
     }),
   ],
   server: {
-    allowedHosts: [".ngrok-free.app", "localhost"],
+    allowedHosts: [
+      ".ngrok-free.app",
+      "localhost",
+      "betterwallet.web.app",
+      ".betterwallet.web.app",
+    ],
     host: "0.0.0.0",
     port: 5173,
   },
