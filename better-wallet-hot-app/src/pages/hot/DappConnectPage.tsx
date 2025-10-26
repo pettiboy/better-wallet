@@ -480,6 +480,7 @@ export function DappConnectPage() {
                     border: "3px solid var(--color-black)",
                     padding: "1rem",
                     display: "flex",
+                    flexDirection: "column",
                     justifyContent: "space-between",
                     alignItems: "center",
                     gap: "1rem",
@@ -504,6 +505,7 @@ export function DappConnectPage() {
                     icon={X}
                     variant="danger"
                     onClick={() => handleDisconnect(session.topic)}
+                    fullWidth
                   />
                 </div>
               ))}

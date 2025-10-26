@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Wallet, Send, Plug, RefreshCw, History } from "lucide-react";
+import { Wallet, RefreshCw, History } from "lucide-react";
 import { useTransactionPopup } from "@blockscout/app-sdk";
 import { Button } from "../../components/Button";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
-import { useWalletConnect } from "../../contexts/WalletConnectContext";
 import { getBalance, getERC20Balance } from "../../services/ethereum";
 import { SUPPORTED_TOKENS } from "../../config/tokens";
 
 export function HotHomePage() {
-  const navigate = useNavigate();
   const { walletAddress } = useDeviceMode();
-  const { sessions } = useWalletConnect();
   const { openPopup } = useTransactionPopup();
   const [balance, setBalance] = useState<string>("0.0");
   const [pyusdBalance, setPyusdBalance] = useState<string>("0.0");
@@ -247,24 +243,6 @@ export function HotHomePage() {
             marginBottom: "1.5rem",
           }}
         >
-          <Button
-            title="Send Transaction"
-            icon={Send}
-            variant="success"
-            onClick={() => navigate("/hot/send")}
-            fullWidth
-          />
-
-          <Button
-            title={`Connect to dApps${
-              sessions.length > 0 ? ` (${sessions.length})` : ""
-            }`}
-            icon={Plug}
-            variant="primary"
-            onClick={() => navigate("/hot/dapp-connect")}
-            fullWidth
-          />
-
           <Button
             title="Transaction History"
             icon={History}
