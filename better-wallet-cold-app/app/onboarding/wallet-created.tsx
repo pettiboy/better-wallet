@@ -144,7 +144,7 @@ export default function WalletCreatedScreen() {
             ]}
           >
             <ThemedText type="subtitle" style={styles.nextStepsTitle}>
-              WHAT'S NEXT?
+              WHAT&apos;S NEXT?
             </ThemedText>
 
             <View style={styles.nextStepItem}>

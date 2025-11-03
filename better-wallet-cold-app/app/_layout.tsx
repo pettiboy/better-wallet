@@ -1,15 +1,10 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
+import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { useEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { WalletProvider, useWallet } from "@/contexts/WalletContext";
 import { isDeviceOffline } from "@/services/network";
 import OfflineCheckScreen from "./offline-check";

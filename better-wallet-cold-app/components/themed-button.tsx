@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   View,
-  Animated,
   type TouchableOpacityProps,
 } from "react-native";
 import { useThemeColor } from "@/hooks/use-theme-color";

@@ -24,6 +24,7 @@ export default function MnemonicDisplayScreen() {
   const dangerColor = useThemeColor({}, "danger");
   const borderColor = useThemeColor({}, "border");
   const cardColor = useThemeColor({}, "card");
+  const backgroundColor = useThemeColor({}, "background");
 
   useEffect(() => {
     generateNewWallet();
@@ -216,7 +217,7 @@ export default function MnemonicDisplayScreen() {
         style={[
           styles.buttonContainer,
           {
-            backgroundColor: useThemeColor({}, "background"),
+            backgroundColor: backgroundColor,
             borderTopColor: borderColor,
             borderTopWidth: BorderWidth.thick,
           },

@@ -3,13 +3,10 @@ import React from "react";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { Colors, BorderWidth } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["left", "right"]}>
       <Tabs

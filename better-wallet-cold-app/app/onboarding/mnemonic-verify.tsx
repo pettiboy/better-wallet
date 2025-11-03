@@ -150,8 +150,8 @@ export default function MnemonicVerifyScreen() {
         </ThemedText>
 
         <ThemedText style={styles.subtitle}>
-          Tap the words in the correct order to verify you've written them down
-          correctly.
+          Tap the words in the correct order to verify you&apos;ve written them
+          down correctly.
         </ThemedText>
 
         {/* Progress */}

@@ -9,7 +9,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
 export default function WelcomeScreen() {
-  const primaryColor = useThemeColor({}, "primary");
   const overlayColor = useThemeColor({}, "overlay");
   const warningColor = useThemeColor({}, "warning");
   const borderColor = useThemeColor({}, "border");

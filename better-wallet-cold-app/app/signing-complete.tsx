@@ -181,7 +181,7 @@ export default function SigningCompleteScreen() {
             ]}
           >
             <ThemedText type="subtitle" style={styles.instructionsTitle}>
-              WHAT'S NEXT?
+              WHAT&apos;S NEXT?
             </ThemedText>
 
             <View style={styles.instructionItem}>

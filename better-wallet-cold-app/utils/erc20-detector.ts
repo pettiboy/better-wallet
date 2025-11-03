@@ -111,7 +111,6 @@ function parseTransferFromData(data: string): ERC20Transfer {
   try {
     const params = data.substring(10);
 
-    const fromAddress = "0x" + params.substring(24, 64);
     const toAddress = "0x" + params.substring(88, 128);
     const amountHex = params.substring(128, 192);
     const amount = BigInt("0x" + amountHex).toString();
