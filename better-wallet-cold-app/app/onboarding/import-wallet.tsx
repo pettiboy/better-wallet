@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { QRScanner } from "@/components/QRScanner";
 import { useThemeColor } from "@/hooks/use-theme-color";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 import { importWalletFromMnemonic, validateMnemonic } from "@/services/wallet";
@@ -190,180 +190,188 @@ export default function ImportWalletScreen() {
   }
 
   return (
-    <SafeThemedView style={styles.container} edges={["top"]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <ThemedText type="title" style={styles.title}>
-              IMPORT WALLET
-            </ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Enter your 12-word recovery phrase to restore your wallet
-            </ThemedText>
-          </View>
-
-          {/* Security Warning */}
-          <View
-            style={[
-              styles.warningContainer,
-              {
-                backgroundColor: warningColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.medium,
-              },
-            ]}
-          >
-            <Ionicons name="warning" size={24} color="#000" />
-            <View style={styles.warningTextContainer}>
-              <ThemedText style={styles.warningTitle}>
-                SECURITY WARNING
+    <>
+      <Stack.Screen
+        options={{
+          title: "Import Wallet",
+          headerShown: false,
+        }}
+      />
+      <SafeThemedView style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <ThemedText type="title" style={styles.title}>
+                IMPORT WALLET
               </ThemedText>
-              <ThemedText style={styles.warningText}>
-                • Only import on a device you trust and control{"\n"}• This
-                device should remain offline (air-gapped){"\n"}• Your recovery
-                phrase will be stored with hardware encryption{"\n"}•
-                Authentication required to access after import
+              <ThemedText style={styles.subtitle}>
+                Enter your 12-word recovery phrase to restore your wallet
               </ThemedText>
             </View>
-          </View>
 
-          {/* Mnemonic Input */}
-          <View
-            style={[
-              styles.inputContainer,
-              {
-                backgroundColor: overlayColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.medium,
-              },
-            ]}
-          >
-            <View style={styles.inputHeader}>
-              <ThemedText style={styles.inputLabel}>
-                Recovery Phrase (12 words)
-              </ThemedText>
-              <View style={styles.wordCountBadge}>
-                <ThemedText
-                  style={[
-                    styles.wordCountText,
-                    isValidWordCount && styles.wordCountValid,
-                  ]}
-                >
-                  {wordCount}/12
+            {/* Security Warning */}
+            <View
+              style={[
+                styles.warningContainer,
+                {
+                  backgroundColor: warningColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
+              ]}
+            >
+              <Ionicons name="warning" size={24} color="#000" />
+              <View style={styles.warningTextContainer}>
+                <ThemedText style={styles.warningTitle}>
+                  SECURITY WARNING
+                </ThemedText>
+                <ThemedText style={styles.warningText}>
+                  • Only import on a device you trust and control{"\n"}• This
+                  device should remain offline (air-gapped){"\n"}• Your recovery
+                  phrase will be stored with hardware encryption{"\n"}•
+                  Authentication required to access after import
                 </ThemedText>
               </View>
             </View>
 
-            <TextInput
+            {/* Mnemonic Input */}
+            <View
               style={[
-                styles.textInput,
+                styles.inputContainer,
                 {
-                  backgroundColor,
+                  backgroundColor: overlayColor,
                   borderColor,
-                  color: textColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
                 },
-                validationError && {
-                  borderColor: errorColor,
+              ]}
+            >
+              <View style={styles.inputHeader}>
+                <ThemedText style={styles.inputLabel}>
+                  Recovery Phrase (12 words)
+                </ThemedText>
+                <View style={styles.wordCountBadge}>
+                  <ThemedText
+                    style={[
+                      styles.wordCountText,
+                      isValidWordCount && styles.wordCountValid,
+                    ]}
+                  >
+                    {wordCount}/12
+                  </ThemedText>
+                </View>
+              </View>
+
+              <TextInput
+                style={[
+                  styles.textInput,
+                  {
+                    backgroundColor,
+                    borderColor,
+                    color: textColor,
+                  },
+                  validationError && {
+                    borderColor: errorColor,
+                    borderWidth: BorderWidth.thick,
+                  },
+                ]}
+                value={mnemonic}
+                onChangeText={handleMnemonicChange}
+                placeholder="Enter your 12 words separated by spaces"
+                placeholderTextColor={`${textColor}60`}
+                multiline
+                numberOfLines={4}
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry={true}
+                textAlignVertical="top"
+              />
+
+              <View style={styles.inputActions}>
+                <ThemedButton
+                  title="Scan QR"
+                  variant="secondary"
+                  onPress={handleScanQR}
+                  style={styles.scanButton}
+                />
+                <ThemedButton
+                  title="Validate"
+                  variant="secondary"
+                  onPress={handleValidate}
+                  style={styles.validateButton}
+                />
+              </View>
+
+              {validationError && (
+                <View style={styles.errorContainer}>
+                  <Ionicons name="close-circle" size={18} color={errorColor} />
+                  <ThemedText style={[styles.errorText, { color: errorColor }]}>
+                    {validationError}
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+
+            {/* Info Section */}
+            <View
+              style={[
+                styles.infoContainer,
+                {
+                  backgroundColor: overlayColor,
+                  borderColor,
                   borderWidth: BorderWidth.thick,
                 },
               ]}
-              value={mnemonic}
-              onChangeText={handleMnemonicChange}
-              placeholder="Enter your 12 words separated by spaces"
-              placeholderTextColor={`${textColor}60`}
-              multiline
-              numberOfLines={4}
-              autoCapitalize="none"
-              autoCorrect={false}
-              secureTextEntry={true}
-              textAlignVertical="top"
-            />
-
-            <View style={styles.inputActions}>
-              <ThemedButton
-                title="Scan QR"
-                variant="secondary"
-                onPress={handleScanQR}
-                style={styles.scanButton}
-              />
-              <ThemedButton
-                title="Validate"
-                variant="secondary"
-                onPress={handleValidate}
-                style={styles.validateButton}
-              />
+            >
+              <ThemedText style={styles.infoTitle}>Tips:</ThemedText>
+              <ThemedText style={styles.infoText}>
+                • Enter exactly 12 words separated by spaces{"\n"}• Scan QR code
+                containing your recovery phrase{"\n"}• Words must be from the
+                BIP-39 word list{"\n"}• All words should be lowercase{"\n"}•
+                Copy-paste is supported{"\n"}• Use &quot;Validate&quot; to check
+                before importing
+              </ThemedText>
             </View>
-
-            {validationError && (
-              <View style={styles.errorContainer}>
-                <Ionicons name="close-circle" size={18} color={errorColor} />
-                <ThemedText style={[styles.errorText, { color: errorColor }]}>
-                  {validationError}
-                </ThemedText>
-              </View>
-            )}
           </View>
+        </ScrollView>
 
-          {/* Info Section */}
-          <View
-            style={[
-              styles.infoContainer,
-              {
-                backgroundColor: overlayColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-              },
-            ]}
-          >
-            <ThemedText style={styles.infoTitle}>Tips:</ThemedText>
-            <ThemedText style={styles.infoText}>
-              • Enter exactly 12 words separated by spaces{"\n"}• Scan QR code
-              containing your recovery phrase{"\n"}• Words must be from the
-              BIP-39 word list{"\n"}• All words should be lowercase{"\n"}•
-              Copy-paste is supported{"\n"}• Use &quot;Validate&quot; to check
-              before importing
-            </ThemedText>
-          </View>
+        {/* Action Buttons */}
+        <View
+          style={[
+            styles.buttonContainer,
+            {
+              backgroundColor,
+              borderTopColor: borderColor,
+              borderTopWidth: BorderWidth.thick,
+            },
+          ]}
+        >
+          <ThemedButton
+            title={isImporting ? "Importing..." : "Import Wallet"}
+            variant="primary"
+            onPress={handleImport}
+            disabled={isImporting || !isValidWordCount || !!validationError}
+            loading={isImporting}
+            style={styles.importButton}
+          />
+
+          <ThemedButton
+            title="Cancel"
+            variant="secondary"
+            onPress={handleCancel}
+            disabled={isImporting}
+            style={styles.cancelButton}
+          />
         </View>
-      </ScrollView>
-
-      {/* Action Buttons */}
-      <View
-        style={[
-          styles.buttonContainer,
-          {
-            backgroundColor,
-            borderTopColor: borderColor,
-            borderTopWidth: BorderWidth.thick,
-          },
-        ]}
-      >
-        <ThemedButton
-          title={isImporting ? "Importing..." : "Import Wallet"}
-          variant="primary"
-          onPress={handleImport}
-          disabled={isImporting || !isValidWordCount || !!validationError}
-          loading={isImporting}
-          style={styles.importButton}
-        />
-
-        <ThemedButton
-          title="Cancel"
-          variant="secondary"
-          onPress={handleCancel}
-          disabled={isImporting}
-          style={styles.cancelButton}
-        />
-      </View>
-    </SafeThemedView>
+      </SafeThemedView>
+    </>
   );
 }
 
@@ -376,7 +384,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
   content: {

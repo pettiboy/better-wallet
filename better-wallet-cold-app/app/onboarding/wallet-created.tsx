@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useWallet } from "@/contexts/WalletContext";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
@@ -42,167 +42,175 @@ export default function WalletCreatedScreen() {
   };
 
   return (
-    <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View
-          style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
+    <>
+      <Stack.Screen
+        options={{
+          title: "Wallet Created",
+          headerShown: false,
+        }}
+      />
+      <SafeThemedView style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          {/* Success Icon */}
-          <View
+          <Animated.View
             style={[
-              styles.iconContainer,
+              styles.content,
               {
-                backgroundColor: successColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.large,
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
               },
             ]}
           >
-            <Ionicons name="checkmark" size={72} color="white" />
-          </View>
+            {/* Success Icon */}
+            <View
+              style={[
+                styles.iconContainer,
+                {
+                  backgroundColor: successColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.large,
+                },
+              ]}
+            >
+              <Ionicons name="checkmark" size={72} color="white" />
+            </View>
 
-          {/* Main Message */}
-          <ThemedText type="title" style={styles.title}>
-            WALLET CREATED!
-          </ThemedText>
-
-          <ThemedText style={styles.subtitle}>
-            Your cold wallet is ready. You can now receive ETH or sign Ethereum
-            transactions.
-          </ThemedText>
-
-          {/* Security Features */}
-          <View
-            style={[
-              styles.featuresContainer,
-              {
-                backgroundColor: overlayColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.medium,
-              },
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.featuresTitle}>
-              YOUR WALLET IS NOW SECURE WITH:
+            {/* Main Message */}
+            <ThemedText type="title" style={styles.title}>
+              WALLET CREATED!
             </ThemedText>
 
-            <View style={styles.featureItem}>
-              <Ionicons name="lock-closed" size={24} color="#000" />
-              <ThemedText style={styles.featureText}>
-                Offline private key storage
-              </ThemedText>
-            </View>
-
-            <View style={styles.featureItem}>
-              <MaterialCommunityIcons
-                name="shield-check"
-                size={24}
-                color="#000"
-              />
-              <ThemedText style={styles.featureText}>
-                Biometric authentication protection
-              </ThemedText>
-            </View>
-
-            <View style={styles.featureItem}>
-              <Ionicons name="phone-portrait" size={24} color="#000" />
-              <ThemedText style={styles.featureText}>
-                QR code transaction signing
-              </ThemedText>
-            </View>
-
-            <View style={styles.featureItem}>
-              <Ionicons name="airplane" size={24} color="#000" />
-              <ThemedText style={styles.featureText}>
-                Airplane mode enforcement
-              </ThemedText>
-            </View>
-          </View>
-
-          {/* Next Steps */}
-          <View
-            style={[
-              styles.nextStepsContainer,
-              {
-                backgroundColor: overlayColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.small,
-              },
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.nextStepsTitle}>
-              WHAT&apos;S NEXT?
+            <ThemedText style={styles.subtitle}>
+              Your cold wallet is ready. You can now receive ETH or sign
+              Ethereum transactions.
             </ThemedText>
 
-            <View style={styles.nextStepItem}>
-              <ThemedText style={styles.stepNumber}>1</ThemedText>
-              <ThemedText style={styles.stepText}>
-                Keep this device offline at all times
+            {/* Security Features */}
+            <View
+              style={[
+                styles.featuresContainer,
+                {
+                  backgroundColor: overlayColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
+              ]}
+            >
+              <ThemedText type="subtitle" style={styles.featuresTitle}>
+                YOUR WALLET IS NOW SECURE WITH:
               </ThemedText>
+
+              <View style={styles.featureItem}>
+                <Ionicons name="lock-closed" size={24} color="#000" />
+                <ThemedText style={styles.featureText}>
+                  Offline private key storage
+                </ThemedText>
+              </View>
+
+              <View style={styles.featureItem}>
+                <MaterialCommunityIcons
+                  name="shield-check"
+                  size={24}
+                  color="#000"
+                />
+                <ThemedText style={styles.featureText}>
+                  Biometric authentication protection
+                </ThemedText>
+              </View>
+
+              <View style={styles.featureItem}>
+                <Ionicons name="phone-portrait" size={24} color="#000" />
+                <ThemedText style={styles.featureText}>
+                  QR code transaction signing
+                </ThemedText>
+              </View>
+
+              <View style={styles.featureItem}>
+                <Ionicons name="airplane" size={24} color="#000" />
+                <ThemedText style={styles.featureText}>
+                  Airplane mode enforcement
+                </ThemedText>
+              </View>
             </View>
 
-            <View style={styles.nextStepItem}>
-              <ThemedText style={styles.stepNumber}>2</ThemedText>
-              <ThemedText style={styles.stepText}>
-                Use your hot wallet to create transactions
+            {/* Next Steps */}
+            <View
+              style={[
+                styles.nextStepsContainer,
+                {
+                  backgroundColor: overlayColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.small,
+                },
+              ]}
+            >
+              <ThemedText type="subtitle" style={styles.nextStepsTitle}>
+                WHAT&apos;S NEXT?
               </ThemedText>
+
+              <View style={styles.nextStepItem}>
+                <ThemedText style={styles.stepNumber}>1</ThemedText>
+                <ThemedText style={styles.stepText}>
+                  Keep this device offline at all times
+                </ThemedText>
+              </View>
+
+              <View style={styles.nextStepItem}>
+                <ThemedText style={styles.stepNumber}>2</ThemedText>
+                <ThemedText style={styles.stepText}>
+                  Use your hot wallet to create transactions
+                </ThemedText>
+              </View>
+
+              <View style={styles.nextStepItem}>
+                <ThemedText style={styles.stepNumber}>3</ThemedText>
+                <ThemedText style={styles.stepText}>
+                  Scan transaction QR codes to sign them
+                </ThemedText>
+              </View>
+
+              <View style={styles.nextStepItem}>
+                <ThemedText style={styles.stepNumber}>4</ThemedText>
+                <ThemedText style={styles.stepText}>
+                  Share signed transaction QR codes back to hot wallet
+                </ThemedText>
+              </View>
             </View>
 
-            <View style={styles.nextStepItem}>
-              <ThemedText style={styles.stepNumber}>3</ThemedText>
-              <ThemedText style={styles.stepText}>
-                Scan transaction QR codes to sign them
+            {/* Action Button */}
+            <ThemedButton
+              title="Go to Dashboard"
+              variant="primary"
+              onPress={handleGoToDashboard}
+              style={styles.dashboardButton}
+            />
+
+            {/* Security Reminder */}
+            <View
+              style={[
+                styles.reminderContainer,
+                {
+                  borderColor,
+                  borderWidth: BorderWidth.thin,
+                },
+              ]}
+            >
+              <Ionicons name="information-circle" size={20} color="#000" />
+              <ThemedText style={styles.reminderText}>
+                Never connect this device to the internet while storing private
+                keys
               </ThemedText>
             </View>
-
-            <View style={styles.nextStepItem}>
-              <ThemedText style={styles.stepNumber}>4</ThemedText>
-              <ThemedText style={styles.stepText}>
-                Share signed transaction QR codes back to hot wallet
-              </ThemedText>
-            </View>
-          </View>
-
-          {/* Action Button */}
-          <ThemedButton
-            title="Go to Dashboard"
-            variant="primary"
-            onPress={handleGoToDashboard}
-            style={styles.dashboardButton}
-          />
-
-          {/* Security Reminder */}
-          <View
-            style={[
-              styles.reminderContainer,
-              {
-                borderColor,
-                borderWidth: BorderWidth.thin,
-              },
-            ]}
-          >
-            <Ionicons name="information-circle" size={20} color="#000" />
-            <ThemedText style={styles.reminderText}>
-              Never connect this device to the internet while storing private
-              keys
-            </ThemedText>
-          </View>
-        </Animated.View>
-      </ScrollView>
-    </SafeThemedView>
+          </Animated.View>
+        </ScrollView>
+      </SafeThemedView>
+    </>
   );
 }
 
@@ -216,8 +224,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: Spacing.lg,
-    paddingTop: Spacing.xxl,
+    paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
   content: {

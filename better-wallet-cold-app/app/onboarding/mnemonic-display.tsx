@@ -11,7 +11,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { generateWallet } from "@/services/wallet";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
@@ -81,157 +81,165 @@ export default function MnemonicDisplayScreen() {
   }
 
   return (
-    <SafeThemedView style={styles.container} edges={["top"]}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.content}>
-          {/* Header */}
-          <ThemedText type="title" style={styles.title}>
-            YOUR RECOVERY PHRASE
-          </ThemedText>
-
-          <ThemedText style={styles.subtitle}>
-            Write down these 12 words in the exact order shown. Store them
-            safely offline.
-          </ThemedText>
-
-          {/* Warning */}
-          <View
-            style={[
-              styles.warningContainer,
-              {
-                backgroundColor: dangerColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.medium,
-              },
-            ]}
-          >
-            <Ionicons
-              name="warning"
-              size={24}
-              color="#fff"
-              style={styles.warningIcon}
-            />
-            <ThemedText style={styles.warningText}>
-              These words are your wallet. Write them down and store them
-              offline. This will not be shown again.
+    <>
+      <Stack.Screen
+        options={{
+          title: "Save Recovery Phrase",
+          headerShown: false,
+        }}
+      />
+      <SafeThemedView style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.content}>
+            {/* Header */}
+            <ThemedText type="title" style={styles.title}>
+              YOUR RECOVERY PHRASE
             </ThemedText>
-          </View>
 
-          {/* Mnemonic Words Grid */}
-          <View
-            style={[
-              styles.mnemonicContainer,
-              {
-                backgroundColor: cardColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.large,
-              },
-            ]}
-          >
-            {mnemonicWords.map((word, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.wordItem,
-                  {
-                    backgroundColor: overlayColor,
-                    borderColor,
-                    borderWidth: BorderWidth.thin,
-                  },
-                ]}
-              >
-                <View style={styles.wordNumber}>
-                  <ThemedText style={styles.wordNumberText}>
-                    {index + 1}
-                  </ThemedText>
+            <ThemedText style={styles.subtitle}>
+              Write down these 12 words in the exact order shown. Store them
+              safely offline.
+            </ThemedText>
+
+            {/* Warning */}
+            <View
+              style={[
+                styles.warningContainer,
+                {
+                  backgroundColor: dangerColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.medium,
+                },
+              ]}
+            >
+              <Ionicons
+                name="warning"
+                size={24}
+                color="#fff"
+                style={styles.warningIcon}
+              />
+              <ThemedText style={styles.warningText}>
+                These words are your wallet. Write them down and store them
+                offline. This will not be shown again.
+              </ThemedText>
+            </View>
+
+            {/* Mnemonic Words Grid */}
+            <View
+              style={[
+                styles.mnemonicContainer,
+                {
+                  backgroundColor: cardColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.large,
+                },
+              ]}
+            >
+              {mnemonicWords.map((word, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.wordItem,
+                    {
+                      backgroundColor: overlayColor,
+                      borderColor,
+                      borderWidth: BorderWidth.thin,
+                    },
+                  ]}
+                >
+                  <View style={styles.wordNumber}>
+                    <ThemedText style={styles.wordNumberText}>
+                      {index + 1}
+                    </ThemedText>
+                  </View>
+                  <ThemedText style={styles.wordText}>{word}</ThemedText>
                 </View>
-                <ThemedText style={styles.wordText}>{word}</ThemedText>
+              ))}
+            </View>
+
+            {/* Instructions */}
+            <View
+              style={[
+                styles.instructionsContainer,
+                {
+                  backgroundColor: overlayColor,
+                  borderColor,
+                  borderWidth: BorderWidth.thick,
+                  ...Shadows.small,
+                },
+              ]}
+            >
+              <ThemedText type="subtitle" style={styles.instructionsTitle}>
+                IMPORTANT INSTRUCTIONS:
+              </ThemedText>
+
+              <View style={styles.instructionItem}>
+                <Ionicons name="checkmark-circle" size={20} color="#000" />
+                <ThemedText style={styles.instructionText}>
+                  Write down all 12 words in order
+                </ThemedText>
               </View>
-            ))}
+              <View style={styles.instructionItem}>
+                <Ionicons name="checkmark-circle" size={20} color="#000" />
+                <ThemedText style={styles.instructionText}>
+                  Store them in a safe, offline location
+                </ThemedText>
+              </View>
+              <View style={styles.instructionItem}>
+                <Ionicons name="checkmark-circle" size={20} color="#000" />
+                <ThemedText style={styles.instructionText}>
+                  Never share these words with anyone
+                </ThemedText>
+              </View>
+              <View style={styles.instructionItem}>
+                <Ionicons name="checkmark-circle" size={20} color="#000" />
+                <ThemedText style={styles.instructionText}>
+                  Anyone with these words can access your wallet
+                </ThemedText>
+              </View>
+            </View>
+
+            {/* Scroll to bottom indicator */}
+            {!hasScrolledToBottom && (
+              <View style={styles.scrollIndicator}>
+                <Ionicons name="arrow-down" size={24} color="#000" />
+                <ThemedText style={styles.scrollText}>
+                  Scroll down to continue
+                </ThemedText>
+              </View>
+            )}
           </View>
+        </ScrollView>
 
-          {/* Instructions */}
-          <View
-            style={[
-              styles.instructionsContainer,
-              {
-                backgroundColor: overlayColor,
-                borderColor,
-                borderWidth: BorderWidth.thick,
-                ...Shadows.small,
-              },
-            ]}
-          >
-            <ThemedText type="subtitle" style={styles.instructionsTitle}>
-              IMPORTANT INSTRUCTIONS:
-            </ThemedText>
-
-            <View style={styles.instructionItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#000" />
-              <ThemedText style={styles.instructionText}>
-                Write down all 12 words in order
-              </ThemedText>
-            </View>
-            <View style={styles.instructionItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#000" />
-              <ThemedText style={styles.instructionText}>
-                Store them in a safe, offline location
-              </ThemedText>
-            </View>
-            <View style={styles.instructionItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#000" />
-              <ThemedText style={styles.instructionText}>
-                Never share these words with anyone
-              </ThemedText>
-            </View>
-            <View style={styles.instructionItem}>
-              <Ionicons name="checkmark-circle" size={20} color="#000" />
-              <ThemedText style={styles.instructionText}>
-                Anyone with these words can access your wallet
-              </ThemedText>
-            </View>
-          </View>
-
-          {/* Scroll to bottom indicator */}
-          {!hasScrolledToBottom && (
-            <View style={styles.scrollIndicator}>
-              <Ionicons name="arrow-down" size={24} color="#000" />
-              <ThemedText style={styles.scrollText}>
-                Scroll down to continue
-              </ThemedText>
-            </View>
-          )}
+        {/* Next Button */}
+        <View
+          style={[
+            styles.buttonContainer,
+            {
+              backgroundColor: backgroundColor,
+              borderTopColor: borderColor,
+              borderTopWidth: BorderWidth.thick,
+            },
+          ]}
+        >
+          <ThemedButton
+            title="I've Written Down My Words"
+            variant="primary"
+            onPress={handleNext}
+            style={styles.nextButton}
+            disabled={!hasScrolledToBottom}
+          />
         </View>
-      </ScrollView>
-
-      {/* Next Button */}
-      <View
-        style={[
-          styles.buttonContainer,
-          {
-            backgroundColor: backgroundColor,
-            borderTopColor: borderColor,
-            borderTopWidth: BorderWidth.thick,
-          },
-        ]}
-      >
-        <ThemedButton
-          title="I've Written Down My Words"
-          variant="primary"
-          onPress={handleNext}
-          style={styles.nextButton}
-          disabled={!hasScrolledToBottom}
-        />
-      </View>
-    </SafeThemedView>
+      </SafeThemedView>
+    </>
   );
 }
 
@@ -261,7 +269,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
   content: {
