@@ -62,15 +62,15 @@ function AppContent() {
       <Stack.Screen name="receive" options={{ title: "Receive ETH" }} />
       <Stack.Screen
         name="scan-transaction"
-        options={{ title: "Scan Transaction" }}
+        options={{ title: "Scan Transaction", headerShown: false }}
       />
       <Stack.Screen
         name="verify-transaction"
-        options={{ title: "Verify Transaction" }}
+        options={{ title: "Verify Transaction", headerShown: false }}
       />
       <Stack.Screen
         name="signing-complete"
-        options={{ title: "Transaction Signed" }}
+        options={{ title: "Transaction Signed", headerShown: false }}
       />
       <Stack.Screen
         name="modal"

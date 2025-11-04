@@ -364,7 +364,8 @@ export default function ImportWalletScreen() {
 
           <ThemedButton
             title="Cancel"
-            variant="secondary"
+            // outline button
+            variant="outline"
             onPress={handleCancel}
             disabled={isImporting}
             style={styles.cancelButton}

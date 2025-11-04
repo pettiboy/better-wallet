@@ -55,8 +55,16 @@ export function QRScanner({
       }
 
       // Call onScan with slight delay to ensure state updates
+      // Wrapped in try-catch to handle any errors in the parent's onScan handler
       scanTimeout.current = setTimeout(() => {
-        onScan(data);
+        try {
+          onScan(data);
+        } catch (error) {
+          console.error("Error in onScan callback:", error);
+          // Reset scanner state on error so user can try again
+          setScanned(false);
+          lastScanTime.current = 0;
+        }
       }, 100) as unknown as number;
     },
     [scanned, onScan]

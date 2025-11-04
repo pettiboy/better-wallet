@@ -12,7 +12,13 @@ import { BorderWidth, Shadows } from "@/constants/theme";
 
 export type ThemedButtonProps = TouchableOpacityProps & {
   title: string;
-  variant?: "primary" | "success" | "danger" | "warning" | "secondary";
+  variant?:
+    | "primary"
+    | "success"
+    | "danger"
+    | "warning"
+    | "secondary"
+    | "outline";
   loading?: boolean;
   lightColor?: string;
   darkColor?: string;
@@ -30,12 +36,12 @@ export function ThemedButton({
 }: ThemedButtonProps) {
   const [pressed, setPressed] = useState(false);
 
+  const borderColor = useThemeColor({}, "border");
   const backgroundColor = useThemeColor(
     { light: lightColor, dark: darkColor },
-    variant as any
+    variant === "outline" ? "transparent" : (variant as any)
   );
-  const borderColor = useThemeColor({}, "border");
-  const textColor = "#FFFFFF";
+  const textColor = variant === "outline" ? "#000000" : "#FFFFFF";
 
   const isDisabled = disabled || loading;
 

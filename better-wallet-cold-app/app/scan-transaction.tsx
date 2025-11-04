@@ -1,18 +1,21 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Alert } from "react-native";
-import { SafeThemedView } from "@/components/safe-themed-view";
-import { ThemedText } from "@/components/themed-text";
+import { Alert } from "react-native";
 import { QRScanner } from "@/components/QRScanner";
 import { router } from "expo-router";
 import { deserializeTransaction } from "@/utils/transaction-serializer";
 
 export default function ScanTransactionScreen() {
-  const [isScanning, setIsScanning] = useState(true);
+  const [scannerKey, setScannerKey] = useState(0);
 
   const handleScan = (data: string) => {
     try {
       // Try to parse the transaction data
       const transactionData = deserializeTransaction(data);
+
+      // Validate that we have required transaction fields
+      if (!transactionData.transaction || !transactionData.transaction.to) {
+        throw new Error("Invalid transaction format: missing required fields");
+      }
 
       // Convert BigInt values to strings for JSON serialization
       const serializableTransaction = {
@@ -36,10 +39,36 @@ export default function ScanTransactionScreen() {
       });
     } catch (error) {
       console.error("Error parsing transaction:", error);
+
+      // Determine error message based on error type
+      let errorMessage =
+        "The scanned QR code does not contain a valid transaction.";
+
+      if (error instanceof SyntaxError) {
+        errorMessage =
+          "Invalid QR code format. This does not appear to be a transaction QR code.";
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       Alert.alert(
-        "Invalid Transaction",
-        "The scanned QR code does not contain a valid transaction. Please try again.",
-        [{ text: "OK", onPress: () => setIsScanning(true) }]
+        "Invalid Transaction QR Code",
+        errorMessage +
+          "\n\nPlease scan a valid transaction QR code from your hot wallet.",
+        [
+          {
+            text: "Try Again",
+            onPress: () => {
+              // Force remount of QRScanner by changing key
+              setScannerKey((prev) => prev + 1);
+            },
+          },
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: handleClose,
+          },
+        ]
       );
     }
   };
@@ -48,47 +77,12 @@ export default function ScanTransactionScreen() {
     router.back();
   };
 
-  if (isScanning) {
-    return (
-      <QRScanner
-        title="Scan Unsigned Transaction"
-        onScan={handleScan}
-        onClose={handleClose}
-      />
-    );
-  }
-
   return (
-    <SafeThemedView style={styles.container}>
-      <View style={styles.content}>
-        <ThemedText type="title" style={styles.title}>
-          Scan Transaction
-        </ThemedText>
-
-        <ThemedText style={styles.subtitle}>
-          Point camera at the transaction QR code from your hot wallet
-        </ThemedText>
-      </View>
-    </SafeThemedView>
+    <QRScanner
+      key={scannerKey}
+      title="Scan Unsigned Transaction"
+      onScan={handleScan}
+      onClose={handleClose}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  subtitle: {
-    textAlign: "center",
-    opacity: 0.7,
-  },
-});

@@ -7,6 +7,8 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
+import QRCode from "react-native-qrcode-svg";
+import * as Clipboard from "expo-clipboard";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
@@ -41,6 +43,8 @@ export default function VerifyTransactionScreen() {
   const [isSigning, setIsSigning] = useState(false);
   const [showDetailedFees, setShowDetailedFees] = useState(true);
   const [expandedFields, setExpandedFields] = useState<Set<string>>(new Set());
+  const [showRawTransaction, setShowRawTransaction] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const toggleField = (field: string) => {
     setExpandedFields((prev) => {
@@ -57,6 +61,7 @@ export default function VerifyTransactionScreen() {
   const overlayColor = useThemeColor({}, "overlay");
   const warningColor = useThemeColor({}, "warning");
   const successColor = useThemeColor({}, "success");
+  const primaryColor = useThemeColor({}, "primary");
   const borderColor = useThemeColor({}, "border");
   const cardColor = useThemeColor({}, "card");
   const backgroundColor = useThemeColor({}, "background");
@@ -147,6 +152,18 @@ export default function VerifyTransactionScreen() {
 
   const handleCancel = () => {
     router.back();
+  };
+
+  const handleCopyTransaction = async () => {
+    if (!transactionData) return;
+
+    try {
+      await Clipboard.setStringAsync(transactionData);
+      Alert.alert("Copied", "Transaction data copied to clipboard");
+    } catch (error) {
+      console.error("Error copying to clipboard:", error);
+      Alert.alert("Error", "Failed to copy transaction data");
+    }
   };
 
   if (!parsedTransaction) {
@@ -526,6 +543,154 @@ export default function VerifyTransactionScreen() {
               </View>
             </View>
           )}
+
+          {/* Raw Transaction Data */}
+          <View
+            style={[
+              styles.rawTransactionContainer,
+              {
+                backgroundColor: cardColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
+          >
+            <ThemedText type="subtitle" style={styles.rawTransactionTitle}>
+              SCANNED TRANSACTION
+            </ThemedText>
+
+            {/* Action Buttons */}
+            <View style={styles.rawTransactionActions}>
+              <TouchableOpacity
+                onPress={() => setShowQRCode(!showQRCode)}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: showQRCode ? primaryColor : overlayColor,
+                    borderColor,
+                    borderWidth: BorderWidth.thin,
+                    ...Shadows.small,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={showQRCode ? "qr-code" : "qr-code-outline"}
+                  size={18}
+                  color={showQRCode ? "white" : borderColor}
+                />
+                <ThemedText
+                  style={[
+                    styles.actionButtonText,
+                    showQRCode && { color: "white" },
+                  ]}
+                >
+                  {showQRCode ? "HIDE" : "QR"}
+                </ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleCopyTransaction}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: overlayColor,
+                    borderColor,
+                    borderWidth: BorderWidth.thin,
+                    ...Shadows.small,
+                  },
+                ]}
+              >
+                <Ionicons name="copy" size={18} color={borderColor} />
+                <ThemedText style={styles.actionButtonText}>COPY</ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setShowRawTransaction(!showRawTransaction)}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: showRawTransaction
+                      ? primaryColor
+                      : overlayColor,
+                    borderColor,
+                    borderWidth: BorderWidth.thin,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={showRawTransaction ? "code-slash" : "code"}
+                  size={18}
+                  color={showRawTransaction ? "white" : borderColor}
+                />
+                <ThemedText
+                  style={[
+                    styles.actionButtonText,
+                    showRawTransaction && { color: "white" },
+                  ]}
+                >
+                  {showRawTransaction ? "HIDE" : "JSON"}
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+
+            {/* QR Code Display */}
+            {showQRCode && transactionData && (
+              <View style={styles.qrContainer}>
+                <View
+                  style={[
+                    styles.qrCodeWrapper,
+                    {
+                      backgroundColor: "white",
+                      borderColor,
+                      borderWidth: BorderWidth.thick,
+                    },
+                  ]}
+                >
+                  <QRCode
+                    value={transactionData}
+                    size={200}
+                    color="black"
+                    backgroundColor="white"
+                  />
+                </View>
+                <ThemedText style={styles.qrHint}>
+                  Original transaction QR code
+                </ThemedText>
+              </View>
+            )}
+
+            {/* JSON Display */}
+            {showRawTransaction && transactionData && (
+              <View
+                style={[
+                  styles.rawTransactionContent,
+                  {
+                    backgroundColor: overlayColor,
+                    borderColor,
+                    borderWidth: BorderWidth.thin,
+                  },
+                ]}
+              >
+                <ScrollView
+                  style={styles.rawTransactionScroll}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={true}
+                >
+                  <ThemedText style={styles.rawTransactionText}>
+                    {JSON.stringify(JSON.parse(transactionData), null, 2)}
+                  </ThemedText>
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Hint when both hidden */}
+            {!showQRCode && !showRawTransaction && (
+              <ThemedText style={styles.rawTransactionHint}>
+                Use buttons above to view QR code or raw JSON data
+              </ThemedText>
+            )}
+          </View>
 
           {/* Transaction Details */}
           <View
@@ -1156,5 +1321,84 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: Spacing.md,
     opacity: 0.7,
+  },
+  rawTransactionContainer: {
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  rawTransactionTitle: {
+    fontWeight: "800",
+    fontSize: 17,
+    letterSpacing: 0.5,
+    marginBottom: Spacing.md,
+    textAlign: "center",
+  },
+  qrContainer: {
+    alignItems: "center",
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  qrCodeWrapper: {
+    padding: Spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qrHint: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: Spacing.sm,
+    opacity: 0.7,
+    textAlign: "center",
+  },
+  rawTransactionActions: {
+    flexDirection: "row",
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: 0,
+    minHeight: 44,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  actionButtonTextWhite: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "white",
+    letterSpacing: 0.5,
+  },
+  rawTransactionHint: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: Spacing.xs,
+    opacity: 0.6,
+    fontStyle: "italic",
+    textAlign: "center",
+  },
+  rawTransactionContent: {
+    borderRadius: 0,
+    padding: Spacing.sm,
+    marginTop: Spacing.sm,
+    maxHeight: 300,
+  },
+  rawTransactionScroll: {
+    maxHeight: 280,
+  },
+  rawTransactionText: {
+    fontFamily: "monospace",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
   },
 });
