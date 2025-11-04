@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+export const HOT_WALLET_URL = "https://hot.betterwallet.app/";
+
 export function Home() {
   return (
     <>
@@ -38,7 +40,7 @@ export function Home() {
                 <Smartphone size={20} strokeWidth={2.5} /> Download Cold Wallet
               </Link>
               <a
-                href="https://better-wallet.web.app/"
+                href={HOT_WALLET_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="button button-secondary"
@@ -248,7 +250,7 @@ export function Home() {
               APK
             </Link>
             <a
-              href="https://better-wallet.web.app/"
+              href={HOT_WALLET_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="button button-outline"
@@ -282,11 +284,7 @@ export function Home() {
             >
               GitHub
             </a>
-            <a
-              href="https://better-wallet.web.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href={HOT_WALLET_URL} target="_blank" rel="noopener noreferrer">
               Hot Wallet App
             </a>
             <Link to="/cold">Download Cold App</Link>

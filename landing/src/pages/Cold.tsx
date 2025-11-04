@@ -8,6 +8,7 @@ import {
   Settings,
 } from "lucide-react";
 import "./Cold.css";
+import { HOT_WALLET_URL } from "./Home";
 
 interface AppVersion {
   version: string;
@@ -42,11 +43,13 @@ export default function Cold() {
       <section className="cold-hero">
         <div className="container">
           <div className="cold-hero-content">
-            <img
-              src="/logo.png"
-              alt="Better Wallet Logo"
-              className="cold-hero-logo"
-            />
+            <a href="/">
+              <img
+                src="/logo.png"
+                alt="Better Wallet Logo"
+                className="cold-hero-logo"
+              />
+            </a>
             <h1>Better Wallet - Cold App</h1>
             <p className="cold-hero-subtitle">
               Download the secure, offline-only cold wallet for your Android
@@ -383,11 +386,7 @@ export default function Cold() {
             >
               GitHub
             </a>
-            <a
-              href="https://better-wallet.web.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href={HOT_WALLET_URL} target="_blank" rel="noopener noreferrer">
               Hot Wallet App
             </a>
           </div>

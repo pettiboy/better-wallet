@@ -93,3 +93,11 @@ after apk ready
 adb devices              # verify phone
 adb -s <DEVICE_ID> install ./name.apk   # install
 ```
+
+## Build Bundle
+
+```zsh
+npx expo prebuild
+cd android
+./gradlew bundleRelease
+```
