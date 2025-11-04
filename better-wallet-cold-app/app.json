@@ -14,8 +14,11 @@
       "bundleIdentifier": "web.app.betterwallet",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to scan QR codes for transaction signing.",
-        "NSFaceIDUsageDescription": "This app uses Face ID for secure transaction signing.",
+        "NSFaceIDUsageDescription": "Allow Better Wallet to authenticate using Face ID to protect your private keys.",
         "NSLocalAuthenticationUsageDescription": "This app uses biometric authentication for secure transaction signing."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
@@ -65,7 +68,14 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "This app uses Face ID for secure transaction signing."
+          "faceIDPermission": "Allow Better Wallet to authenticate using Face ID to protect your private keys."
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow Better Wallet to authenticate using Face ID to protect your private keys."
         }
       ]
     ],

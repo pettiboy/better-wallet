@@ -82,8 +82,29 @@ export default function SettingsScreen() {
       } else {
         Alert.alert("Error", "No recovery phrase found");
       }
-    } catch {
-      Alert.alert("Error", "Failed to load recovery phrase");
+    } catch (error) {
+      console.error("Error loading mnemonic:", error);
+
+      // Check if it's an authentication error
+      if (
+        error instanceof Error &&
+        error.message.includes("Authentication required")
+      ) {
+        Alert.alert(
+          "Authentication Required",
+          "You must authenticate to view your recovery phrase. Please try again."
+        );
+      } else if (
+        error instanceof Error &&
+        error.message.includes("invalidated")
+      ) {
+        Alert.alert(
+          "Security Alert",
+          "Your biometric data has changed. For security, the recovery phrase has been locked. Please restore your wallet from backup."
+        );
+      } else {
+        Alert.alert("Error", "Failed to load recovery phrase");
+      }
     } finally {
       setIsLoadingMnemonic(false);
     }
@@ -110,7 +131,18 @@ export default function SettingsScreen() {
               router.replace("/welcome");
             } catch (error) {
               console.error("Error during factory reset:", error);
-              Alert.alert("Error", "Failed to reset wallet");
+
+              if (
+                error instanceof Error &&
+                error.message.includes("Authentication")
+              ) {
+                Alert.alert(
+                  "Authentication Required",
+                  "You must authenticate to delete your wallet. Please try again."
+                );
+              } else {
+                Alert.alert("Error", "Failed to reset wallet");
+              }
             }
           },
         },

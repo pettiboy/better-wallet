@@ -115,11 +115,27 @@ export default function VerifyTransactionScreen() {
 
       if (
         error instanceof Error &&
+        error.message.includes("Authentication required")
+      ) {
+        Alert.alert(
+          "Authentication Required",
+          "You must authenticate to access your wallet and sign this transaction. Please try again."
+        );
+      } else if (
+        error instanceof Error &&
         error.message.includes("Biometric authentication is required")
       ) {
         Alert.alert(
           "Authentication Required",
           "Biometric authentication is required but not available. Please check your device settings."
+        );
+      } else if (
+        error instanceof Error &&
+        error.message.includes("invalidated")
+      ) {
+        Alert.alert(
+          "Security Alert",
+          "Your biometric data has changed. For security, your wallet has been locked. Please restore from recovery phrase."
         );
       } else {
         Alert.alert("Error", "Failed to sign transaction");

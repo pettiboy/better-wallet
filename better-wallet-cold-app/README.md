@@ -1,6 +1,17 @@
-# Welcome to your Expo app 👋
+# Better Wallet - Cold Storage
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A secure, offline-only Ethereum cold wallet with hardware-backed encryption and biometric authentication.
+
+## 🔒 Security Features
+
+- **Hardware-Backed Encryption**: Keys stored in iOS Secure Enclave / Android Hardware Keystore
+- **Biometric Authentication**: Face ID / Touch ID / Fingerprint required for all access
+- **Device-Lock Protection**: Data only accessible when device is unlocked
+- **Auto-Invalidation**: Keys automatically invalidated if biometrics change
+- **No Cloud Sync**: All data stays on device, never backed up or synced
+- **Offline-Only**: No internet connectivity required or used
+
+See [SECURITY.md](./SECURITY.md) for detailed security documentation.
 
 ## Get started
 
