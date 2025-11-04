@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Switch, Alert } from "react-native";
+import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
@@ -7,8 +7,6 @@ import { useThemeColor } from "@/hooks/use-theme-color";
 import { useWallet } from "@/contexts/WalletContext";
 import {
   getBiometricInfo,
-  isBiometricEnabled,
-  setBiometricEnabled as setBiometricEnabledSetting,
   getAuthenticationTypeName,
   type BiometricInfo,
 } from "@/services/biometric";
@@ -24,7 +22,6 @@ export default function SettingsScreen() {
   const [biometricInfo, setBiometricInfo] = useState<BiometricInfo | null>(
     null
   );
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [isLoadingMnemonic, setIsLoadingMnemonic] = useState(false);
 
   const warningColor = useThemeColor({}, "warning");
@@ -39,36 +36,10 @@ export default function SettingsScreen() {
 
   const loadBiometricInfo = async () => {
     try {
-      const [biometricData, isEnabled] = await Promise.all([
-        getBiometricInfo(),
-        isBiometricEnabled(),
-      ]);
+      const biometricData = await getBiometricInfo();
       setBiometricInfo(biometricData);
-      setBiometricEnabled(isEnabled);
     } catch (error) {
       console.error("Error loading biometric info:", error);
-    }
-  };
-
-  const handleBiometricToggle = async (enabled: boolean) => {
-    try {
-      if (
-        enabled &&
-        biometricInfo &&
-        (!biometricInfo.isAvailable || !biometricInfo.isEnrolled)
-      ) {
-        Alert.alert(
-          "Biometric Not Available",
-          "Biometric authentication is not available or not enrolled on this device. Please set up fingerprint, Face ID, or device PIN in your device settings."
-        );
-        return;
-      }
-
-      await setBiometricEnabledSetting(enabled);
-      setBiometricEnabled(enabled);
-    } catch (error) {
-      console.error("Error updating biometric setting:", error);
-      Alert.alert("Error", "Failed to update biometric setting");
     }
   };
 
@@ -225,28 +196,37 @@ export default function SettingsScreen() {
                 },
               ]}
             >
-              <View style={styles.securityRow}>
-                <View style={styles.securityInfo}>
-                  <ThemedText style={styles.securityLabel}>
-                    Require Authentication Before Signing
-                  </ThemedText>
-                  <ThemedText style={styles.securityDescription}>
-                    {biometricInfo
-                      ? `Use ${getAuthenticationTypeName(
-                          biometricInfo
-                        )} to authenticate before signing transactions`
-                      : "Checking authentication availability..."}
+              <View style={styles.securityInfo}>
+                <ThemedText style={styles.securityLabel}>
+                  Authentication Before Signing
+                </ThemedText>
+                <ThemedText style={styles.securityDescription}>
+                  {biometricInfo
+                    ? `${getAuthenticationTypeName(
+                        biometricInfo
+                      )} authentication is always required before signing transactions`
+                    : "Checking authentication availability..."}
+                </ThemedText>
+                <View style={styles.securityStatus}>
+                  <Ionicons
+                    name={
+                      biometricInfo?.isAvailable && biometricInfo?.isEnrolled
+                        ? "checkmark-circle"
+                        : "information-circle"
+                    }
+                    size={20}
+                    color={
+                      biometricInfo?.isAvailable && biometricInfo?.isEnrolled
+                        ? "#4CAF50"
+                        : dangerColor
+                    }
+                  />
+                  <ThemedText style={styles.securityStatusText}>
+                    {biometricInfo?.isAvailable && biometricInfo?.isEnrolled
+                      ? "Enabled (Always Required)"
+                      : "Limited Security - Biometric Not Available"}
                   </ThemedText>
                 </View>
-                <Switch
-                  value={biometricEnabled}
-                  onValueChange={handleBiometricToggle}
-                  disabled={
-                    biometricInfo
-                      ? !biometricInfo.isAvailable || !biometricInfo.isEnrolled
-                      : true
-                  }
-                />
               </View>
 
               {biometricInfo && !biometricInfo.isAvailable && (
@@ -255,7 +235,8 @@ export default function SettingsScreen() {
                   <ThemedText
                     style={[styles.securityWarningText, { color: dangerColor }]}
                   >
-                    Biometric authentication is not available on this device
+                    Biometric authentication is not available on this device.
+                    Wallet operations will proceed without authentication.
                   </ThemedText>
                 </View>
               )}
@@ -272,7 +253,7 @@ export default function SettingsScreen() {
                       ]}
                     >
                       Please set up biometric authentication in your device
-                      settings
+                      settings for maximum security
                     </ThemedText>
                   </View>
                 )}
@@ -459,14 +440,18 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     padding: Spacing.md,
   },
-  securityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   securityInfo: {
     flex: 1,
-    marginRight: Spacing.sm,
+  },
+  securityStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  securityStatusText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   securityLabel: {
     fontSize: 15,

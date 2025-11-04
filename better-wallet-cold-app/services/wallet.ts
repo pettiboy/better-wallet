@@ -176,3 +176,74 @@ export async function deleteWallet(): Promise<void> {
 export async function canUseSecureAuthentication(): Promise<boolean> {
   return SecureStore.canUseBiometricAuthentication();
 }
+
+/**
+ * Validate a BIP-39 mnemonic phrase
+ */
+export function validateMnemonic(phrase: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  try {
+    // Clean up the phrase
+    const cleanedPhrase = phrase.trim().toLowerCase().replace(/\s+/g, " ");
+
+    // Check word count
+    const words = cleanedPhrase.split(" ");
+    if (words.length !== 12) {
+      return {
+        isValid: false,
+        error: `Invalid word count. Expected 12 words, got ${words.length}.`,
+      };
+    }
+
+    // Validate using ethers.js
+    ethers.Mnemonic.fromPhrase(cleanedPhrase);
+
+    return { isValid: true };
+  } catch (error) {
+    return {
+      isValid: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Invalid mnemonic phrase. Please check your words and try again.",
+    };
+  }
+}
+
+/**
+ * Import wallet from mnemonic phrase
+ * Validates the mnemonic, derives keys, and stores securely with authentication
+ */
+export async function importWalletFromMnemonic(phrase: string): Promise<{
+  address: string;
+  privateKey: string;
+  mnemonic: string;
+}> {
+  try {
+    // Clean up the phrase
+    const cleanedPhrase = phrase.trim().toLowerCase().replace(/\s+/g, " ");
+
+    // Validate the mnemonic
+    const validation = validateMnemonic(cleanedPhrase);
+    if (!validation.isValid) {
+      throw new Error(validation.error || "Invalid mnemonic phrase");
+    }
+
+    // Create wallet from mnemonic
+    const wallet = ethers.Wallet.fromPhrase(cleanedPhrase);
+
+    // Store with secure authentication
+    await storePrivateKey(wallet.privateKey, cleanedPhrase);
+
+    return {
+      address: wallet.address,
+      privateKey: wallet.privateKey,
+      mnemonic: cleanedPhrase,
+    };
+  } catch (error) {
+    console.error("Error importing wallet:", error);
+    throw error;
+  }
+}

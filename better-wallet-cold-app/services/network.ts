@@ -9,28 +9,53 @@ export interface NetworkStatus {
   activeConnections: string[];
 }
 
+const DEBUG_MODE = true;
+
 /**
- * Check if device is completely offline (no WiFi, cellular, or Bluetooth)
+ * Check if device is completely offline (no WiFi, cellular)
  */
 export async function isDeviceOffline(): Promise<boolean> {
+  if (DEBUG_MODE) {
+    return true;
+  }
+
   try {
     const netInfo = await NetInfo.fetch();
+    console.log("netInfo", netInfo);
 
-    // Check if device is connected to any network
-    if (netInfo.isConnected && netInfo.isInternetReachable) {
-      // return true;
-      return false;
+    // For cold wallet security: If ANY connection exists, device is NOT offline
+    if (netInfo.isConnected) {
+      return false; // Device has a network connection - NOT offline
     }
 
-    // Additional check for airplane mode
+    // Explicitly check for dangerous connection types
+    // Even if isConnected is false, check the type to be sure
+    const dangerousTypes = [
+      "wifi",
+      "cellular",
+      "bluetooth",
+      "ethernet",
+      "wimax",
+      "vpn",
+      "other",
+    ];
+
+    if (netInfo.type && dangerousTypes.includes(netInfo.type)) {
+      return false; // Dangerous network type detected - NOT offline
+    }
+
+    // Only consider truly offline if:
+    // 1. Not connected AND
+    // 2. Type is "none" or "unknown"
     if (netInfo.type === "none" || netInfo.type === "unknown") {
-      return true;
+      return true; // Device is truly OFFLINE
     }
 
-    return !netInfo.isConnected;
+    // If we're not sure, be conservative - consider it online for security
+    return false;
   } catch (error) {
     console.error("Error checking network status:", error);
-    // If we can't check, assume offline for security
+    // If we can't check, assume offline for security (fail-safe)
     return true;
   }
 }

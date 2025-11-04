@@ -83,7 +83,7 @@ export default function OfflineCheckScreen() {
 
           <ThemedText style={styles.message}>
             For security, this cold wallet can only run offline. Please enable
-            airplane mode and disable Wi-Fi, cellular data, and Bluetooth.
+            airplane mode and disable Wi-Fi, cellular data
           </ThemedText>
 
           {/* Network Status */}
@@ -181,7 +181,7 @@ export default function OfflineCheckScreen() {
             <View style={styles.instructionItem}>
               <ThemedText style={styles.instructionNumber}>3</ThemedText>
               <ThemedText style={styles.instructionText}>
-                Ensure Wi-Fi and Bluetooth are also disabled
+                Ensure Wi-Fi is also disabled
               </ThemedText>
             </View>
           </View>

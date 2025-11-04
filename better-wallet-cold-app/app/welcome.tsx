@@ -17,6 +17,10 @@ export default function WelcomeScreen() {
     router.push("/onboarding/mnemonic-display");
   };
 
+  const handleImportWallet = () => {
+    router.push("/onboarding/import-wallet");
+  };
+
   return (
     <SafeThemedView style={styles.container} edges={["top", "bottom"]}>
       <ScrollView
@@ -125,7 +129,7 @@ export default function WelcomeScreen() {
           </ThemedText>
         </View>
 
-        {/* Action Button */}
+        {/* Action Buttons */}
         <ThemedButton
           title="Create New Wallet"
           variant="primary"
@@ -133,10 +137,17 @@ export default function WelcomeScreen() {
           style={styles.createButton}
         />
 
+        <ThemedButton
+          title="Import Existing Wallet"
+          variant="secondary"
+          onPress={handleImportWallet}
+          style={styles.importButton}
+        />
+
         {/* Additional Info */}
         <ThemedText style={styles.infoText}>
-          Your wallet will be generated with a 12-word recovery phrase. Write it
-          down and store it safely offline.
+          Create a new wallet or import an existing one using your 12-word
+          recovery phrase.
         </ThemedText>
       </ScrollView>
     </SafeThemedView>
@@ -223,6 +234,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   createButton: {
+    width: "100%",
+    marginBottom: Spacing.sm,
+  },
+  importButton: {
     width: "100%",
     marginBottom: Spacing.md,
   },

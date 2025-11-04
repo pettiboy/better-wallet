@@ -198,8 +198,7 @@ function App() {
               </div>
               <h3>QR Code Only</h3>
               <p>
-                All communication happens via QR codes. No network, no
-                Bluetooth, no risk.
+                All communication happens via QR codes. No network, no risk.
               </p>
             </div>
 

@@ -1,7 +1,4 @@
 import * as LocalAuthentication from "expo-local-authentication";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const BIOMETRIC_ENABLED_KEY = "biometric_auth_enabled";
 
 export type BiometricType =
   | "fingerprint"
@@ -102,49 +99,20 @@ export function getAuthenticationTypeName(
 }
 
 /**
- * Check if biometric authentication is enabled in settings
- */
-export async function isBiometricEnabled(): Promise<boolean> {
-  try {
-    const enabled = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
-    return enabled === "true";
-  } catch (error) {
-    console.error("Error reading biometric setting:", error);
-    return false;
-  }
-}
-
-/**
- * Set biometric authentication preference
- */
-export async function setBiometricEnabled(enabled: boolean): Promise<void> {
-  try {
-    await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enabled.toString());
-  } catch (error) {
-    console.error("Error saving biometric setting:", error);
-    throw error;
-  }
-}
-
-/**
- * Authenticate before signing if enabled
+ * Authenticate before signing - always required for security
+ * On devices without biometric support, will proceed with a warning
  */
 export async function authenticateIfRequired(
   reason?: string
 ): Promise<boolean> {
-  const isEnabled = await isBiometricEnabled();
-
-  if (!isEnabled) {
-    return true; // Authentication not required
-  }
-
   const biometricInfo = await getBiometricInfo();
 
   if (!biometricInfo.isAvailable || !biometricInfo.isEnrolled) {
-    // If biometric is enabled but not available, we can't proceed
-    throw new Error(
-      "Biometric authentication is required but not available on this device"
+    // If biometric is not available, allow operation but log warning
+    console.warn(
+      "Biometric authentication is not available on this device. Proceeding without authentication."
     );
+    return true; // Allow operation on devices without biometric
   }
 
   return await authenticateUser(reason);

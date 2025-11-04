@@ -10,6 +10,7 @@ A secure, offline-only Ethereum cold wallet with hardware-backed encryption and 
 - **Auto-Invalidation**: Keys automatically invalidated if biometrics change
 - **No Cloud Sync**: All data stays on device, never backed up or synced
 - **Offline-Only**: No internet connectivity required or used
+- **Import/Create**: Create new wallet or import existing via 12-word recovery phrase
 
 See [SECURITY.md](./SECURITY.md) for detailed security documentation.
 

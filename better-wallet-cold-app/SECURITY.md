@@ -15,25 +15,27 @@ All sensitive data (private keys and mnemonics) is stored using platform-native 
 
 ### 2. Authentication Requirements
 
-Every access to sensitive data requires biometric or device PIN authentication:
+Biometric or device PIN authentication is **always enabled** for all sensitive operations:
 
 ```typescript
 const SECURE_OPTIONS = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED, // Only when device is unlocked
-  requireAuthentication: true, // Biometric/PIN required
+  requireAuthentication: true, // Biometric/PIN required (always enabled)
   authenticationPrompt: "Authenticate to access your wallet",
 };
 ```
 
+**Note:** On devices without biometric support, wallet operations will proceed with a security warning. For maximum security, it's recommended to use a device with biometric authentication enabled.
+
 ### 3. Multiple Security Layers
 
-| Layer                   | Protection                            | Implementation                |
-| ----------------------- | ------------------------------------- | ----------------------------- |
-| **Physical Access**     | Device must be physically present     | Hardware-based                |
-| **Device Lock**         | Device must be unlocked               | `WHEN_UNLOCKED`               |
-| **Authentication**      | Biometric/PIN required                | `requireAuthentication: true` |
-| **Hardware Encryption** | Keys stored in secure hardware        | Keychain/Keystore             |
-| **Auto-Invalidation**   | Keys invalidated on biometric changes | Platform-native               |
+| Layer                   | Protection                            | Implementation                           |
+| ----------------------- | ------------------------------------- | ---------------------------------------- |
+| **Physical Access**     | Device must be physically present     | Hardware-based                           |
+| **Device Lock**         | Device must be unlocked               | `WHEN_UNLOCKED`                          |
+| **Authentication**      | Biometric/PIN required (always on)    | `requireAuthentication: true` (enforced) |
+| **Hardware Encryption** | Keys stored in secure hardware        | Keychain/Keystore                        |
+| **Auto-Invalidation**   | Keys invalidated on biometric changes | Platform-native                          |
 
 ## Data Storage
 
@@ -127,12 +129,14 @@ Keys are automatically invalidated in the following scenarios:
 ### For Users
 
 1. ✅ Enable strong device passcode/PIN
-2. ✅ Enable biometric authentication (Face ID/Touch ID/Fingerprint)
+2. ✅ Enable biometric authentication (Face ID/Touch ID/Fingerprint) - **highly recommended**
 3. ✅ Keep device OS updated
 4. ✅ Write down recovery phrase on paper (not digitally)
 5. ✅ Store recovery phrase in safe place
 6. ❌ Never share your recovery phrase
 7. ❌ Never take screenshots of recovery phrase
+
+> **Note:** Biometric authentication is always enabled in the app and cannot be disabled. For devices without biometric support, wallet operations will proceed with reduced security.
 
 ### For Developers
 
@@ -195,17 +199,10 @@ grep -r "Authentication required" app/
 
 - **v1.0.0**: Initial secure storage implementation
   - Hardware-backed encryption
-  - Biometric authentication required
+  - Biometric authentication always enabled (cannot be disabled)
   - WHEN_UNLOCKED access policy
   - Auto-invalidation on biometric changes
-
-## Security Contacts
-
-For security concerns or vulnerability reports, please:
-
-1. Do NOT create public issues
-2. Contact: [your-security-email]
-3. Use PGP encryption for sensitive reports
+  - Wallet creation allowed on devices without biometric with warnings
 
 ## License & Disclaimer
 
