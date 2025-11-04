@@ -43,6 +43,19 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="scan-transaction"
+          options={{
+            title: "Scan",
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name={focused ? "camera" : "camera-outline"}
+                size={26}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="settings"
           options={{
             title: "Settings",

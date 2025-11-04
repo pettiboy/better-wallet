@@ -55,7 +55,7 @@ export default function DashboardScreen() {
   };
 
   const handleScanTransaction = () => {
-    router.push("/scan-transaction");
+    router.push("/(tabs)/scan-transaction");
   };
 
   const handleCopyAddress = async () => {
