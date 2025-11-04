@@ -11,7 +11,7 @@
     "description": "A secure, offline-only Better Wallet cold wallet for maximum security",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "web.app.betterwallet",
+      "bundleIdentifier": "app.betterwallet.cold",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to scan QR codes for transaction signing.",
         "NSFaceIDUsageDescription": "Allow Better Wallet to authenticate using Face ID to protect your private keys.",
@@ -30,13 +30,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "web.app.betterwallet",
+      "package": "app.betterwallet.cold",
       "permissions": [
         "CAMERA",
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"
       ]
