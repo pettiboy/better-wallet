@@ -8,6 +8,15 @@ export interface ERC20Transfer {
   spender?: string; // For approve transactions
 }
 
+export interface ContractDataBreakdown {
+  functionSelector: string;
+  functionName: string;
+  parameterCount: number;
+  parameters: string[];
+  rawData: string;
+  dataSize: number;
+}
+
 /**
  * Detect ERC-20 token transfers from transaction data
  */
@@ -153,6 +162,7 @@ export function formatTokenAmount(
  */
 export function getFunctionName(signature: string): string {
   const functionNames: { [key: string]: string } = {
+    // ERC-20 Standard
     "0xa9059cbb": "transfer",
     "0x095ea7b3": "approve",
     "0x23b872dd": "transferFrom",
@@ -161,7 +171,104 @@ export function getFunctionName(signature: string): string {
     "0x06fdde03": "name",
     "0x95d89b41": "symbol",
     "0x313ce567": "decimals",
+    // ERC-20 Extensions
+    "0x39509351": "increaseAllowance",
+    "0xa457c2d7": "decreaseAllowance",
+    "0x40c10f19": "mint",
+    "0x42966c68": "burn",
+    "0xd505accf": "permit", // EIP-2612
+    // Common DeFi
+    "0x7ff36ab5": "swapExactETHForTokens", // Uniswap V2
+    "0x38ed1739": "swapExactTokensForTokens", // Uniswap V2
+    "0xb6f9de95": "swapExactETHForTokensSupportingFeeOnTransferTokens",
+    "0x5c11d795": "swapExactTokensForTokensSupportingFeeOnTransferTokens",
+    "0xd0e30db0": "deposit", // WETH
+    "0x2e1a7d4d": "withdraw", // WETH
+    // ERC-721
+    "0x42842e0e": "safeTransferFrom", // ERC-721
+    "0xb88d4fde": "safeTransferFrom", // ERC-721 with data
+    // ERC-1155
+    "0xf242432a": "safeTransferFrom", // ERC-1155
+    "0x2eb2c2d6": "safeBatchTransferFrom", // ERC-1155
   };
 
   return functionNames[signature] || "unknown";
+}
+
+/**
+ * Break down contract call data into readable components
+ */
+export function breakdownContractData(data: string): ContractDataBreakdown {
+  if (!data || data === "0x") {
+    return {
+      functionSelector: "0x",
+      functionName: "none",
+      parameterCount: 0,
+      parameters: [],
+      rawData: data,
+      dataSize: 0,
+    };
+  }
+
+  const functionSelector = data.substring(0, 10);
+  const functionName = getFunctionName(functionSelector);
+  const parameterData = data.substring(10);
+
+  // Each parameter is 32 bytes (64 hex characters)
+  const parameterCount = Math.floor(parameterData.length / 64);
+  const parameters: string[] = [];
+
+  for (let i = 0; i < parameterCount; i++) {
+    const paramHex = parameterData.substring(i * 64, (i + 1) * 64);
+    parameters.push("0x" + paramHex);
+  }
+
+  // Handle remaining data that doesn't fit in 32-byte chunks
+  const remainingData = parameterData.substring(parameterCount * 64);
+  if (remainingData.length > 0) {
+    parameters.push("0x" + remainingData + " (partial)");
+  }
+
+  return {
+    functionSelector,
+    functionName,
+    parameterCount,
+    parameters,
+    rawData: data,
+    dataSize: (data.length - 2) / 2, // Convert hex length to bytes
+  };
+}
+
+/**
+ * Format parameter for display with type detection
+ */
+export function formatParameter(param: string, index: number): string {
+  try {
+    // Remove 0x prefix for processing
+    const hex = param.startsWith("0x") ? param.substring(2) : param;
+
+    // Try to detect if it's an address (20 bytes with leading zeros)
+    if (hex.length === 64 && hex.substring(0, 24) === "0".repeat(24)) {
+      const address = "0x" + hex.substring(24);
+      return `Address: ${address}`;
+    }
+
+    // Try to detect if it's a number
+    try {
+      const value = BigInt("0x" + hex);
+      if (value < BigInt(10 ** 15)) {
+        // Small numbers, show as decimal
+        return `Number: ${value.toString()}`;
+      } else {
+        // Large numbers, show both decimal and hex
+        return `Number: ${value.toString()} (0x${hex})`;
+      }
+    } catch {
+      // Not a valid number, show as hex
+      return `Hex: 0x${hex}`;
+    }
+  } catch (error: unknown) {
+    console.error("Error formatting parameter:", error);
+    return param;
+  }
 }

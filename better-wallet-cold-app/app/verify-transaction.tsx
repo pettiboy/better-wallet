@@ -16,7 +16,19 @@ import { signTransaction, loadPrivateKey } from "@/services/wallet";
 import { authenticateIfRequired } from "@/services/biometric";
 import { ethers } from "ethers";
 import { SerializedTransaction } from "@/utils/transaction-serializer";
-import { detectERC20Transfer, formatTokenAmount } from "@/utils/erc20-detector";
+import {
+  detectERC20Transfer,
+  formatTokenAmount,
+  breakdownContractData,
+  formatParameter,
+} from "@/utils/erc20-detector";
+import {
+  detectTransactionType,
+  calculateLegacyGasCost,
+  calculateEIP1559GasCost,
+  formatGasPrice,
+  getTransactionCategory,
+} from "@/utils/transaction-types";
 import { Ionicons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 
@@ -141,23 +153,62 @@ export default function VerifyTransactionScreen() {
     ? ethers.formatEther(transaction.value)
     : "0";
   const gasLimit = transaction.gasLimit?.toString() || "N/A";
+
+  // Detect transaction type and get info
+  const txTypeInfo = detectTransactionType(transaction);
+  const txCategory = getTransactionCategory(transaction);
+
+  // Calculate gas costs based on transaction type
+  const isLegacyTx =
+    txTypeInfo.type === 0 || transaction.gasPrice !== undefined;
+  const isEIP1559Tx =
+    txTypeInfo.type === 2 ||
+    transaction.maxFeePerGas !== undefined ||
+    transaction.maxPriorityFeePerGas !== undefined;
+
+  // Legacy transaction gas fields
+  const gasPrice = transaction.gasPrice
+    ? formatGasPrice(BigInt(transaction.gasPrice.toString()))
+    : undefined;
+  const legacyTotalCost = isLegacyTx
+    ? calculateLegacyGasCost(
+        transaction.gasPrice
+          ? BigInt(transaction.gasPrice.toString())
+          : undefined,
+        transaction.gasLimit
+          ? BigInt(transaction.gasLimit.toString())
+          : undefined
+      )
+    : undefined;
+
+  // EIP-1559 transaction gas fields
   const maxFeePerGas = transaction.maxFeePerGas
     ? ethers.formatUnits(transaction.maxFeePerGas, "gwei")
     : "N/A";
   const maxPriorityFeePerGas = transaction.maxPriorityFeePerGas
     ? ethers.formatUnits(transaction.maxPriorityFeePerGas, "gwei")
     : "N/A";
+  const eip1559TotalCost = isEIP1559Tx
+    ? calculateEIP1559GasCost(
+        transaction.maxFeePerGas
+          ? BigInt(transaction.maxFeePerGas.toString())
+          : undefined,
+        transaction.gasLimit
+          ? BigInt(transaction.gasLimit.toString())
+          : undefined
+      )
+    : undefined;
 
-  const totalCost =
-    transaction.maxFeePerGas && transaction.gasLimit
-      ? ethers.formatEther(
-          BigInt(transaction.maxFeePerGas.toString()) *
-            BigInt(transaction.gasLimit.toString())
-        )
-      : "N/A";
+  // Determine which total cost to display
+  const totalCost = isLegacyTx ? legacyTotalCost : eip1559TotalCost;
 
   const erc20Transfer = hasData
     ? detectERC20Transfer(transaction.data as string)
+    : null;
+
+  // Breakdown contract data for detailed display
+  const contractDataBreakdown = hasData
+    ? breakdownContractData(transaction.data as string)
     : null;
 
   return (
@@ -233,6 +284,84 @@ export default function VerifyTransactionScreen() {
             </View>
           )}
 
+          {/* Transaction Type Information */}
+          <View
+            style={[
+              styles.typeContainer,
+              {
+                backgroundColor: cardColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
+          >
+            <ThemedText type="subtitle" style={styles.typeTitle}>
+              TRANSACTION TYPE
+            </ThemedText>
+            <DetailRow label="Type" value={txTypeInfo.name} />
+            <View style={styles.descriptionContainer}>
+              <ThemedText style={styles.typeDescription}>
+                {txTypeInfo.description}
+              </ThemedText>
+            </View>
+          </View>
+
+          {/* Transaction Category with Risk Level */}
+          <View
+            style={[
+              styles.categoryContainer,
+              {
+                backgroundColor:
+                  txCategory.riskLevel === "high"
+                    ? warningColor
+                    : txCategory.riskLevel === "medium"
+                    ? overlayColor
+                    : successColor,
+                borderColor,
+                borderWidth: BorderWidth.thick,
+                ...Shadows.medium,
+              },
+            ]}
+          >
+            <View style={styles.categoryHeader}>
+              <Ionicons
+                name={
+                  txCategory.riskLevel === "high"
+                    ? "warning"
+                    : txCategory.riskLevel === "medium"
+                    ? "information-circle"
+                    : "checkmark-circle"
+                }
+                size={24}
+                color={
+                  txCategory.riskLevel === "high" ||
+                  txCategory.riskLevel === "low"
+                    ? "#000"
+                    : borderColor
+                }
+              />
+              <ThemedText
+                style={[
+                  styles.categoryTitle,
+                  (txCategory.riskLevel === "high" ||
+                    txCategory.riskLevel === "low") && { color: "#000" },
+                ]}
+              >
+                {txCategory.category.toUpperCase()}
+              </ThemedText>
+            </View>
+            <ThemedText
+              style={[
+                styles.categoryDescription,
+                (txCategory.riskLevel === "high" ||
+                  txCategory.riskLevel === "low") && { color: "#000" },
+              ]}
+            >
+              {txCategory.description}
+            </ThemedText>
+          </View>
+
           {/* ERC-20 Token Transfer */}
           {erc20Transfer && (
             <View
@@ -297,8 +426,8 @@ export default function VerifyTransactionScreen() {
             </View>
           )}
 
-          {/* Contract Interaction Warning */}
-          {hasData && !erc20Transfer && (
+          {/* Contract Interaction Warning with Details */}
+          {hasData && !erc20Transfer && contractDataBreakdown && (
             <View
               style={[
                 styles.warningContainer,
@@ -316,9 +445,68 @@ export default function VerifyTransactionScreen() {
                   CONTRACT INTERACTION
                 </ThemedText>
                 <ThemedText style={styles.warningDescription}>
-                  This transaction includes contract data. Verify the recipient
-                  and dApp before signing.
+                  This transaction calls a smart contract function. Verify all
+                  details before signing.
                 </ThemedText>
+
+                {/* Contract Function Details */}
+                <View style={styles.contractDetailsSection}>
+                  <ThemedText style={styles.contractDetailLabel}>
+                    Function:
+                  </ThemedText>
+                  <ThemedText style={styles.contractDetailValue}>
+                    {contractDataBreakdown.functionName}
+                  </ThemedText>
+
+                  <ThemedText style={styles.contractDetailLabel}>
+                    Selector:
+                  </ThemedText>
+                  <ThemedText style={styles.contractDetailValue}>
+                    {contractDataBreakdown.functionSelector}
+                  </ThemedText>
+
+                  <ThemedText style={styles.contractDetailLabel}>
+                    Data Size:
+                  </ThemedText>
+                  <ThemedText style={styles.contractDetailValue}>
+                    {contractDataBreakdown.dataSize} bytes
+                  </ThemedText>
+
+                  <ThemedText style={styles.contractDetailLabel}>
+                    Parameters:
+                  </ThemedText>
+                  <ThemedText style={styles.contractDetailValue}>
+                    {contractDataBreakdown.parameterCount} parameter(s)
+                  </ThemedText>
+
+                  {/* Show decoded parameters */}
+                  {contractDataBreakdown.parameters.length > 0 && (
+                    <View style={styles.parametersContainer}>
+                      <ThemedText style={styles.parametersTitle}>
+                        Decoded Parameters:
+                      </ThemedText>
+                      {contractDataBreakdown.parameters.map((param, index) => (
+                        <View key={index} style={styles.parameterRow}>
+                          <ThemedText style={styles.parameterIndex}>
+                            [{index}]
+                          </ThemedText>
+                          <View style={styles.parameterValueContainer}>
+                            <ThemedText style={styles.parameterValue}>
+                              {formatParameter(param, index)}
+                            </ThemedText>
+                            <ExpandableDetailRow
+                              label="Raw Hex"
+                              value={param}
+                              fieldKey={`param-${index}`}
+                              isExpanded={expandedFields.has(`param-${index}`)}
+                              onToggle={() => toggleField(`param-${index}`)}
+                            />
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
               </View>
             </View>
           )}
@@ -339,6 +527,16 @@ export default function VerifyTransactionScreen() {
               TRANSACTION DETAILS
             </ThemedText>
 
+            {transaction.from && (
+              <ExpandableDetailRow
+                label="From"
+                value={transaction.from as string}
+                fieldKey="from-address"
+                isExpanded={expandedFields.has("from-address")}
+                onToggle={() => toggleField("from-address")}
+              />
+            )}
+
             <ExpandableDetailRow
               label="To"
               value={transaction.to as string}
@@ -346,8 +544,15 @@ export default function VerifyTransactionScreen() {
               isExpanded={expandedFields.has("to-address")}
               onToggle={() => toggleField("to-address")}
             />
+
             <DetailRow label="Amount" value={`${amount} ETH`} />
+
+            {transaction.nonce !== undefined && transaction.nonce !== null && (
+              <DetailRow label="Nonce" value={transaction.nonce.toString()} />
+            )}
+
             <DetailRow label="Gas Limit" value={gasLimit} />
+
             <DetailRow
               label="Chain ID"
               value={transaction.chainId?.toString() || "N/A"}
@@ -355,7 +560,7 @@ export default function VerifyTransactionScreen() {
 
             {hasData && (
               <ExpandableDetailRow
-                label="Data"
+                label="Raw Data"
                 value={transaction.data as string}
                 fieldKey="tx-data"
                 isExpanded={expandedFields.has("tx-data")}
@@ -398,31 +603,67 @@ export default function VerifyTransactionScreen() {
 
             {showDetailedFees ? (
               <>
-                <DetailRow
-                  label="Max Fee per Gas"
-                  value={`${maxFeePerGas} Gwei`}
-                />
-                <DetailRow
-                  label="Max Priority Fee"
-                  value={`${maxPriorityFeePerGas} Gwei`}
-                />
-                <DetailRow label="Gas Limit" value={gasLimit} />
-                <View
-                  style={[
-                    styles.totalCostRow,
-                    {
-                      borderTopColor: borderColor,
-                      borderTopWidth: BorderWidth.thin,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.totalCostLabel}>
-                    Total Cost:
+                {/* Legacy Transaction (Type 0) Gas Display */}
+                {isLegacyTx && gasPrice && (
+                  <>
+                    <DetailRow label="Gas Price" value={`${gasPrice} Gwei`} />
+                    <DetailRow label="Gas Limit" value={gasLimit} />
+                    <View
+                      style={[
+                        styles.totalCostRow,
+                        {
+                          borderTopColor: borderColor,
+                          borderTopWidth: BorderWidth.thin,
+                        },
+                      ]}
+                    >
+                      <ThemedText style={styles.totalCostLabel}>
+                        Total Cost:
+                      </ThemedText>
+                      <ThemedText style={styles.totalCostValue}>
+                        {legacyTotalCost} ETH
+                      </ThemedText>
+                    </View>
+                  </>
+                )}
+
+                {/* EIP-1559 Transaction (Type 2) Gas Display */}
+                {isEIP1559Tx && !isLegacyTx && (
+                  <>
+                    <DetailRow
+                      label="Max Fee per Gas"
+                      value={`${maxFeePerGas} Gwei`}
+                    />
+                    <DetailRow
+                      label="Max Priority Fee"
+                      value={`${maxPriorityFeePerGas} Gwei`}
+                    />
+                    <DetailRow label="Gas Limit" value={gasLimit} />
+                    <View
+                      style={[
+                        styles.totalCostRow,
+                        {
+                          borderTopColor: borderColor,
+                          borderTopWidth: BorderWidth.thin,
+                        },
+                      ]}
+                    >
+                      <ThemedText style={styles.totalCostLabel}>
+                        Total Cost:
+                      </ThemedText>
+                      <ThemedText style={styles.totalCostValue}>
+                        {eip1559TotalCost} ETH
+                      </ThemedText>
+                    </View>
+                  </>
+                )}
+
+                {/* Fallback for unknown gas type */}
+                {!isLegacyTx && !isEIP1559Tx && (
+                  <ThemedText style={styles.noGasInfo}>
+                    Gas information not available
                   </ThemedText>
-                  <ThemedText style={styles.totalCostValue}>
-                    {totalCost} ETH
-                  </ThemedText>
-                </View>
+                )}
               </>
             ) : (
               <View style={styles.simpleFeeRow}>
@@ -430,7 +671,7 @@ export default function VerifyTransactionScreen() {
                   Total Fee:
                 </ThemedText>
                 <ThemedText style={styles.simpleFeeValue}>
-                  {totalCost} ETH
+                  {totalCost || "N/A"} ETH
                 </ThemedText>
               </View>
             )}
@@ -799,5 +1040,105 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 22,
+  },
+  typeContainer: {
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  typeTitle: {
+    marginBottom: Spacing.md,
+    fontWeight: "800",
+    fontSize: 17,
+    letterSpacing: 0.5,
+  },
+  typeDescription: {
+    fontSize: 15,
+    marginTop: 4,
+    fontWeight: "600",
+    lineHeight: 22,
+  },
+  categoryContainer: {
+    borderRadius: 0,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  categoryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  categoryTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  categoryDescription: {
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 22,
+    marginLeft: 32,
+  },
+  contractDetailsSection: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.2)",
+  },
+  contractDetailLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: Spacing.xs,
+    color: "#000",
+  },
+  contractDetailValue: {
+    fontSize: 13,
+    fontFamily: "monospace",
+    fontWeight: "600",
+    marginBottom: Spacing.xs,
+    color: "#000",
+  },
+  parametersContainer: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.2)",
+  },
+  parametersTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: Spacing.sm,
+    color: "#000",
+  },
+  parameterRow: {
+    flexDirection: "row",
+    marginBottom: Spacing.md,
+    gap: Spacing.xs,
+  },
+  parameterIndex: {
+    fontSize: 12,
+    fontFamily: "monospace",
+    fontWeight: "700",
+    color: "#000",
+    minWidth: 30,
+  },
+  parameterValueContainer: {
+    flex: 1,
+  },
+  parameterValue: {
+    fontSize: 12,
+    fontFamily: "monospace",
+    fontWeight: "600",
+    marginBottom: 4,
+    color: "#000",
+    lineHeight: 18,
+  },
+  noGasInfo: {
+    fontSize: 15,
+    fontWeight: "600",
+    textAlign: "center",
+    paddingVertical: Spacing.md,
+    opacity: 0.7,
   },
 });

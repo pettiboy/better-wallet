@@ -33,6 +33,7 @@ export function serializeTransaction(
     value: tx.value?.toString(),
     nonce: tx.nonce,
     gasLimit: tx.gasLimit?.toString(),
+    gasPrice: tx.gasPrice?.toString(), // Legacy transaction support (Type 0)
     chainId: tx.chainId,
     type: tx.type,
     maxFeePerGas: tx.maxFeePerGas?.toString(),
@@ -64,6 +65,7 @@ export function deserializeTransaction(data: string): SerializedTransaction {
       value: parsed.value ? BigInt(parsed.value) : undefined,
       nonce: parsed.nonce,
       gasLimit: parsed.gasLimit ? BigInt(parsed.gasLimit) : undefined,
+      gasPrice: parsed.gasPrice ? BigInt(parsed.gasPrice) : undefined, // Legacy transaction support
       chainId: parsed.chainId,
       type: parsed.type,
       maxFeePerGas: parsed.maxFeePerGas
@@ -92,6 +94,9 @@ export function deserializeTransaction(data: string): SerializedTransaction {
     gasLimit: parsed.transaction.gasLimit
       ? BigInt(parsed.transaction.gasLimit)
       : undefined,
+    gasPrice: parsed.transaction.gasPrice
+      ? BigInt(parsed.transaction.gasPrice)
+      : undefined, // Legacy transaction support
     chainId: parsed.transaction.chainId,
     type: parsed.transaction.type,
     maxFeePerGas: parsed.transaction.maxFeePerGas
