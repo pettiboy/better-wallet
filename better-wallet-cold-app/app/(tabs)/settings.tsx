@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { SafeThemedView } from "@/components/safe-themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedButton } from "@/components/themed-button";
@@ -10,7 +11,7 @@ import {
   getAuthenticationTypeName,
   type BiometricInfo,
 } from "@/services/biometric";
-import { loadMnemonic, deleteWallet } from "@/services/wallet";
+import { loadMnemonic, loadPrivateKey, deleteWallet } from "@/services/wallet";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
@@ -18,11 +19,14 @@ import { BorderWidth, Shadows, Spacing } from "@/constants/theme";
 export default function SettingsScreen() {
   const { address, resetWallet } = useWallet();
   const [showMnemonic, setShowMnemonic] = useState(false);
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [mnemonic, setMnemonic] = useState<string>("");
+  const [privateKey, setPrivateKey] = useState<string>("");
   const [biometricInfo, setBiometricInfo] = useState<BiometricInfo | null>(
     null
   );
   const [isLoadingMnemonic, setIsLoadingMnemonic] = useState(false);
+  const [isLoadingPrivateKey, setIsLoadingPrivateKey] = useState(false);
 
   const warningColor = useThemeColor({}, "warning");
   const overlayColor = useThemeColor({}, "overlay");
@@ -46,17 +50,21 @@ export default function SettingsScreen() {
   const handleShowMnemonic = async () => {
     try {
       setIsLoadingMnemonic(true);
+
       const mnemonicPhrase = await loadMnemonic();
-      if (mnemonicPhrase) {
+
+      if (mnemonicPhrase && mnemonicPhrase.trim().length > 0) {
         setMnemonic(mnemonicPhrase);
         setShowMnemonic(true);
       } else {
-        Alert.alert("Error", "No recovery phrase found");
+        Alert.alert(
+          "No Recovery Phrase",
+          "This wallet was imported via private key and does not have a recovery phrase."
+        );
       }
     } catch (error) {
       console.error("Error loading mnemonic:", error);
 
-      // Check if it's an authentication error
       if (
         error instanceof Error &&
         error.message.includes("Authentication required")
@@ -81,9 +89,72 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleShowPrivateKey = async () => {
+    try {
+      setIsLoadingPrivateKey(true);
+
+      const privKey = await loadPrivateKey();
+      if (privKey) {
+        setPrivateKey(privKey);
+        setShowPrivateKey(true);
+      } else {
+        Alert.alert("Error", "No private key found");
+      }
+    } catch (error) {
+      console.error("Error loading private key:", error);
+
+      if (
+        error instanceof Error &&
+        error.message.includes("Authentication required")
+      ) {
+        Alert.alert(
+          "Authentication Required",
+          "You must authenticate to view your private key. Please try again."
+        );
+      } else if (
+        error instanceof Error &&
+        error.message.includes("invalidated")
+      ) {
+        Alert.alert(
+          "Security Alert",
+          "Your biometric data has changed. For security, the private key has been locked. Please restore your wallet from backup."
+        );
+      } else {
+        Alert.alert("Error", "Failed to load private key");
+      }
+    } finally {
+      setIsLoadingPrivateKey(false);
+    }
+  };
+
   const handleHideMnemonic = () => {
     setShowMnemonic(false);
     setMnemonic("");
+  };
+
+  const handleHidePrivateKey = () => {
+    setShowPrivateKey(false);
+    setPrivateKey("");
+  };
+
+  const handleCopyMnemonic = async () => {
+    try {
+      await Clipboard.setStringAsync(mnemonic);
+      Alert.alert("Copied", "Recovery phrase copied to clipboard");
+    } catch (error) {
+      console.error("Error copying mnemonic:", error);
+      Alert.alert("Error", "Failed to copy recovery phrase");
+    }
+  };
+
+  const handleCopyPrivateKey = async () => {
+    try {
+      await Clipboard.setStringAsync(privateKey);
+      Alert.alert("Copied", "Private key copied to clipboard");
+    } catch (error) {
+      console.error("Error copying private key:", error);
+      Alert.alert("Error", "Failed to copy private key");
+    }
   };
 
   const handleFactoryReset = () => {
@@ -274,10 +345,10 @@ export default function SettingsScreen() {
                 loading={isLoadingMnemonic}
               />
             ) : (
-              <View style={styles.mnemonicContainer}>
+              <View style={styles.credentialContainer}>
                 <View
                   style={[
-                    styles.mnemonicWarningBox,
+                    styles.warningBox,
                     {
                       backgroundColor: dangerColor,
                       borderColor,
@@ -286,10 +357,11 @@ export default function SettingsScreen() {
                   ]}
                 >
                   <Ionicons name="warning" size={20} color="#fff" />
-                  <ThemedText style={styles.mnemonicWarning}>
+                  <ThemedText style={styles.warningBoxText}>
                     Keep this safe and private!
                   </ThemedText>
                 </View>
+
                 <View
                   style={[
                     styles.mnemonicBox,
@@ -322,12 +394,86 @@ export default function SettingsScreen() {
                     </View>
                   ))}
                 </View>
-                <ThemedButton
-                  title="Hide Recovery Phrase"
-                  variant="danger"
-                  onPress={handleHideMnemonic}
-                  style={styles.marginTop}
-                />
+
+                <View style={styles.buttonRow}>
+                  <ThemedButton
+                    title="Copy"
+                    variant="secondary"
+                    onPress={handleCopyMnemonic}
+                    style={styles.halfButton}
+                  />
+                  <ThemedButton
+                    title="Hide"
+                    variant="danger"
+                    onPress={handleHideMnemonic}
+                    style={styles.halfButton}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Private Key Section */}
+          <View style={styles.section}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              PRIVATE KEY
+            </ThemedText>
+
+            {!showPrivateKey ? (
+              <ThemedButton
+                title="Show Private Key"
+                variant="primary"
+                onPress={handleShowPrivateKey}
+                loading={isLoadingPrivateKey}
+              />
+            ) : (
+              <View style={styles.credentialContainer}>
+                <View
+                  style={[
+                    styles.warningBox,
+                    {
+                      backgroundColor: dangerColor,
+                      borderColor,
+                      borderWidth: BorderWidth.thin,
+                    },
+                  ]}
+                >
+                  <Ionicons name="warning" size={20} color="#fff" />
+                  <ThemedText style={styles.warningBoxText}>
+                    Never share your private key!
+                  </ThemedText>
+                </View>
+
+                <View
+                  style={[
+                    styles.privateKeyBox,
+                    {
+                      backgroundColor: cardColor,
+                      borderColor,
+                      borderWidth: BorderWidth.thick,
+                      ...Shadows.medium,
+                    },
+                  ]}
+                >
+                  <ThemedText style={styles.privateKeyText}>
+                    {privateKey}
+                  </ThemedText>
+                </View>
+
+                <View style={styles.buttonRow}>
+                  <ThemedButton
+                    title="Copy"
+                    variant="secondary"
+                    onPress={handleCopyPrivateKey}
+                    style={styles.halfButton}
+                  />
+                  <ThemedButton
+                    title="Hide"
+                    variant="danger"
+                    onPress={handleHidePrivateKey}
+                    style={styles.halfButton}
+                  />
+                </View>
               </View>
             )}
           </View>
@@ -473,10 +619,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
   },
-  mnemonicContainer: {
+  credentialContainer: {
     marginTop: Spacing.xs,
   },
-  mnemonicWarningBox: {
+  warningBox: {
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.sm,
@@ -484,7 +630,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     gap: Spacing.xs,
   },
-  mnemonicWarning: {
+  warningBoxText: {
     fontWeight: "700",
     color: "#fff",
     fontSize: 14,
@@ -530,5 +676,28 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontSize: 14,
     fontWeight: "600",
+  },
+  privateKeyBox: {
+    padding: Spacing.md,
+    borderRadius: 0,
+  },
+  privateKeyLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: Spacing.sm,
+  },
+  privateKeyText: {
+    fontFamily: "monospace",
+    fontSize: 11,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  halfButton: {
+    flex: 1,
   },
 });

@@ -247,3 +247,95 @@ export async function importWalletFromMnemonic(phrase: string): Promise<{
     throw error;
   }
 }
+
+/**
+ * Validate a private key
+ */
+export function validatePrivateKey(privateKey: string): {
+  isValid: boolean;
+  error?: string;
+} {
+  try {
+    // Clean up the private key
+    let cleanedKey = privateKey.trim();
+
+    // Remove 0x prefix if present for validation
+    const keyWithoutPrefix = cleanedKey.startsWith("0x")
+      ? cleanedKey.slice(2)
+      : cleanedKey;
+
+    // Check if it's valid hex
+    if (!/^[0-9a-fA-F]+$/.test(keyWithoutPrefix)) {
+      return {
+        isValid: false,
+        error:
+          "Invalid format. Private key must contain only hexadecimal characters (0-9, a-f).",
+      };
+    }
+
+    // Check length (should be 64 characters without 0x prefix)
+    if (keyWithoutPrefix.length !== 64) {
+      return {
+        isValid: false,
+        error: `Invalid length. Expected 64 characters, got ${keyWithoutPrefix.length}.`,
+      };
+    }
+
+    // Ensure 0x prefix for ethers.js validation
+    const formattedKey = cleanedKey.startsWith("0x")
+      ? cleanedKey
+      : `0x${cleanedKey}`;
+
+    // Validate using ethers.js by creating a wallet
+    new ethers.Wallet(formattedKey);
+
+    return { isValid: true };
+  } catch (error) {
+    return {
+      isValid: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Invalid private key. Please check and try again.",
+    };
+  }
+}
+
+/**
+ * Import wallet from private key
+ * Validates the private key, creates wallet, and stores securely with authentication
+ */
+export async function importWalletFromPrivateKey(privateKey: string): Promise<{
+  address: string;
+  privateKey: string;
+}> {
+  try {
+    // Clean up the private key
+    let cleanedKey = privateKey.trim();
+
+    // Validate the private key
+    const validation = validatePrivateKey(cleanedKey);
+    if (!validation.isValid) {
+      throw new Error(validation.error || "Invalid private key");
+    }
+
+    // Ensure 0x prefix
+    const formattedKey = cleanedKey.startsWith("0x")
+      ? cleanedKey
+      : `0x${cleanedKey}`;
+
+    // Create wallet from private key
+    const wallet = new ethers.Wallet(formattedKey);
+
+    // Store with secure authentication (empty string for mnemonic since we don't have one)
+    await storePrivateKey(wallet.privateKey, "");
+
+    return {
+      address: wallet.address,
+      privateKey: wallet.privateKey,
+    };
+  } catch (error) {
+    console.error("Error importing wallet from private key:", error);
+    throw error;
+  }
+}
