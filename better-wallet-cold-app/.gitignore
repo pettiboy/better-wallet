@@ -44,3 +44,7 @@ app-example
 
 # apk
 *.apk
+
+dev.md
+
+*.keystore

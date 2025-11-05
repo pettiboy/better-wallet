@@ -288,6 +288,7 @@ export function Home() {
               Hot Wallet App
             </a>
             <Link to="/cold">Download Cold App</Link>
+            <Link to="/privacy-policy">Privacy Policy</Link>
             <a
               href="#download-apk"
               onClick={(e) => {

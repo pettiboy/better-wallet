@@ -65,39 +65,53 @@ Join our community of developers creating universal apps.
 
 ## Build APK
 
+1. Prebuild
+
 ```zsh
 npx expo prebuild
+```
+
+2. Build APK
+
+```zsh
 cd android
 ./gradlew assembleRelease
 ```
 
-OR
+It will be available at
 
-(optional)
-
-```zsh
-eas prebuild
+```
+./app/build/outputs/apk/release/app-release.apk
 ```
 
-very slow
-
-```zsh
-eas build --platform android --local
-```
-
-## Install on device
+3. Install on device
 
 after apk ready
 
 ```zsh
-adb devices              # verify phone
-adb -s <DEVICE_ID> install ./name.apk   # install
+adb devices      # verify phone
+adb -s <DEVICE_ID> install ./app/build/outputs/apk/release/app-release.apk  # install
 ```
 
-## Build Bundle
+## Build Bundle (.aab)
+
+Before starting make sure to update version numbers
 
 ```zsh
 npx expo prebuild
 cd android
+```
+
+```zsh
+./gradlew clean
+```
+
+```zsh
 ./gradlew bundleRelease
+```
+
+It will be available at
+
+```
+./app/build/outputs/bundle/release/app-release.aab
 ```
