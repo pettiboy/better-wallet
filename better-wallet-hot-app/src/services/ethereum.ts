@@ -1,24 +1,43 @@
 import { ethers } from "ethers";
 
-// Using public Ethereum RPC endpoints
-// const MAINNET_RPC = 'https://eth.llamarpc.com';
-const SEPOLIA_RPC =
-  "https://eth-sepolia.g.alchemy.com/v2/QUIEJhuCFwaqG_DsrOIXeSqdCHmsYLXH";
-
-// Default to Sepolia testnet for safety
-const DEFAULT_RPC = SEPOLIA_RPC;
-export const DEFAULT_CHAIN_ID = 11155111; // Sepolia
-
-let provider: ethers.JsonRpcProvider;
+// Provider instance management
+let currentProvider: ethers.JsonRpcProvider | null = null;
+let currentChainId: number | null = null;
+let currentRpcUrl: string | null = null;
 
 /**
- * Get or create provider instance
+ * Set the provider for a specific chain
+ */
+export function setProvider(chainId: number, rpcUrl: string): void {
+  // Only create a new provider if chain or RPC changed
+  if (chainId !== currentChainId || rpcUrl !== currentRpcUrl) {
+    currentProvider = new ethers.JsonRpcProvider(rpcUrl);
+    currentChainId = chainId;
+    currentRpcUrl = rpcUrl;
+  }
+}
+
+/**
+ * Get the current provider instance
+ * Note: Provider must be set using setProvider() before calling this
  */
 export function getProvider(): ethers.JsonRpcProvider {
-  if (!provider) {
-    provider = new ethers.JsonRpcProvider(DEFAULT_RPC);
+  if (!currentProvider) {
+    throw new Error(
+      "Provider not initialized. Call setProvider() with chain config first."
+    );
   }
-  return provider;
+  return currentProvider;
+}
+
+/**
+ * Get current chain ID
+ */
+export function getCurrentChainId(): number {
+  if (currentChainId === null) {
+    throw new Error("Chain ID not set. Call setProvider() first.");
+  }
+  return currentChainId;
 }
 
 /**
@@ -85,6 +104,7 @@ export async function constructTransaction(
 ): Promise<ethers.TransactionRequest> {
   try {
     const provider = getProvider();
+    const chainId = getCurrentChainId();
     const nonce = await provider.getTransactionCount(from, "pending");
     const feeData = await provider.getFeeData();
     const valueInWei = ethers.parseEther(amount);
@@ -98,7 +118,7 @@ export async function constructTransaction(
       value: valueInWei,
       nonce,
       gasLimit,
-      chainId: DEFAULT_CHAIN_ID,
+      chainId,
       type: 2, // EIP-1559 transaction
       maxFeePerGas: feeData.maxFeePerGas,
       maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
@@ -243,6 +263,7 @@ export async function constructERC20Transfer(
 ): Promise<ethers.TransactionRequest> {
   try {
     const provider = getProvider();
+    const chainId = getCurrentChainId();
     const nonce = await provider.getTransactionCount(from, "pending");
     const feeData = await provider.getFeeData();
 
@@ -265,7 +286,7 @@ export async function constructERC20Transfer(
       data, // Encoded transfer function call
       nonce,
       gasLimit,
-      chainId: DEFAULT_CHAIN_ID,
+      chainId,
       type: 2, // EIP-1559 transaction
       maxFeePerGas: feeData.maxFeePerGas,
       maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,

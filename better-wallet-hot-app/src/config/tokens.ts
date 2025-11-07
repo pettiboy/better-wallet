@@ -7,16 +7,9 @@ export interface TokenInfo {
 }
 
 /**
- * Supported tokens on Sepolia testnet
+ * Default supported tokens (native currency for each chain)
  */
 export const SUPPORTED_TOKENS: TokenInfo[] = [
-  {
-    symbol: "PYUSD",
-    name: "PayPal USD",
-    address: "0xcac524bca292aaade2df8a05cc58f0a65b1b3bb9",
-    decimals: 6, // PYUSD typically uses 6 decimals
-    isNative: false,
-  },
   {
     symbol: "ETH",
     name: "Ethereum",

@@ -1,42 +1,68 @@
 import { useState, useEffect } from "react";
-import { RefreshCw, History } from "lucide-react";
+import { RefreshCw, History, Plus } from "lucide-react";
 import { useTransactionPopup } from "@blockscout/app-sdk";
 import { Button } from "../../components/Button";
+import { NetworkSelector } from "../../components/NetworkSelector";
+import { AddTokenModal } from "../../components/AddTokenModal";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
-import { getBalance, getERC20Balance } from "../../services/ethereum";
-import { SUPPORTED_TOKENS } from "../../config/tokens";
+import { useNetwork } from "../../contexts/NetworkContext";
+import { useTokens } from "../../contexts/TokenContext";
+import {
+  getBalance,
+  getERC20Balance,
+  setProvider,
+} from "../../services/ethereum";
 
 export function HotHomePage() {
   const { walletAddress } = useDeviceMode();
   const { openPopup } = useTransactionPopup();
+  const { selectedChain } = useNetwork();
+  const { getTokensForChain } = useTokens();
   const [balance, setBalance] = useState<string>("0.0");
-  const [pyusdBalance, setPyusdBalance] = useState<string>("0.0");
   const [loading, setLoading] = useState(false);
+  const [tokenBalances, setTokenBalances] = useState<
+    Record<string, { balance: string; symbol: string }>
+  >({});
+  const [isAddTokenModalOpen, setIsAddTokenModalOpen] = useState(false);
+
+  // Initialize provider when chain changes
+  useEffect(() => {
+    setProvider(selectedChain.id, selectedChain.rpcUrl);
+  }, [selectedChain]);
 
   useEffect(() => {
     if (walletAddress) {
       loadBalance();
     }
-  }, [walletAddress]);
+  }, [walletAddress, selectedChain]);
 
   const loadBalance = async () => {
     if (!walletAddress) return;
 
     setLoading(true);
     try {
-      // Load ETH balance
-      const ethBal = await getBalance(walletAddress);
-      setBalance(ethBal);
+      // Load native currency balance
+      const nativeBal = await getBalance(walletAddress);
+      setBalance(nativeBal);
 
-      // Load PYUSD balance
-      const pyusdToken = SUPPORTED_TOKENS.find((t) => t.symbol === "PYUSD");
-      if (pyusdToken) {
-        const { balance: pyusdBal } = await getERC20Balance(
-          pyusdToken.address,
-          walletAddress
-        );
-        setPyusdBalance(pyusdBal);
+      // Load custom token balances
+      const customTokens = getTokensForChain(selectedChain.id);
+      const balances: Record<string, { balance: string; symbol: string }> = {};
+
+      for (const token of customTokens) {
+        try {
+          const { balance: tokenBal, symbol } = await getERC20Balance(
+            token.address,
+            walletAddress
+          );
+          balances[token.address] = { balance: tokenBal, symbol };
+        } catch (error) {
+          console.error(`Error loading balance for ${token.symbol}:`, error);
+          balances[token.address] = { balance: "0.0", symbol: token.symbol };
+        }
       }
+
+      setTokenBalances(balances);
     } catch (error) {
       console.error("Error loading balance:", error);
       alert("Failed to load balance. Check your internet connection.");
@@ -48,7 +74,7 @@ export function HotHomePage() {
   const handleViewHistory = () => {
     if (!walletAddress) return;
     openPopup({
-      chainId: "11155111", // Sepolia testnet
+      chainId: selectedChain.id.toString(),
       address: walletAddress,
     });
   };
@@ -139,9 +165,14 @@ export function HotHomePage() {
           </h1>
         </div>
 
+        {/* Network Selector */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <NetworkSelector />
+        </div>
+
         {/* Balance Cards */}
         <div style={{ marginBottom: "1.5rem" }}>
-          {/* ETH Balance */}
+          {/* Native Currency Balance */}
           <div
             style={{
               backgroundColor: "var(--color-primary)",
@@ -161,7 +192,7 @@ export function HotHomePage() {
                 fontWeight: 700,
               }}
             >
-              ETH Balance
+              {selectedChain.nativeCurrency.symbol} Balance
             </p>
             <p
               style={{
@@ -169,55 +200,66 @@ export function HotHomePage() {
                 fontWeight: 900,
               }}
             >
-              {parseFloat(balance).toFixed(4)} ETH
+              {parseFloat(balance).toFixed(4)}{" "}
+              {selectedChain.nativeCurrency.symbol}
             </p>
           </div>
 
-          {/* PYUSD Balance */}
-          <div
-            style={{
-              backgroundColor: "var(--color-success)",
-              border: "4px solid var(--color-black)",
-              boxShadow: "8px 8px 0 var(--color-black)",
-              padding: "1.5rem",
-              textAlign: "center",
-              color: "var(--color-white)",
-            }}
-          >
-            <p
+          {/* Custom Token Balances */}
+          {getTokensForChain(selectedChain.id).map((token) => (
+            <div
+              key={token.address}
               style={{
-                fontSize: "0.875rem",
-                opacity: 0.9,
-                marginBottom: "0.5rem",
-                fontWeight: 700,
+                backgroundColor: "var(--color-success)",
+                border: "4px solid var(--color-black)",
+                boxShadow: "8px 8px 0 var(--color-black)",
+                padding: "1.5rem",
+                textAlign: "center",
+                color: "var(--color-white)",
+                marginBottom: "1rem",
               }}
             >
-              PYUSD Balance
-            </p>
-            <p
-              style={{
-                fontSize: "2rem",
-                fontWeight: 900,
-              }}
-            >
-              {parseFloat(pyusdBalance).toFixed(2)} PYUSD
-            </p>
-          </div>
-        </div>
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  opacity: 0.9,
+                  marginBottom: "0.5rem",
+                  fontWeight: 700,
+                }}
+              >
+                {token.symbol} Balance
+              </p>
+              <p
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: 900,
+                }}
+              >
+                {parseFloat(
+                  tokenBalances[token.address]?.balance || "0.0"
+                ).toFixed(token.decimals <= 6 ? 2 : 4)}{" "}
+                {token.symbol}
+              </p>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  opacity: 0.8,
+                  marginTop: "0.5rem",
+                }}
+              >
+                {token.name}
+              </p>
+            </div>
+          ))}
 
-        {/* Network Badge */}
-        <div
-          style={{
-            backgroundColor: "var(--color-gray-100)",
-            border: "3px solid var(--color-black)",
-            padding: "0.75rem",
-            textAlign: "center",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <p style={{ fontSize: "0.875rem", fontWeight: 900, margin: 0 }}>
-            Sepolia Testnet
-          </p>
+          {/* Add Token Button */}
+          <Button
+            title="Add Custom Token"
+            icon={Plus}
+            variant="secondary"
+            onClick={() => setIsAddTokenModalOpen(true)}
+            fullWidth
+          />
         </div>
 
         {/* Address Card */}
@@ -313,6 +355,12 @@ export function HotHomePage() {
             <li>Broadcast to the network</li>
           </ol>
         </div>
+
+        {/* Add Token Modal */}
+        <AddTokenModal
+          isOpen={isAddTokenModalOpen}
+          onClose={() => setIsAddTokenModalOpen(false)}
+        />
       </div>
     </div>
   );

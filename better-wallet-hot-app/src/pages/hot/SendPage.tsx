@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { Send, CheckCircle, Lightbulb, Coins } from "lucide-react";
 import { useNotification } from "@blockscout/app-sdk";
@@ -6,6 +6,8 @@ import { Button } from "../../components/Button";
 import { QRDisplay } from "../../components/QRDisplay";
 import { QRScanner } from "../../components/QRScanner";
 import { useDeviceMode } from "../../contexts/DeviceModeContext";
+import { useNetwork } from "../../contexts/NetworkContext";
+import { useTokens } from "../../contexts/TokenContext";
 import {
   constructTransaction,
   constructERC20Transfer,
@@ -13,12 +15,13 @@ import {
   isValidAddress,
   getBalance,
   getERC20Balance,
+  setProvider,
 } from "../../services/ethereum";
 import {
   serializeTransaction,
   deserializeSignedTransaction,
 } from "../../utils/transaction-serializer";
-import { SUPPORTED_TOKENS, type TokenInfo } from "../../config/tokens";
+import { type TokenInfo } from "../../config/tokens";
 
 type Step =
   | "input"
@@ -30,24 +33,25 @@ type Step =
 export function SendPage() {
   const { walletAddress } = useDeviceMode();
   const { openTxToast } = useNotification();
+  const { selectedChain } = useNetwork();
+  const { getTokensForChain } = useTokens();
   const [step, setStep] = useState<Step>("input");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const [selectedToken, setSelectedToken] = useState<TokenInfo>(
-    SUPPORTED_TOKENS[0]
-  );
+  const [availableTokens, setAvailableTokens] = useState<TokenInfo[]>([]);
+  const [selectedToken, setSelectedToken] = useState<TokenInfo | null>(null);
   const [tokenBalance, setTokenBalance] = useState<string | null>(null);
   const [unsignedTx, setUnsignedTx] =
     useState<ethers.TransactionRequest | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
 
-  // Load token balance when token changes
+  // Initialize provider when chain changes
   useEffect(() => {
-    loadTokenBalance();
-  }, [selectedToken, walletAddress]);
+    setProvider(selectedChain.id, selectedChain.rpcUrl);
+  }, [selectedChain]);
 
-  const loadTokenBalance = async () => {
-    if (!walletAddress) return;
+  const loadTokenBalance = useCallback(async () => {
+    if (!walletAddress || !selectedToken) return;
 
     try {
       if (selectedToken.isNative) {
@@ -64,11 +68,49 @@ export function SendPage() {
       console.error("Error loading balance:", error);
       setTokenBalance(null);
     }
-  };
+  }, [walletAddress, selectedToken]);
+
+  // Update available tokens when chain changes
+  useEffect(() => {
+    const nativeToken: TokenInfo = {
+      symbol: selectedChain.nativeCurrency.symbol,
+      name: selectedChain.nativeCurrency.name,
+      address: "0x0",
+      decimals: selectedChain.nativeCurrency.decimals,
+      isNative: true,
+    };
+
+    const customTokens = getTokensForChain(selectedChain.id);
+    const tokens = [nativeToken, ...customTokens];
+    setAvailableTokens(tokens);
+
+    // Set default selected token to native
+    if (!selectedToken || selectedToken.isNative) {
+      setSelectedToken(nativeToken);
+    } else {
+      // Check if current selected token is available in new chain
+      const tokenExists = customTokens.find(
+        (t) => t.address.toLowerCase() === selectedToken.address.toLowerCase()
+      );
+      setSelectedToken(tokenExists || nativeToken);
+    }
+  }, [selectedChain, getTokensForChain, selectedToken]);
+
+  // Load token balance when token or chain changes
+  useEffect(() => {
+    if (selectedToken) {
+      loadTokenBalance();
+    }
+  }, [selectedToken, walletAddress, selectedChain, loadTokenBalance]);
 
   const handleCreateTransaction = async () => {
     if (!walletAddress) {
       alert("No wallet address found");
+      return;
+    }
+
+    if (!selectedToken) {
+      alert("No token selected");
       return;
     }
 
@@ -131,7 +173,7 @@ export function SendPage() {
       setStep("success");
 
       // Show Blockscout transaction toast for real-time tracking
-      await openTxToast("11155111", hash);
+      await openTxToast(selectedChain.id.toString(), hash);
 
       alert(`Transaction broadcasted!\nHash: ${hash.substring(0, 10)}...`);
     } catch (error) {
@@ -151,6 +193,8 @@ export function SendPage() {
   };
 
   const getTransactionDisplayValue = (tx: ethers.TransactionRequest) => {
+    if (!selectedToken) return "0";
+
     if (selectedToken.isNative) {
       return `${ethers.formatEther(tx.value || 0)} ${selectedToken.symbol}`;
     } else {
@@ -241,17 +285,20 @@ export function SendPage() {
                 marginBottom: "1.5rem",
               }}
             >
+              <DetailRow label="Network" value={selectedChain.name} />
               <DetailRow
                 label="To"
                 value={
-                  selectedToken.isNative ? (unsignedTx.to as string) : recipient
+                  selectedToken?.isNative
+                    ? (unsignedTx.to as string)
+                    : recipient
                 }
               />
               <DetailRow
                 label="Amount"
                 value={getTransactionDisplayValue(unsignedTx)}
               />
-              {!selectedToken.isNative && (
+              {selectedToken && !selectedToken.isNative && (
                 <DetailRow label="Token" value={selectedToken.name} />
               )}
             </div>
@@ -402,7 +449,7 @@ export function SendPage() {
                 View on block explorer:
               </p>
               <a
-                href={`https://sepolia.etherscan.io/tx/${txHash}`}
+                href={`${selectedChain.blockExplorer}/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -413,7 +460,8 @@ export function SendPage() {
                   fontWeight: 700,
                 }}
               >
-                sepolia.etherscan.io/tx/{txHash.slice(0, 10)}...
+                {selectedChain.blockExplorer.replace("https://", "")}/tx/
+                {txHash.slice(0, 10)}...
               </a>
             </div>
 
@@ -467,6 +515,20 @@ export function SendPage() {
           <div
             style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}
           >
+            {/* Network Display */}
+            <div
+              style={{
+                backgroundColor: "var(--color-info)",
+                border: "3px solid var(--color-black)",
+                padding: "0.75rem",
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                color: "var(--color-white)",
+              }}
+            >
+              Network: {selectedChain.name}
+            </div>
+
             <div>
               <label
                 style={{
@@ -480,9 +542,9 @@ export function SendPage() {
                 Asset
               </label>
               <select
-                value={selectedToken.symbol}
+                value={selectedToken?.symbol || ""}
                 onChange={(e) => {
-                  const token = SUPPORTED_TOKENS.find(
+                  const token = availableTokens.find(
                     (t) => t.symbol === e.target.value
                   );
                   if (token) {
@@ -501,13 +563,13 @@ export function SendPage() {
                   cursor: "pointer",
                 }}
               >
-                {SUPPORTED_TOKENS.map((token) => (
-                  <option key={token.symbol} value={token.symbol}>
+                {availableTokens.map((token) => (
+                  <option key={token.address} value={token.symbol}>
                     {token.symbol} - {token.name}
                   </option>
                 ))}
               </select>
-              {tokenBalance !== null && (
+              {tokenBalance !== null && selectedToken && (
                 <div
                   style={{
                     marginTop: "0.5rem",
@@ -556,11 +618,11 @@ export function SendPage() {
                   color: "var(--color-black)",
                 }}
               >
-                Amount ({selectedToken.symbol})
+                Amount ({selectedToken?.symbol || ""})
               </label>
               <input
                 type="number"
-                step={selectedToken.decimals === 6 ? "0.000001" : "0.00001"}
+                step={selectedToken?.decimals === 6 ? "0.000001" : "0.00001"}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"

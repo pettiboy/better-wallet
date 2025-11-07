@@ -10,6 +10,8 @@ import {
 } from "@blockscout/app-sdk";
 import { DeviceModeProvider } from "./contexts/DeviceModeContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { NetworkProvider } from "./contexts/NetworkContext";
+import { TokenProvider } from "./contexts/TokenContext";
 import { WalletConnectProvider } from "./contexts/WalletConnectContext";
 import { MobileContainer } from "./components/MobileContainer";
 import { BottomTabBar } from "./components/BottomTabBar";
@@ -94,9 +96,13 @@ function App() {
       <TransactionPopupProvider>
         <OnboardingProvider>
           <DeviceModeProvider>
-            <WalletConnectProvider>
-              <AppContent />
-            </WalletConnectProvider>
+            <NetworkProvider>
+              <TokenProvider>
+                <WalletConnectProvider>
+                  <AppContent />
+                </WalletConnectProvider>
+              </TokenProvider>
+            </NetworkProvider>
           </DeviceModeProvider>
         </OnboardingProvider>
       </TransactionPopupProvider>
